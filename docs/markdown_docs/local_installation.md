@@ -82,20 +82,19 @@ For this example we use a simple config file `tactus/data/config_files/modificat
 This suite has four tasks
  * PrepRun: The usual preparatory work
 
- * CollectLogsTest: Collect the log output of PrepRun
+ * CollectLogsStatic: Collect the log output of PrepRun
 
 ```
-[collectlogs.test]
+[collectlogs.staticlogs]
   joboutdir = "@ECF_OUT@/@CASE@"
   tarname = "Test"
   task_logs = "@WRK@"
 ```
 
- * ArchivTest: "Archives" the result of the log collection in a new folder called duplicate
-
+ * ArchivStatic: "Archives" the result of the log collection in a new folder called duplicate
 
 ```
-[archiving.test.copy.logs]
+[archiving.static.copy.logs]
   active = true
   inpath = "@LOGS@"
   outpath = "@LOGS@/duplicate"
@@ -119,6 +118,7 @@ Now we're ready to launch the run
 ```
 tactus case tactus/data/config_files/modifications/test_ecflow.toml --start-suite
 ```
+This creates a new config file `test_ecflow.toml` which is used to launch the suite
 
 Launch the ecflow viewer by
 
@@ -131,6 +131,17 @@ Output will be written to
 * ~/deode_ecflow
 * ~/ecflow_server
 
+### Run a task outside of ecflow
+To run e.g. the `ArchiveStatic` task from the command line we do the following:
+* Create a new job by
+```
+tactus run --task ArchiveStatic -c test_ecflow.toml --create-only
+```
+This creates `ArchiveStatic.job` which is ready to be launched as a normal bash script
+```
+bash ./ArchiveStatic.job
+```
+
 ### Remove all results
 
 All traces of the run can be removed by
@@ -138,7 +149,6 @@ All traces of the run can be removed by
 ```
 tactus remove test_ecflow.toml --execute-removal
 ```
-
 
 ## freja
 
