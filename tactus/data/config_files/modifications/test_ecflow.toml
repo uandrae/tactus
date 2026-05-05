@@ -1,4 +1,4 @@
-[archiving.test.copy.logs]
+[archiving.static.copy.logs]
   active = true
   inpath = "@LOGS@"
   outpath = "@LOGS@/duplicate"
