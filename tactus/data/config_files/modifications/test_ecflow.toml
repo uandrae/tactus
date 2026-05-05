@@ -10,7 +10,7 @@
   dry_run = false
   path = "@LOGS@/duplicate"
 
-[collectlogs.test]
+[collectlogs.staticlogs]
   joboutdir = "@ECF_OUT@/@CASE@"
   tarname = "Test"
   task_logs = "@WRK@"

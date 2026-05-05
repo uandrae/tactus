@@ -47,7 +47,7 @@ class TestSuiteDefinition(SuiteDefinition):
         )
 
         collect_logs = EcflowSuiteTask(
-            "CollectLogsTest",
+            "CollectLogsStatic",
             self.suite,
             config,
             self.task_settings,
@@ -59,7 +59,7 @@ class TestSuiteDefinition(SuiteDefinition):
         )
 
         archiving = EcflowSuiteTask(
-            "ArchiveTest",
+            "ArchiveStatic",
             self.suite,
             config,
             self.task_settings,
