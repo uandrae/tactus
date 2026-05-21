@@ -1,6 +1,4 @@
 """Canari — surface OI analysis using MASTERODB (configuration 701).
-
-Ported from: seemhews/scripts/assim/analysis/surface/canari.ecf
 """
 import json
 import os
@@ -18,11 +16,6 @@ from .batch import BatchJob
 
 class Canari(Task):
     """Run CANARI surface analysis (OI, MASTERODB conf 701).
-
-    Reads the short-range background (first-guess) field and the merged
-    surface ECMA ODB, then produces ``ICMSHCYCL+0000`` — the OI surface
-    analysis field — which is archived to the DA scratch directory for
-    use by the BlendSur task.
     """
 
     def __init__(self, config):

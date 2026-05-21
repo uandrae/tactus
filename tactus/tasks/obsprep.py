@@ -1,7 +1,7 @@
 """Observation preparation task.
 
 Stages observation files from the obs archive into the DA scratch directory
-and writes an obstype availability list consumed by the Bator tasks.
+and writes an obstype availability list used by the Bator tasks.
 
 Observation provider selection
 -----------------------------
@@ -31,11 +31,10 @@ the same obs type arrives in separate per-country or per-satellite files.
 
 - **BUFR / GRIB**: files are concatenated byte-for-byte.
 - **OBSOUL**: files are merged via ``obsoul_merge.pl`` (configured via
-  ``da.obsoul_merge_script``).  Falls back to raw concatenation with a
-  warning when the script is not available (observation counts in the
-  header will be wrong).
+  ``da.obsoul_merge_script``).  
 - **NETCDF**: only the first file is used; a warning is issued when more
   than one is found.
+- **HDF**: No merging performed - radar files should be linked as site${i}   
 
 Temporal windowing
 ------------------
@@ -127,8 +126,8 @@ class ObsPrep(Task):
 
         For each obs type, collects all matching files from all archive slots
         within the assimilation window, merges them, and copies the result
-        into the working directory.  Writes ``obstypes_YYYYMMDDRR`` with the
-        list of successfully staged types — consumed by OdbMerge.
+        into the working directory. Writes ``obstypes_YYYYMMDDRR`` with the
+        list of successfully staged types — used by the Bator tasks.
         """
         yyyy = self.basetime.strftime("%Y")
         mm = self.basetime.strftime("%m")
@@ -157,7 +156,7 @@ class ObsPrep(Task):
         with open(obstypes_file, "w") as fh:
             fh.write("\n".join(available_types) + "\n")
         logger.info(
-            "ObsPrep: available obs types for {}: {}", ymdrr, available_types
+            "ObsPrep: available obs types for {}: {} in {}", ymdrr, available_types, self.obs_dir
         )
 
         out_dir = os.path.join(self.da_scratch, yyyy, mm, dd, rr, "obsprep")

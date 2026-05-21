@@ -7,7 +7,6 @@ Two BLENDSUR steps:
 Output ``surface.YYYYMMDDRR`` is the blended surface field used as the
 first guess for 3D-Var screening and as the Forecast initial conditions.
 
-Ported from: seemhews/scripts/assim/analysis/surface/blendsur.ecf
 """
 import os
 import shutil

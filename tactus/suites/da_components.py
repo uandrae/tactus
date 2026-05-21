@@ -12,7 +12,7 @@ from .base import EcflowSuiteFamily, EcflowSuiteTask
 
 
 # ---------------------------------------------------------------------------
-# Default obs-type lists (mirrors classes.Analysis2 from seemhews)
+# Default obs-type lists
 # ---------------------------------------------------------------------------
 
 _DEFAULT_OBS_SURFACE: List[str] = ["synop"]

@@ -371,7 +371,7 @@ obs_step = 60
 # ------------------------------------------------------------------
 
  [da.oops]
-   namelist_dir = "@SCRATCH@/da/oops_namelists"
+   namelist_dir = "@SCRATCH@/da/namelists"
 #
 #   # Minimization inner-loop settings
 #   niter    = 66
@@ -387,6 +387,7 @@ obs_step = 60
 [submission.task_exceptions.OopsVar.BATCH]
   NODES       = "#SBATCH --nodes=10"
   NTASKS      = "#SBATCH --ntasks=128"
+  QOS         = "#SBATCH --qos=np"
   HINT        = "#SBATCH --hint=nomultithread"
   WALLTIME    = "#SBATCH --time=01:00:00"
 

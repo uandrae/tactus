@@ -1,39 +1,4 @@
 """OopsVar task — OOPS-based 3D-Var (screening + minimization via OOVAR).
-
-Replaces the classic two-step Screen + Minim MASTERODB pair with a single
-``OOVAR oops.json`` execution.  Active when ``da.do_upper_air = true`` (the default).
-
-OOPS namelist directory
------------------------
-The task reads namelist *templates* from ``da.oops.namelist_dir``.  Unlike
-the MASTERODB-based tasks, OOPS uses many small named files rather than a
-single ``fort.4``.  The following files are expected in that directory:
-
-``namelist_oopsminim``
-    Main minimization namelist template.  Placeholders ``{NBPROC}``,
-    ``{NPRTRV}``, ``{NPRTRW}``, ``{NSTRIN}``, ``{NSTROUT}``,
-    ``{NPROMA}``, ``{NPRGPEW}``, ``{NPRGPNS}``, ``{niter}``,
-    ``{nsimu}``, ``{rednmc}``, ``{LEJK}``, ``{LSPRT}``, ``{qlsp}``,
-    ``{qlgp}``, ``{NSMAXJK}``, ``{ALPHAKT}``, ``{ALPHAKVOR}``,
-    ``{ALPHAKDIV}``, ``{ALPHAKQ}``, ``{ALPHAKP}``, ``{PRESINFJK}``,
-    ``{PRESUPJK}``, ``{NTRUNCJK}`` are substituted from config.
-
-``oops_3dvar.json``
-    OOPS control JSON template.  Placeholders ``{yyyy}``, ``{mm}``,
-    ``{dd}``, ``{hh}`` are substituted with the basetime date parts.
-
-``namelist_standard_geometry``, ``namelist_geometry_tENS``
-    Geometry namelists.  Placeholder ``{nproma}`` is substituted.
-
-``namelist_bmatrix_3dvar``, ``namelist_observations_tlad``,
-``namelist_observations``, ``namelist_traj_model``,
-``namelist_linear_model``, ``namelist_nonlinear_model``,
-``namelist_oops_write_spec``, ``namelist_write_analysis``,
-``namelist_gom_setup_hres``, ``namelist_gom_setup``
-    Linked as-is (no substitution) to the names expected by OOVAR.
-
-``iasichannels``
-    IASI channel selection file, copied from the OOPS namelist dir.
 """
 import datetime
 import glob
