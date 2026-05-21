@@ -1,33 +1,16 @@
 """Observation preparation task.
 
-Stages observation files from the obs archive into the DA scratch directory
-and writes an obstype availability list used by the Bator tasks.
-
 Observation provider selection
 -----------------------------
 ``da.obs_provider`` names the active provider convention.  All provider
 definitions live in configuration under ``da.providers.<name>``::
 
-    [da.providers.LACE]
-    obs_step = 60            # minutes between archive slots (0 = single slot)
-
-    [da.providers.LACE.synop]
-    candidates = ["obsoul_1_xxxxxx_xx_{ymdrr}"]
-    local_name  = "OBSOUL.synop"
-
-Selecting a provider is a single config switch::
-
-    obs_provider = "LACE"
-
-No built-in filename presets exist in the Python code; all conventions
-live in configuration, making it straightforward to add new providers or
-update existing ones without touching the task code.
+e.g. obs_provider = "LACE"
 
 Multi-file merging
 ------------------
 All candidates found in the archive are merged into a single file per obs
-type rather than stopping at the first match.  This covers archives where
-the same obs type arrives in separate per-country or per-satellite files.
+type.  
 
 - **BUFR / GRIB**: files are concatenated byte-for-byte.
 - **OBSOUL**: files are merged via ``obsoul_merge.pl`` (configured via
@@ -45,7 +28,7 @@ When enabled, ObsPrep computes the slots covered by
 searches each slot's date directory.
 
 Example: basetime 00 UTC, window_shift=-90 min, window_len=180 min →
-slots 22, 23, 00, 01 are searched (four different hours, possibly across
+slots 23, 00, 01 should be searched (three different hours, possibly across
 two calendar dates).
 """
 import datetime as dt
@@ -93,7 +76,7 @@ class ObsPrep(Task):
         else:
             self.obs_types = config.get("da.obs_types_3dvar", self.DEFAULT_OBS_3DVAR)
 
-        self.obs_provider = config.get("da.obs_provider", "UWC")
+        self.obs_provider = config.get("da.obs_provider", "None.")
         all_providers = config.get("da.providers", {})
 
         if self.obs_provider not in all_providers:
@@ -344,17 +327,11 @@ class ObsPrep(Task):
                     len(paths), local_name,
                 )
             else:
-                logger.warning(
-                    "ObsPrep: obsoul_merge.pl not found (da.obsoul_merge_script={}); "
-                    "concatenating {} OBSOUL files — observation counts in the "
-                    "header will be wrong.",
-                    self.obsoul_merge_script or "<not set>",
-                    len(paths),
+                raise RuntimeError(
+                    f"ObsPrep: obsoul_merge.pl not found "
+                    f"(da.obsoul_merge_script={self.obsoul_merge_script}). "
+                    f"Cannot proceed with assimilation."
                 )
-                with open(local_name, "wb") as out:
-                    for p in paths:
-                        with open(p, "rb") as inp:
-                            shutil.copyfileobj(inp, out)
 
         else:
             shutil.copy2(paths[0], local_name)
