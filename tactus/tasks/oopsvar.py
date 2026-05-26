@@ -322,6 +322,7 @@ class OopsVar(Task):
             "{mm}":   mm,
             "{dd}":   dd,
             "{hh}":   rr,
+            "{{now.iso8601()}}": f"{yyyy}-{mm}-{dd}T{rr}:00:00Z",
         }
         self._fill_template(
             os.path.join(nd, "3dvar.json"), "oops.json", json_subst
