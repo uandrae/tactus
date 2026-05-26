@@ -27,7 +27,7 @@ assimilation_input_definition = "@CYCLE@/assimilation.json"
   # Root directory for pre-processed observation files (OPLACE / local)
   # Expected layout: <obs_dir>/YYYY/MM/DD/<obstype_filename>[.gz]
   # obs_dir = "@SCRATCH@/da/@CASE@/obs"
-  obs_dir = "/scratch/sis/da/namelists/"
+  obs_dir = "/scratch/sis/da/obs/"
 
   # Per-cycle scratch store for intermediate DA files (ODB, CCMA, analyses)
   scratch = "@SCRATCH@/da/@CASE@/scratch"
