@@ -31,6 +31,7 @@ class OopsVar(Task):
         self.basetime = as_datetime(config["general.times.basetime"])
         self.da_scratch = self.platform.substitute(config["da.scratch"])
         self.da_const_dir = self.platform.substitute(config["da.const_dir"])
+        self.domain = config["domain.name"]
         self.oops_namelist_dir = self.platform.substitute(
             config.get("da.oops.namelist_dir", "")
         )
@@ -159,8 +160,9 @@ class OopsVar(Task):
             )
 
         # --- B-matrix (3 files for OOPS: .bal, .cv, .cvt) ---
+        bmat_dir = os.path.join(self.da_const_dir, self.domain)
         for bmat in ("stabal96.bal", "stabal96.cv", "stabal96.cvt"):
-            src = os.path.join(self.da_const_dir, bmat)
+            src = os.path.join(bmat_dir, bmat)
             if os.path.isfile(src):
                 shutil.copy2(src, os.path.basename(bmat))
             else:
