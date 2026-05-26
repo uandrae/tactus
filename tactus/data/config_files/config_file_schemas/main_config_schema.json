@@ -1280,6 +1280,11 @@
             "description": "NPROMA block size for OOPS geometry ({NPROMA}, {nproma}). Negative values mean auto-sizing.",
             "type": "integer",
             "default": -32
+          },
+          "nbpool": {
+            "description": "Number of ODB pools for the upper-air 3D-Var (OOVAR). Separate from da.nbpool which controls Canari/BATOR.",
+            "type": "integer",
+            "default": 128
           }
         }
       }

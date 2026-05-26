@@ -43,7 +43,7 @@ class OopsVar(Task):
                 os.path.join(config.get("da.const_dir", ""), "rtcoef"),
             )
         )
-        self.nbpool = config.get("da.nbpool", 12)
+        self.nbpool = config.get("da.oops.nbpool", 128)
 
         # Minimization parameters
         self.niter = config.get("da.oops.niter", 66)

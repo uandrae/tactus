@@ -373,6 +373,10 @@ obs_step = 60
  [da.oops]
    namelist_dir = "@SCRATCH@/da/namelists"
 #
+#   # Number of ODB pools for the upper-air 3D-Var (OOVAR).
+#   # Canari uses da.nbpool (default 16); OopsVar uses this key.
+   nbpool = 128
+#
 #   # Minimization inner-loop settings
 #   niter    = 66
 #   nsimu    = 69
