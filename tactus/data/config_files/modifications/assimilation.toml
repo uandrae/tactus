@@ -41,8 +41,8 @@ assimilation_input_definition = "@CYCLE@/assimilation.json"
   # Directory containing DA namelists:
   #   aldnml_canari, aldnml_screen, aldnml_minim,
   #   aldnml_bator, aldnml_lamflag_<domain>, aldnml_rgb, etc.
-  namelist_dir = "@SCRATCH@/da/namelists"
-
+  #namelist_dir = "@SCRATCH@/da/namelists"
+  namelist_dir = "/scratch/sis/da/namelists"
   # Short-range background (first-guess) directory.
   # Expected files: <guess_dir>/YYYY/MM/DD/guess.YYYYMMDDRR[.gz]
   guess_dir = "@SCRATCH@/da/@CASE@/guess"
