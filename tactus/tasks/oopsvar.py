@@ -169,7 +169,7 @@ class OopsVar(Task):
                 logger.warning("OopsVar: B-matrix file not found: {}", src)
 
         # --- constant links ---
-        const_globs = ["ATLAS_*", "ATLAS*", "errgrib*", "MCICA", "RAD*", "amv_*",
+        const_globs = ["ATLAS_*", "ATLAS*", "errgrib*", "ECOZC", "MCICA", "RAD*", "amv_*",
                        "bcor_noaa.dat", "bcor_meto.dat"]
         for pattern in const_globs:
             for src in glob.glob(os.path.join(self.da_const_dir, pattern)):
