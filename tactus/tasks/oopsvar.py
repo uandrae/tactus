@@ -204,6 +204,8 @@ class OopsVar(Task):
                 "DR_HOOK_SILENT": "1",
                 "DR_HOOK_IGNORE_SIGNALS": "-1",
                 # ODB
+                "ODB_ANALYSIS_DATE": f"{yyyy}{mm}{dd}",
+                "ODB_ANALYSIS_TIME": f"{rr}0000",
                 "ODB_STATIC_LINKING": "1",
                 "TO_ODB_ECMWF": "0",
                 "ODB_TRACE_FILE": "List_odb",

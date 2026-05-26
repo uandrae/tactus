@@ -31,7 +31,10 @@ class OdbMerge(Task):
         self.da_scratch = self.platform.substitute(config["da.scratch"])
         # family1 determines output archive subdirectory name
         self.family1 = os.environ.get("DA_STREAM", "3dvar")
-        self.nbpool = config.get("da.nbpool", 12)
+        if self.family1 == "surface":
+            self.nbpool = config.get("da.nbpool", 16)
+        else:
+            self.nbpool = config.get("da.oops.nbpool", 128)
         self.bator_window_len = config.get("da.bator_window_len", 180)
         self.bator_window_shift = config.get("da.bator_window_shift", -90)
         # Only merge subbases that belong to this stream's obs type list.
