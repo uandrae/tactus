@@ -26,7 +26,8 @@ assimilation_input_definition = "@CYCLE@/assimilation.json"
 [da]
   # Root directory for pre-processed observation files (OPLACE / local)
   # Expected layout: <obs_dir>/YYYY/MM/DD/<obstype_filename>[.gz]
-  obs_dir = "@SCRATCH@/da/@CASE@/obs"
+  # obs_dir = "@SCRATCH@/da/@CASE@/obs"
+  obs_dir = "/scratch/sis/da/obs/"
 
   # Per-cycle scratch store for intermediate DA files (ODB, CCMA, analyses)
   scratch = "@SCRATCH@/da/@CASE@/scratch"
@@ -34,13 +35,14 @@ assimilation_input_definition = "@CYCLE@/assimilation.json"
   # Directory containing DA constants:
   #   B-matrix (stabal96.cv/bal), error files (errgrib*),
   #   RTTOV coefficients, blacklists (LISTE_NOIRE_DIAP, LISTE_LOC), etc.
-  const_dir = "@SCRATCH@/da/const"
+  #const_dir = "@SCRATCH@/da/const"
+  const_dir =  "/scratch/sis/da/const/"
 
   # Directory containing DA namelists:
   #   aldnml_canari, aldnml_screen, aldnml_minim,
   #   aldnml_bator, aldnml_lamflag_<domain>, aldnml_rgb, etc.
-  namelist_dir = "@SCRATCH@/da/namelists"
-
+  #namelist_dir = "@SCRATCH@/da/namelists"
+  namelist_dir = "/scratch/sis/da/namelists"
   # Short-range background (first-guess) directory.
   # Expected files: <guess_dir>/YYYY/MM/DD/guess.YYYYMMDDRR[.gz]
   guess_dir = "@SCRATCH@/da/@CASE@/guess"
@@ -334,7 +336,8 @@ obs_step = 60
   NODES    = "#SBATCH --nodes=1"
   NTASKS   = "#SBATCH --ntasks=16"
   WALLTIME = "#SBATCH --time=00:30:00"
-  MEM = "#SBATCH --mem=16000MB"
+  QOS = "#SBATCH --qos=np"
+  MEM = "#SBATCH --mem=120000MB"
 
 [submission.task_exceptions.Canari.MODULES]
   01_INTEL = ["load", "intel/2023.2.0"]
@@ -371,7 +374,8 @@ obs_step = 60
 # ------------------------------------------------------------------
 
  [da.oops]
-   namelist_dir = "@SCRATCH@/da/namelists"
+#   namelist_dir = "@SCRATCH@/da/namelists"
+   namelist_dir = "/scratch/sis/da/namelists/"
 #
 #   # Number of ODB pools for the upper-air 3D-Var (OOVAR).
 #   # Canari uses da.nbpool (default 16); OopsVar uses this key.
