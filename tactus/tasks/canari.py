@@ -69,6 +69,7 @@ class Canari(Task):
         # runs and produces ICMSHCYCL+0000.
         mode = self.config.get("suite_control.mode", "cycling")
         self.nlgen.load("canari")
+        
         if mode == "cold_start":
             self.nlgen.update({"NACTEX": {"LAEICS_SX": False}}, "cold_start_sfx_disable")
         nml = self.nlgen.assemble_namelist("canari")

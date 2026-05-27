@@ -41,7 +41,11 @@ class Bator(Task):
                 "Bator: OBSTYPE ecFlow variable is not set. "
                 "It must be set by the OdbFamily suite component."
             )
-        self.nbpool = config.get("da.nbpool", 12)
+        stream = os.environ.get("DA_STREAM", "3dvar")
+        if stream == "surface":
+            self.nbpool = config.get("da.nbpool", 16)
+        else:
+            self.nbpool = config.get("da.oops.nbpool", 128)
         self.bator_window_len = config.get("da.bator_window_len", 180)
         self.bator_window_shift = config.get("da.bator_window_shift", -90)
         self.bator_nbslot = config.get("da.bator_nbslot", 1)

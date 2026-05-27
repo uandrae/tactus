@@ -120,6 +120,15 @@ class OopsVar(Task):
                 f"OopsVar: merged ECMA ODB not found at {odb_dir}"
             )
         shutil.copytree(odb_dir, "ECMA", symlinks=True)
+        # The merged IOASSIGN references subbases as ../ECMA.{obstype}/ relative to
+        # ECMA/, so they must exist alongside ECMA in the work dir.
+        odbmerge_dir = os.path.dirname(odb_dir)
+        for entry in os.listdir(odbmerge_dir):
+            if entry.startswith("ECMA.") and os.path.isdir(
+                os.path.join(odbmerge_dir, entry)
+            ):
+                if not os.path.lexists(entry):
+                    os.symlink(os.path.join(odbmerge_dir, entry), entry)
 
         # --- CCMA skeleton via create_ioassign (serial) ---
         os.makedirs("CCMA", exist_ok=True)
