@@ -35,14 +35,12 @@ assimilation_input_definition = "@CYCLE@/assimilation.json"
   # Directory containing DA constants:
   #   B-matrix (stabal96.cv/bal), error files (errgrib*),
   #   RTTOV coefficients, blacklists (LISTE_NOIRE_DIAP, LISTE_LOC), etc.
-  #const_dir = "@SCRATCH@/da/const"
-  const_dir =  "/scratch/sis/da/const/"
+  const_dir = "/perm/sis/da/const"
 
   # Directory containing DA namelists:
   #   aldnml_canari, aldnml_screen, aldnml_minim,
   #   aldnml_bator, aldnml_lamflag_<domain>, aldnml_rgb, etc.
-  #namelist_dir = "@SCRATCH@/da/namelists"
-  namelist_dir = "/scratch/sis/da/namelists"
+  namelist_dir = "/perm/sis/da/namelists"
   # Short-range background (first-guess) directory.
   # Expected files: <guess_dir>/YYYY/MM/DD/guess.YYYYMMDDRR[.gz]
   guess_dir = "@SCRATCH@/da/@CASE@/guess"
@@ -55,8 +53,12 @@ assimilation_input_definition = "@CYCLE@/assimilation.json"
   # Expected: <varbc_dir>/YYYY/MM/DD/VARBC.cycle_<RR>
   varbc_dir = "@SCRATCH@/da/@CASE@/varbc"
 
-  # RTTOV satellite channel coefficient files (inherited from platform if set)
-  rttov_coef_dir = "@RTTOV_COEFDIR@"
+  # Warm-start VarBC: used when no cycling varbc_dir entry exists and
+  # the experiment is not a bgcycle cold start.
+  varbc_init_dir = "/perm/sis/da/varbc_init"
+
+  # RTTOV satellite channel coefficient files
+  rttov_coef_dir = "/perm/sis/da/const/rttov"
 
   # Number of ODB pools used by BATOR / SHUFFLE
   nbpool = 16
@@ -67,6 +69,9 @@ assimilation_input_definition = "@CYCLE@/assimilation.json"
 
   # Enable OpenMP threading in MASTERODB screening step
   openmp = true
+
+  odb_task_surface = "Obsconvert"   # default, can be "Bator"
+  odb_task_3dvar   = "Obsconvert"        # default, can be "Obsconvert"
 
   # Observation types for CANARI surface analysis (obsprep + BATOR)
   obs_types_surface = ["synop"]
@@ -315,6 +320,21 @@ obs_step = 60
 [submission.task_exceptions.Bator.ENV]
   DR_HOOK_ASSERT_MPI_INITIALIZED = "0"
 
+[submission.task_exceptions.Obsconvert]
+  bindir = "/perm/sis/tactus_bin/@CYCLE@/@COMPILER@/@PRECISION@/bin_gmkpack"
+  NPROC = 1
+
+[submission.task_exceptions.Obsconvert.BATCH]
+  NTASKS = "#SBATCH --ntasks=1"
+  WALLTIME = "#SBATCH --time=00:10:00"
+
+[submission.task_exceptions.Obsconvert.ENV]
+  DR_HOOK_ASSERT_MPI_INITIALIZED = "0"
+
+[submission.task_exceptions.Obsconvert.MODULES]
+  01_INTEL = ["load", "intel/2023.2.0"]
+  OPENMPI = ["load", "openmpi/4.1.1.1"]
+
 # ---- OdbMerge (shuffle + merge_ioassign) ----
 [submission.task_exceptions.OdbMerge]
   bindir = "/perm/sis/tactus_bin/@CYCLE@/@COMPILER@/@PRECISION@/bin_gmkpack"  
@@ -375,7 +395,7 @@ obs_step = 60
 
  [da.oops]
 #   namelist_dir = "@SCRATCH@/da/namelists"
-   namelist_dir = "/scratch/sis/da/namelists/"
+   namelist_dir = "/perm/sis/da/namelists/"
 #
 #   # Number of ODB pools for the upper-air 3D-Var (OOVAR).
 #   # Canari uses da.nbpool (default 16); OopsVar uses this key.

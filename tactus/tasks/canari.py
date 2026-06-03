@@ -59,8 +59,8 @@ class Canari(Task):
 
         # --- binary ---
         masterodb_bin = self.get_binary("MASTERODB")
-        if not os.path.lexists("MASTERODB_canari"):
-            os.symlink(masterodb_bin, "MASTERODB_canari")
+        if not os.path.lexists("MASTERODB"):
+            os.symlink(masterodb_bin, "MASTERODB")
 
         # --- namelist ---
         # In cold_start mode the atmospheric first-guess is an LBC file that
@@ -118,9 +118,6 @@ class Canari(Task):
         logger.info("Canari: soil first guess {}", fg_sfx)
 
         # --- ODB ---
-        # Copy all ODB dirs from the archive (ECMA + ECMA.synop etc.).
-        # ECMA.iomap references $ODB_SRCPATH_ECMA/../ECMA.{obstype}/ so
-        # subbases must be siblings of ECMA in the work directory.
         if not os.path.isdir(odb_archive_dir):
             raise FileNotFoundError(
                 f"Canari: merged ECMA ODB archive not found at {odb_archive_dir}"
@@ -131,7 +128,7 @@ class Canari(Task):
                 shutil.copytree(src, entry, symlinks=True)
         if not os.path.isdir("ECMA"):
             raise RuntimeError("Canari: ECMA directory missing after ODB copy.")
-        # IOASSIGN symlinks required by MASTERODB (ECMA/ECMA.IOASSIGN is the data file)
+        # IOASSIGN symlinks required by MASTERODB
         if not os.path.lexists("IOASSIGN"):
             os.symlink(os.path.join("ECMA", "ECMA.IOASSIGN"), "IOASSIGN")
         if not os.path.lexists("IOASSIGN.ECMA"):
@@ -175,7 +172,7 @@ class Canari(Task):
 
         # --- run MASTERODB (CANARI conf 701) ---
         BatchJob(rte, wrapper=self.platform.substitute(self.wrapper)).run(
-            "./MASTERODB_canari"
+            "./MASTERODB"
         )
 
         # CANARI with CNMEXP=ANAL produces ICMSHANAL+0000

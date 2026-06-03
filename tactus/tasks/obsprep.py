@@ -188,6 +188,16 @@ class ObsPrep(Task):
             t_epoch += step_sec
         return slots
 
+    # Maps tactus obstype names to the OBSOUL type code embedded in temp
+    # filenames so that obsoul_merge.pl (which splits on '_' and reads field [1])
+    # accepts records of the correct type.  Numeric strings work because
+    # obsoul_merge.pl uses numeric != for the per-record type check.
+    # Using the numeric code rather than a source-specific name (e.g. "amdar")
+    # lets multiple aircraft sub-types (AMDAR, MODES, EHS …) all be accepted.
+    _OBSOUL_MERGE_NAMES = {
+        "amdr": "2",   # OBSOUL type 2 = aircraft
+    }
+
     def _stage_obstype(self, obstype, ymdrr):
         """Collect and merge all obs files for *obstype* across window slots.
 
@@ -226,7 +236,7 @@ class ObsPrep(Task):
             src_dir = self.platform.substitute(spec.get("source_dir", slot_date_dir))
             for cand_tpl in candidates:
                 fname = cand_tpl.format(**subst)
-                path, is_tmp = self._collect_file(os.path.join(src_dir, fname))
+                path, is_tmp = self._collect_file(os.path.join(src_dir, fname), obstype)
                 if path is not None:
                     collected.append((path, is_tmp))
                     logger.debug(
@@ -250,12 +260,16 @@ class ObsPrep(Task):
 
         return True
 
-    def _collect_file(self, src):
+    def _collect_file(self, src, obstype=None):
         """Return (path, is_temp) for *src* or *src*.gz.
 
         Decompresses gz files into a temporary file so the caller always gets
         a plain path.  Returns (None, False) when the source does not exist
         or is empty.
+
+        When *obstype* has a known mapping in ``_OBSOUL_MERGE_NAMES`` the temp
+        file is given a prefix of the form ``obsoul_<type>_`` so that
+        obsoul_merge.pl can derive the correct OBS type from the filename.
         """
         if os.path.isfile(src) and os.path.getsize(src) > 0:
             return src, False
@@ -264,8 +278,12 @@ class ObsPrep(Task):
         if os.path.isfile(src_gz) and os.path.getsize(src_gz) > 0:
             import gzip
 
+            merge_name = self._OBSOUL_MERGE_NAMES.get(obstype) if obstype else None
+            prefix = f"obsoul_{merge_name}_" if merge_name else None
             tmp = tempfile.NamedTemporaryFile(
-                delete=False, suffix=".obsprep.tmp", dir="."
+                delete=False, suffix=".obsprep.tmp",
+                **({"prefix": prefix} if prefix else {}),
+                dir=".",
             )
             with gzip.open(src_gz, "rb") as f_gz:
                 shutil.copyfileobj(f_gz, tmp)

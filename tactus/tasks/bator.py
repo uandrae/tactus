@@ -41,8 +41,8 @@ class Bator(Task):
                 "Bator: OBSTYPE ecFlow variable is not set. "
                 "It must be set by the OdbFamily suite component."
             )
-        stream = os.environ.get("DA_STREAM", "3dvar")
-        if stream == "surface":
+        family1 = os.environ.get("DA_STREAM", "3dvar")
+        if family1 == "surface":
             self.nbpool = config.get("da.nbpool", 16)
         else:
             self.nbpool = config.get("da.oops.nbpool", 128)
@@ -87,10 +87,6 @@ class Bator(Task):
         if os.path.isfile(param_cfg):
             os.symlink(param_cfg, "param.cfg")
 
-        nam_lamflag = os.path.join(
-            self.da_nam_dir, f"aldnml_lamflag_{self.domain}"
-        )
-        # lamflag
         self._write_nam_lamflag()
         bator_lamflag = "1"
 
@@ -142,6 +138,7 @@ class Bator(Task):
                 "IOASSIGN": os.path.join(self.wdir, "IOASSIGN"),
                 "SWAPP_ODB_IOASSIGN": os.path.join(self.wdir, "IOASSIGN"),
                 "ODB_SRCPATH_ECMA": os.path.join(self.wdir, f"ECMA.{self.obstype}"),
+                "ODB_SRCPATH_RSTBIAS": os.path.join(self.wdir, "ECMA"),
                 "ODB_DATAPATH_ECMA": os.path.join(self.wdir, f"ECMA.{self.obstype}"),
                 "ODB_ECMA_CREATE_POOLMASK": "1",
                 "ODB_ECMA_POOLMASK_FILE": os.path.join(
@@ -203,7 +200,7 @@ class Bator(Task):
 
         # --- archive output ---
         out_dir = os.path.join(
-            self.da_scratch, yyyy, mm, dd, rr, "bator", self.obstype
+            self.da_scratch, yyyy, mm, dd, rr, "odb", self.obstype
         )
         tactusmakedirs(out_dir)
         if os.path.isdir(ecma_out):

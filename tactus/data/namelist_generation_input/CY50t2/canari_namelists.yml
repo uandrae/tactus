@@ -193,7 +193,7 @@ canari_base:
   NAMGFL:
     YQ_NL%CNAME: HUMI.SPECIFI
     YQ_NL%LGP: true
-    YQ_NL%LREQOUT: false
+    YQ_NL%LREQOUT: true
     YQ_NL%LSP: false
     YQ_NL%NREQIN: 1
   # ---- gravity wave drag ----

@@ -56,9 +56,7 @@ class OdbMerge(Task):
         mm = self.basetime.strftime("%m")
         dd = self.basetime.strftime("%d")
         rr = self.basetime.strftime("%H")
-        ymdrr = f"{yyyy}{mm}{dd}{rr}"
-
-        bator_base_dir = os.path.join(self.da_scratch, yyyy, mm, dd, rr, "bator")
+        bator_base_dir = os.path.join(self.da_scratch, yyyy, mm, dd, rr, "odb")
 
         # --- locate binaries ---
         shuffle_bin = self.get_binary("shuffle")
@@ -124,6 +122,7 @@ class OdbMerge(Task):
                 "SWAPP_ODB_IOASSIGN": os.path.join(self.wdir, "ECMA", "IOASSIGN"),
                 "ODB_SRCPATH_ECMA": os.path.join(self.wdir, "ECMA"),
                 "ODB_DATAPATH_ECMA": os.path.join(self.wdir, "ECMA"),
+                "ODB_SRCPATH_RSTBIAS": os.path.join(self.wdir, "ECMA"),
                 "ODB_ECMA_CREATE_POOLMASK": "1",
                 "ODB_ECMA_POOLMASK_FILE": os.path.join(
                     self.wdir, "ECMA", "ECMA.poolmask"
@@ -139,7 +138,6 @@ class OdbMerge(Task):
         BatchJob(rte, wrapper="").run(merge_cmd)  # serial, no MPI
 
         # ficdate: window around basetime using config window parameters
-        nproc = int(os.environ.get("NPROC", "1"))
         na = self.nbpool
         bt = self.basetime
         datemin = (
@@ -153,7 +151,10 @@ class OdbMerge(Task):
         with open("ficdate", "w") as fh:
             fh.write(f"{datemin}\n{datemax}\n")
 
-        shuffle_cmd = f"./shuffle -iECMA -oECMA -b{nproc} -a{na}"
+        # -b1: BATOR always runs as a single process regardless of NPROC.
+        # NPROC (= da.oops.nbpool for 3dvar) determines how many shuffle MPI
+        # tasks srun launches, which sets the number of output pool files.
+        shuffle_cmd = f"./shuffle -iECMA -oECMA -b1 -a{na}"
         BatchJob(rte, wrapper=self.platform.substitute(self.wrapper)).run(shuffle_cmd)
 
         if not os.path.isdir("ECMA"):

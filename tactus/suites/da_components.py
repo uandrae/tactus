@@ -51,6 +51,7 @@ class OdbFamily(EcflowSuiteFamily):
         input_template,
         ecf_files,
         obs_types: List[str],
+        task_class: str = "Bator",
         family_name: str = "Odb",
         trigger=None,
         ecf_files_remotely=None,
@@ -64,6 +65,9 @@ class OdbFamily(EcflowSuiteFamily):
             input_template: ecFlow job template.
             ecf_files: Local path prefix for ecf scripts.
             obs_types: List of observation type names to process.
+            task_class: Task class to use for each obs type (``"Bator"`` or
+                ``"Obsconvert"``).  Both archive their output to the same
+                ``odb/`` directory so OdbMerge works with either.
             family_name: Name of this family node (default ``Odb``).
             trigger: Optional trigger for the whole family.
             ecf_files_remotely: Remote path prefix for ecf scripts.
@@ -79,13 +83,13 @@ class OdbFamily(EcflowSuiteFamily):
         bator_tasks = []
         for obstype in obs_types:
             task = EcflowSuiteTask(
-                f"Bator_{obstype}",
+                f"{task_class}_{obstype}",
                 self,
                 config,
                 task_settings,
                 ecf_files,
                 input_template=input_template,
-                variables={"OBSTYPE": obstype, "TACTUS_TASK": "Bator"},
+                variables={"OBSTYPE": obstype, "TACTUS_TASK": task_class},
                 ecf_files_remotely=ecf_files_remotely,
             )
             bator_tasks.append(task)
@@ -148,6 +152,7 @@ class SurfaceAnalysisFamily(EcflowSuiteFamily):
         )
 
         obs_types_surface = config.get("da.obs_types_surface", _DEFAULT_OBS_SURFACE)
+        odb_task_surface = config.get("da.odb_task_surface", "Obsconvert")
 
         obsprep = EcflowSuiteTask(
             "ObsPrep",
@@ -166,6 +171,7 @@ class SurfaceAnalysisFamily(EcflowSuiteFamily):
             input_template,
             ecf_files,
             obs_types=obs_types_surface,
+            task_class=odb_task_surface,
             family_name="Odb",
             trigger=obsprep,
             ecf_files_remotely=ecf_files_remotely,
@@ -204,7 +210,7 @@ class VariationalFamily(EcflowSuiteFamily):
 
     Tasks within this family (in dependency order):
     1. ``ObsPrep`` – stage all upper-air observation types.
-    2. ``Odb``     – build 3D-Var ODB (BATOR + OdbMerge).
+    2. ``Odb``     – build 3D-Var ODB (Bator or Obsconvert + OdbMerge).
     3. ``OopsVar`` – OOPS-based screening + minimisation; triggered by both
                      ``Odb`` and ``Surface/BlendSur`` (blended first guess).
     """
@@ -243,6 +249,7 @@ class VariationalFamily(EcflowSuiteFamily):
         )
 
         obs_types_3dvar = config.get("da.obs_types_3dvar", _DEFAULT_OBS_3DVAR)
+        odb_task_3dvar = config.get("da.odb_task_3dvar", "Bator")
 
         obsprep = EcflowSuiteTask(
             "ObsPrep",
@@ -261,6 +268,7 @@ class VariationalFamily(EcflowSuiteFamily):
             input_template,
             ecf_files,
             obs_types=obs_types_3dvar,
+            task_class=odb_task_3dvar,
             family_name="Odb",
             trigger=obsprep,
             ecf_files_remotely=ecf_files_remotely,

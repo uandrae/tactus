@@ -112,7 +112,7 @@ class BlendSur(Task):
         BatchJob(rte, wrapper="").run(blendsur_bin)
         self._check_node("NODE2")
 
-        surface_out = f"surface.{ymdrr}"
+        surface_out = f"ICMSHANAL+0000_updated_surface"
         os.rename("AL_A", surface_out)
 
         # --- archive ---
