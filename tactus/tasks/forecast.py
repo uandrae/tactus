@@ -4,6 +4,7 @@ import atexit
 import glob
 import json
 import os
+from pathlib import Path
 
 from pysurfex.namelist import InputDataFromNamelist
 from pysurfex.platform_deps import SystemFilePathsFromFile
@@ -69,6 +70,7 @@ class Forecast(PySurfexBaseTask):
     def post(self):
         """Do special post for Foreast."""
         logger.debug("Forecast class post")
+        self.fmanager.dump_storage(Path(self.wrk), self.name)
         if not self.iomerge_is_external:
             # Clean workdir
             if self.config["general.keep_workdirs"]:

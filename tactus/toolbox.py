@@ -2,10 +2,13 @@
 
 import ast
 import contextlib
+import glob
 import inspect
+import json
 import os
 import re
 import sys
+from pathlib import Path
 from typing import Any, Union
 
 import boto3
@@ -696,6 +699,80 @@ class FileManager:
         self.config = config
         self.platform = Platform(config)
         logger.debug("Constructed FileManager object.")
+        self.do_storage = False
+        self.storage = {}
+        with contextlib.suppress(AttributeError):
+            self.storage = self.config.get("trace").dict()
+            for key in self.storage:
+                self.storage[key]["data"] = {}
+                self.do_storage = self.do_storage or self.storage[key]["active"]
+                self.storage[key].pop("active")
+
+    def dump_storage(self, target, name, storage=None):
+        """Dump a storage registry.
+
+        Args:
+            target (Path): Output directory
+            name (str): Output name tag
+            storage (dict, optional): Optional storage dict
+
+        """
+        if self.do_storage:
+            if storage is None:
+                storage = self.storage
+            if len(storage) > 0:
+                _storage = {}
+                for header, body in storage.items():
+                    _storage[header] = body["data"] if "patterns" in body else body
+                json_object = json.dumps(_storage, indent=4)
+                filename = target / f"{name}_storage.json"
+                logger.info("Writing {}", filename)
+                with open(filename, "w", encoding="utf8") as f_h:
+                    f_h.write(json_object)
+
+    def dump_storage_summary(self, searchdir):
+        """Dump a summary of registers.
+
+        Args:
+            searchdir (str): Input and output directory
+
+        """
+        if self.do_storage:
+            register = {}
+            patterns = {}
+
+            for key in self.storage:
+                register[key] = {p: {} for p in self.storage[key]["patterns"]}
+                patterns[key] = {
+                    p: self.platform.substitute(p) for p in self.storage[key]["patterns"]
+                }
+                logger.info("Dump {} patterns: {}", key, patterns[key])
+            logger.info("searchdir: {}", searchdir)
+            files = glob.glob(f"{searchdir}/*_storage.json")
+            for json_file in files:
+                if "Summary" in json_file:
+                    continue
+                with open(json_file, "r", encoding="utf-8") as f:
+                    files = json.load(f)
+                logger.info("Read:{}", json_file)
+                task = os.path.basename(json_file)
+                task = task.replace("_storage.json", "")
+                for key in register:
+                    if key in files:
+                        for provider, file_list in files[key].items():
+                            for pattern in register[key]:
+                                register[key][pattern][task] = {provider: []}
+                            for filename in file_list:
+                                for pattern, resolved_pattern in patterns[key].items():
+                                    if resolved_pattern in filename:
+                                        register[key][pattern][task][provider].append(
+                                            filename
+                                        )
+                            if len(register[key][pattern][task][provider]) == 0:
+                                register[key][pattern][task].pop(provider)
+
+            logger.info(register)
+            self.dump_storage(Path(searchdir), "Summary", storage=register)
 
     def get_input(
         self,
@@ -742,6 +819,12 @@ class FileManager:
 
         if provider.create_resource(destination):
             logger.debug("Using provider_id {}", provider_id)
+            if self.do_storage and "input" in self.storage:
+                if provider_id not in self.storage["input"]["data"]:
+                    self.storage["input"]["data"][provider_id] = []
+                self.storage["input"]["data"][provider_id].append(
+                    str(provider.identifier)
+                )
             return provider, destination
 
         # TODO check archive for file
@@ -887,6 +970,17 @@ class FileManager:
         if provider.create_resource(target_resource):
             target = destination
             logger.debug("Using provider_id {}", provider_id)
+            if self.do_storage and "output" in self.storage:
+                stored_file = provider.identifier
+                if os.path.isdir(stored_file):
+                    stored_file = Path(stored_file) / os.path.basename(
+                        target_resource.identifier
+                    )
+                if provider_id not in self.storage["output"]["data"]:
+                    self.storage["output"]["data"][provider_id] = []
+                self.storage["output"]["data"][provider_id].append(str(stored_file))
+        else:
+            raise RuntimeError("WTF")
 
         aprovider = None
         if archive:

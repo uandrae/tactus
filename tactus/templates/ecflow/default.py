@@ -117,6 +117,7 @@ def default_main(kwargs: dict):
 
     # Get member number
     member = kwargs.get("MEMBER")
+    logger.info("MEMBER:{}", member)
     # If member is not an integer, skip EPS setup
     try:
         member = int(member)
@@ -134,6 +135,9 @@ def default_main(kwargs: dict):
         processor_layout = ProcessorLayout(kwargs)
         update = derived_variables(config, processor_layout=processor_layout)
         config = config.copy(update=update)
+        logger.info("system.wrk:{}", config.get("system.wrk"))
+        logger.info("general.member:{}", config.get("general.member"))
+        logger.info("general.member_str:{}", config.get("general.member_str"))
 
         # TODO Add wrapper to config
         logger.info("Running task {}", task.ecf_name)

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Unit tests for the config file parsing module."""
-
+import json
 import os
 from pathlib import Path
 
@@ -56,6 +56,37 @@ def parsed_config_with_paths(config_platform):
 class TestFileManager:
     """Test FileManager."""
 
+    def test_tracer(self, tmp_directory, parsed_config_with_paths):
+        """Test input/output tracer."""
+        tmp = Path(tmp_directory)
+        config = parsed_config_with_paths
+        config = config.copy(
+            update={
+                "trace": {
+                    "input": {"active": True, "patterns": ["bar"]},
+                    "output": {"active": True, "patterns": ["out", "bar"]},
+                }
+            }
+        )
+        fmanager = FileManager(config)
+        assert fmanager.do_storage
+        test_file_in = tmp / "foo/bar"
+        test_file_out = tmp / "foo/out"
+        test_file_link = tmp / "foo/xbar"
+        searchdir = Path(os.path.dirname(test_file_in))
+        os.makedirs(os.path.dirname(test_file_in), exist_ok=True)
+        os.system(f"touch {test_file_in}")  # noqa S108
+        fmanager.get_input(test_file_in, test_file_link)
+        fmanager.get_output(test_file_in, test_file_out)
+        fmanager.dump_storage(searchdir, "test")
+        fmanager.dump_storage_summary(searchdir)
+        json_file = searchdir / "Summary_storage.json"
+        with open(json_file, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        assert len(data["input"]["bar"]["test"]["symlink"]) == 1
+        assert len(data["output"]["out"]["test"]["move"]) == 1
+        assert len(data["output"]["bar"]["test"]) == 0
+
     def test_non_existing_provider(self, parsed_config_with_paths):
         fmanager = FileManager(parsed_config_with_paths)
         with pytest.raises(NotImplementedError):
@@ -92,7 +123,7 @@ class TestFileManager:
         os.remove(tmp + "/MASTERODB")  # S108
         os.remove(tmp + "/bindir/MASTERODB")  # S108
         os.remove(tmp + "/archive/2000/01/01/00/ICMSHDEOD+0024")
-        os.rmdir(tmp + "/bindir")  # S108
+        os.rmdir(tmp + "/bindir")  # S10
 
         res_dict = {
             "input": {

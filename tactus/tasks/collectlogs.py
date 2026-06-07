@@ -41,6 +41,7 @@ class CollectLogs(Task):
         self.archive = self.platform.get_system_value("archive")
         self.logs = self.platform.get_system_value("logs")
         self.wrk = self.platform.get_system_value("wrk")
+        self.name += config_label
 
     def scan_logs(self, tarlog, parent, target, pattern="", exclude=""):
         """Search for files matching a pattern and add them to a tar file.
@@ -93,6 +94,7 @@ class CollectLogs(Task):
 
         tarlog.close()
         self.fmanager.output(self.tarfile, self.logs)
+        self.fmanager.dump_storage_summary(self.wrk)
         if self.do_archiving:
             Archive(self.config, self.config_label, exclude=["FDB"]).execute()
 

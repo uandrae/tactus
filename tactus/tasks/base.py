@@ -5,6 +5,7 @@ import contextlib
 import os
 import shutil
 import socket
+from pathlib import Path
 
 from ..config_parser import ConfigParserDefaults
 from ..logs import logger
@@ -57,7 +58,13 @@ class Task(object):
         self.fmanager = FileManager(self.config)
         self.platform = self.fmanager.platform
         self.wrapper = self.config["submission.task.wrapper"]
+
+        logger.info("WRK:{}", self.config.get("system.wrk"))
+        logger.info("MEMBER:{}", self.config.get("general.member"))
+        logger.info("MEMBER_STR:{}", self.config.get("general.member_str"))
+
         self.wrk = self.platform.get_system_value("wrk")
+        logger.info("WRK:{}", self.wrk)
         if self.wrk is None:
             raise ValueError("You must set wrk", self.wrk)
 
@@ -271,6 +278,8 @@ class Task(object):
 
         """
         logger.debug("Base class post")
+        self.fmanager.dump_storage(Path(self.wrk), self.name)
+
         # Clean workdir
         if self.config["general.keep_workdirs"]:
             self.rename_wdir(prefix="Finished_task_", source=source, target=target)
