@@ -534,7 +534,9 @@ class Platform:
                     val = self.macros[sub_pattern.upper()]
                 try:
                     if val.count("@") > 0:
-                        val = self.substitute(val, basetime, validtime, bd_index, keyval)
+                        val = self.substitute(
+                            val, basetime, validtime, bd_index, keyval
+                        )
                 except AttributeError:
                     pass
 
@@ -608,7 +610,9 @@ class Platform:
 
             start = self.config.get("general.times.start", None)
             if start is not None:
-                pattern = self.substitute_datetime(pattern, as_datetime(start), "_START")
+                pattern = self.substitute_datetime(
+                    pattern, as_datetime(start), "_START"
+                )
 
             end = self.config.get("general.times.end", None)
             if end is not None:
@@ -619,7 +623,9 @@ class Platform:
             forecast_range = parse_duration(forecast_range)
 
         if forecast_range is not None:
-            pattern = self.substitute_duration(pattern, forecast_range, "FORECAST_RANGE_")
+            pattern = self.substitute_duration(
+                pattern, forecast_range, "FORECAST_RANGE_"
+            )
 
         logger.debug("Return pattern={}", pattern)
         return pattern
@@ -724,6 +730,7 @@ class FileManager:
                 _storage = {}
                 for header, body in storage.items():
                     _storage[header] = body["data"] if "patterns" in body else body
+                logger.info(_storage)
                 json_object = json.dumps(_storage, indent=4)
                 filename = target / f"{name}_storage.json"
                 logger.info("Writing {}", filename)
@@ -744,7 +751,8 @@ class FileManager:
             for key in self.storage:
                 register[key] = {p: {} for p in self.storage[key]["patterns"]}
                 patterns[key] = {
-                    p: self.platform.substitute(p) for p in self.storage[key]["patterns"]
+                    p: self.platform.substitute(p)
+                    for p in self.storage[key]["patterns"]
                 }
                 logger.info("Dump {} patterns: {}", key, patterns[key])
             logger.info("searchdir: {}", searchdir)
@@ -823,7 +831,7 @@ class FileManager:
                 if provider_id not in self.storage["input"]["data"]:
                     self.storage["input"]["data"][provider_id] = []
                 self.storage["input"]["data"][provider_id].append(
-                    str(provider.identifier)
+                    {str(provider.identifier): destination.identifier}
                 )
             return provider, destination
 
@@ -978,7 +986,9 @@ class FileManager:
                     )
                 if provider_id not in self.storage["output"]["data"]:
                     self.storage["output"]["data"][provider_id] = []
-                self.storage["output"]["data"][provider_id].append(str(stored_file))
+                self.storage["output"]["data"][provider_id].append(
+                    {target_resource.identifier: str(stored_file)}
+                )
         else:
             raise RuntimeError("WTF")
 
@@ -1440,9 +1450,9 @@ class FDB(ArchiveProvider):
             rules_file = "temp_rules"
             self._write_rules_file(rules_file, rules, neg="!")
             os.system(f"grib_filter {rules_file} {resource.identifier} -o {temp1}")
-            set_values = ",".join([
-                f"{key}={value}" for key, value in grib_set.items() if value
-            ])
+            set_values = ",".join(
+                [f"{key}={value}" for key, value in grib_set.items() if value]
+            )
             cmd_for_grib = "grib_set -s " + set_values + f" {temp1} {temp2}"
             logger.debug(cmd_for_grib)
             os.system(cmd_for_grib)
@@ -1460,7 +1470,9 @@ class FDB(ArchiveProvider):
                     f"grib_filter {inv_rules_file} {resource.identifier} -o {inv_temp1}"
                 )
                 if os.path.isfile(inv_temp1):
-                    logger.info("Created file with non archived fields as {}", inv_temp1)
+                    logger.info(
+                        "Created file with non archived fields as {}", inv_temp1
+                    )
             else:
                 os.remove(temp1)
                 os.remove(temp2)
@@ -1592,5 +1604,7 @@ class LocalFileOnDisk(Resource):
 
         """
         platform = Platform(config)
-        identifier = platform.substitute(pattern, basetime=basetime, validtime=validtime)
+        identifier = platform.substitute(
+            pattern, basetime=basetime, validtime=validtime
+        )
         Resource.__init__(self, config, identifier)
