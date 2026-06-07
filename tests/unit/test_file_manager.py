@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Unit tests for the config file parsing module."""
+
 import json
 import os
 from pathlib import Path
@@ -75,7 +76,7 @@ class TestFileManager:
         test_file_link = tmp / "foo/xbar"
         searchdir = Path(os.path.dirname(test_file_in))
         os.makedirs(os.path.dirname(test_file_in), exist_ok=True)
-        os.system(f"touch {test_file_in}")  # noqa S108
+        os.system(f"touch {test_file_in}")
         fmanager.get_input(test_file_in, test_file_link)
         fmanager.get_output(test_file_in, test_file_out)
         fmanager.dump_storage(searchdir, "test")

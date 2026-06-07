@@ -22,6 +22,7 @@
     },
     "trace": {
       "$ref": "#/definitions/trace"
+    },
     "boundaries": {
       "$ref": "#/definitions/boundaries"
     },
@@ -527,6 +528,53 @@
           "description": "Limit for max number of monthly tasks, run at same time",
           "type": "integer",
           "default": 10
+        }
+      }
+    },
+    "trace": {
+      "title": "Tracer",
+      "description": "Input/output data tracer",
+      "type": "object",
+      "properties": {
+        "input": {
+          "description": "Handle input data tracer",
+          "type": "object",
+          "properties": {
+            "active": {
+              "description": "Activate input tracer",
+              "type": "boolean",
+              "default": false
+            },
+            "patterns": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "default": [
+                ""
+              ]
+            }
+          }
+        },
+        "output": {
+          "description": "Handle output data tracer",
+          "type": "object",
+          "properties": {
+            "active": {
+              "description": "Activate output tracer",
+              "type": "boolean",
+              "default": false
+            },
+            "patterns": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "default": [
+                ""
+              ]
+            }
+          }
         }
       }
     },
