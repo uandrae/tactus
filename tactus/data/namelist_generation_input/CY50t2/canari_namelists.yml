@@ -167,7 +167,8 @@ canari_base:
   NAMDIMO: {}
   NAMDIM_TRAJ: {}
   NAMDFI: {}
-  NAMDPHY: {}
+  NAMDPHY:
+    LDIRCLSMOD: true   # take T2M directly from atm FA first guess (CLAEF1k style)
   NAMDVISI: {}
   NAMDWET: {}
   # ---- full-pos / output (must be present, empty for CANARI) ----

@@ -305,6 +305,7 @@ class AssimilationFamily(EcflowSuiteFamily):
         ecf_files,
         trigger=None,
         ecf_files_remotely=None,
+        cycle_basetime=None,
     ):
         """Construct AssimilationFamily.
 
@@ -317,6 +318,8 @@ class AssimilationFamily(EcflowSuiteFamily):
             trigger: Trigger to start the DA chain (typically
                 ``InitializationFamily`` so that FirstGuess is ready).
             ecf_files_remotely: Remote ecf script path prefix.
+            cycle_basetime: ISO basetime string for this specific cycle,
+                used to set IS_BGCYCLE at generation time.
         """
         super().__init__(
             "Assimilation",
@@ -325,6 +328,23 @@ class AssimilationFamily(EcflowSuiteFamily):
             trigger=trigger,
             ecf_files_remotely=ecf_files_remotely,
         )
+
+        # Cold-start skip: set IS_BGCYCLE=1 on the bgcycle, 0 otherwise.
+        # The ecFlow complete expression fires only when IS_BGCYCLE == 1,
+        # bypassing all DA tasks for that slot (forecast uses first-guess).
+        # ecFlow string comparison (eq) is unsupported; integer IS_BGCYCLE
+        # avoids that limitation while keeping the expression runtime-visible.
+        # NOTE: for repeat YMD, IS_BGCYCLE would need to be a derived variable
+        # (computed from the repeat counter) rather than a generation-time constant.
+        bgcycle = config.get("da.bgcycle", "")
+        if bgcycle and len(bgcycle) == 10:
+            bgcycle_iso = (
+                f"{bgcycle[:4]}-{bgcycle[4:6]}-{bgcycle[6:8]}"
+                f"T{bgcycle[8:10]}:00:00Z"
+            )
+            is_bgcycle = 1 if cycle_basetime == bgcycle_iso else 0
+            self.ecf_node.add_variable("IS_BGCYCLE", is_bgcycle)
+            self.ecf_node.add_complete("Assimilation:IS_BGCYCLE == 1")
 
         # Surface OI chain — always present
         surface_family = SurfaceAnalysisFamily(

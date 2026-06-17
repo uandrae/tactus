@@ -54,8 +54,6 @@ bator_base:
     ASCAT_XYGRID: 12500.
     #"LSCAT_UVBYCELL(3)": true   # not declared in NAMELIST /BUFR/ -- do not uncomment
     #"LSCAT_UVBYCELL(6)": true
-    # LSCAT_SELWSOL(3): write pre-selected wind vector for MetOp ASCAT (NSCAT3SQ=3); default .FALSE.
-    "LSCAT_SELWSOL(3)": true
     # ASCAT: T_SATSID%MODSID=-1 and T_SATSENS%MODSENSOR=-1 required by ObsConvert (default -9 = disabled)
     "TS_ASCAT(3)%T_SATSID%MODSID": -1
     "TS_ASCAT(3)%T_SATSENS%MODSENSOR": -1

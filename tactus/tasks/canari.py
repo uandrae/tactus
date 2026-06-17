@@ -3,6 +3,7 @@
 import json
 import os
 import shutil
+import subprocess
 
 from ..config_parser import ConfigPaths
 from ..datetime_utils import as_datetime
@@ -12,6 +13,64 @@ from ..namelist import NamelistGenerator
 from ..os_utils import tactusmakedirs
 from .base import Task
 from .batch import BatchJob
+
+
+def _patch_nampre(fort4_path):
+    """Inject IPRSA predictor entries into the NAMPRE group in fort.4.
+
+    CANARI reads NAMPRE to populate IPRSA (desired predictor VARNO codes per
+    analysis type) via CANAMI → CAPREDI.  An empty NAMPRE leaves all IPRSA
+    at NMDI, so CAPREDI returns NBPREA=0 for every analysis, CANEVA finds
+    0 predictors and returns INBPR=0 everywhere → no OI increment.
+
+    VARNO codes (varno_module.F90, CY50t2):  39=T2M, 58=RH2M, 11=TS(SST)
+    Column indices in IPRSA(NVNUMAX,JPANAL) (canami.F90):
+      NAT2=5, NAH2=6, NAST=9
+
+    We write the full IPRSA array in Fortran column-major sequential order using
+    N*value repetition syntax rather than element subscript assignments
+    (IPRSA(1,5)=39).  This avoids a silent failure observed with Intel Fortran
+    where 2-D subscript assignments in namelist input are accepted (POSNAMEF
+    finds the group, READ executes without error) but IPRSA is not updated.
+    The sequential format uses a different parser path and is unambiguous.
+    """
+    # IPRSA(NVNUMAX, JPANAL) layout (canami.F90 / nampre.nam.h / varno_module.F90):
+    #   NVNUMAX=284, JPANAL=11, NMDI=2**31-1=2147483647
+    # Fortran column-major: element (row,col) → 0-indexed flat = (col-1)*NVNUMAX + (row-1)
+    #   IPRSA(1,NAT2=5) = 39  → index (5-1)*284 = 1136
+    #   IPRSA(1,NAH2=6) = 58  → index (6-1)*284 = 1420
+    #   IPRSA(1,NAST=9) = 11  → index (9-1)*284 = 2272
+    NMDI = 2147483647
+    NVNUMAX = 284
+    JPANAL = 11
+    iprsa = [NMDI] * (NVNUMAX * JPANAL)
+    iprsa[(5 - 1) * NVNUMAX] = 39
+    iprsa[(6 - 1) * NVNUMAX] = 58
+    iprsa[(9 - 1) * NVNUMAX] = 11
+
+    # Compact consecutive equal values with Fortran's N*value repetition syntax.
+    def _nml_list(vals):
+        parts = []
+        i = 0
+        while i < len(vals):
+            v = vals[i]
+            n = 1
+            while i + n < len(vals) and vals[i + n] == v:
+                n += 1
+            parts.append(f"{n}*{v}" if n > 1 else str(v))
+            i += n
+        return ", ".join(parts)
+
+    new_block = "&NAMPRE\n IPRSA = " + _nml_list(iprsa) + "\n/\n"
+
+    with open(fort4_path, "r") as f:
+        content = f.read()
+    patched = content.replace("&NAMPRE\n/\n", new_block, 1)
+    if patched == content:
+        logger.warning("Canari: NAMPRE group not found in fort.4 — predictors not injected")
+    with open(fort4_path, "w") as f:
+        f.write(patched)
+
 
 
 class Canari(Task):
@@ -63,17 +122,13 @@ class Canari(Task):
             os.symlink(masterodb_bin, "MASTERODB")
 
         # --- namelist ---
-        # In cold_start mode the atmospheric first-guess is an LBC file that
-        # does not contain near-surface diagnostics (T2M, HU2M) required by
-        # the SURFEX OI (CANARI_SFX). Disable it so the atmospheric OI still
-        # runs and produces ICMSHCYCL+0000.
-        mode = self.config.get("suite_control.mode", "cycling")
         self.nlgen.load("canari")
-        
-        if mode == "cold_start":
-            self.nlgen.update({"NACTEX": {"LAEICS_SX": False}}, "cold_start_sfx_disable")
+
         nml = self.nlgen.assemble_namelist("canari")
         self.nlgen.write_namelist(nml, "fort.4")
+        # NAMPRE: {} in the YAML produces an empty group; inject IPRSA predictor
+        # definitions so that CANAMI/CAPREDI sets NBPREA > 0 for each analysis.
+        _patch_nampre("fort.4")
 
         # --- static input files ---
         input_definition = ConfigPaths.path_from_subpath(
@@ -113,8 +168,14 @@ class Canari(Task):
 
         if not os.path.lexists("ICMSHCYCLINIT.sfx"):
             os.symlink(fg_sfx, "ICMSHCYCLINIT.sfx")
+        if not os.path.lexists("ICMSHANALINIT.sfx"):
+            shutil.copy2(fg_sfx, "ICMSHANALINIT.sfx")
+        # ICMSHANAL+0000.sfx is both the surface first guess and the analysis
+        # output: MASTERODB reads it, runs CANARI_SFX, and writes the analysis
+        # back in place.  It must be a real writable copy — a symlink pointing
+        # to the archived first guess would be modified in the archive.
         if not os.path.lexists("ICMSHANAL+0000.sfx"):
-            os.symlink(fg_sfx, "ICMSHANAL+0000.sfx")
+            shutil.copy2(fg_sfx, "ICMSHANAL+0000.sfx")
         logger.info("Canari: soil first guess {}", fg_sfx)
 
         # --- ODB ---
@@ -162,7 +223,10 @@ class Canari(Task):
                 "CNMEXPB": "CYCL",
                 "F_RECLUNIT": "BYTE",
                 "F_UFMTENDIAN": "big:10,33,50,54,81",
-                "ODB_ECMA_CREATE_POOLMASK": "1",
+                # Poolmask creation via gather4poolmask_counts crashes (SIGSEGV) when
+                # cmake ODB BATOR produces ghost pools with index.body.len=NMDI;
+                # CANARI analysis does not require a poolmask to function.
+                "ODB_ECMA_CREATE_POOLMASK": "0",
                 "ODB_ECMA_POOLMASK_FILE": os.path.join(
                     self.wdir, "ECMA", "ECMA.poolmask"
                 ),
@@ -170,13 +234,50 @@ class Canari(Task):
             }
         )
 
+        # fort.61 is read by oi_cavegi.F90 (unit 61) for vegetation polynomial coefficients.
+        # POLYNOMES_ISBA from the Harmonie-IAL const area provides the standard coefficients.
+        polynomes_src = (
+            "/lus/h2resw01/hpcperm/fag/release/Harmonie-IAL/const/sa_const/POLYNOMES_ISBA"
+        )
+        if not os.path.exists("fort.61"):
+            os.symlink(polynomes_src, "fort.61")
+
+        # EXSEG1.nam is read by MASTERODB's SURFEX OI (unit 39) when LAEICS_SX=.T.
+        # Without it, NECHGU and LAROME in MODD_ASSIM are uninitialized (→ NECHGU=0,
+        # XRSCALDW=NECHGU/6=0, division-by-zero crash inside OI_CONTROL).
+        with open("EXSEG1.nam", "w") as _f:
+            _f.write(
+                "&NAM_NACVEG\n"
+                "  NECHGU=3,\n"
+                "  XSIGH2MO=0.1,\n"
+                "  XSIGT2MO=1.,\n"
+                "  LOBSWG=.FALSE.,\n"
+                "  LOBS2M=.TRUE.,\n"
+                "/\n"
+                "&NAM_ASSIM\n"
+                "  LAROME=.TRUE.,\n"
+                "  NPRINTLEV=1,\n"
+                "  LAESNM=.FALSE.,\n"
+                "/\n"
+            )
+
+        # libphyex_dp.so bakes in mpi_serial stubs as T (strong) symbols, which
+        # override the W (weak) mpi_initialized_ from libmpi_mpifh.so process-wide.
+        # The serial stub always returns ldflag=.FALSE., so DrHook's startup check
+        # "is MPI initialized?" fires even after MPL_INIT. Bypass the assertion;
+        # CANARI surface OI computation is unaffected (it does not need real MPI).
+        rte["DR_HOOK_ASSERT_MPI_INITIALIZED"] = "0"
+
         # --- run MASTERODB (CANARI conf 701) ---
-        BatchJob(rte, wrapper=self.platform.substitute(self.wrapper)).run(
+        # cmake MASTERODB: libphyex_dp.so bakes in mpi_serial T symbols that override
+        # real OpenMPI W symbols process-wide → MPL_NUMPROC=1 always. Force srun -n 1
+        # so the SLURM task count matches MPL, regardless of SLURM --ntasks allocation.
+        nproc = self.config.get("submission.task_exceptions.Canari.NPROC", 1)
+        output_file = "ICMSHANAL+0000"
+        BatchJob(rte, wrapper=f"srun -n {nproc}").run(
             "./MASTERODB"
         )
 
-        # CANARI with CNMEXP=ANAL produces ICMSHANAL+0000
-        output_file = "ICMSHANAL+0000"
         if not os.path.isfile(output_file) or os.path.getsize(output_file) == 0:
             raise RuntimeError(f"Canari: {output_file} not produced or empty.")
 

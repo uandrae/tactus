@@ -56,13 +56,17 @@ class OdbMerge(Task):
         mm = self.basetime.strftime("%m")
         dd = self.basetime.strftime("%d")
         rr = self.basetime.strftime("%H")
-        bator_base_dir = os.path.join(self.da_scratch, yyyy, mm, dd, rr, "odb")
+        bator_base_dir = os.path.join(self.da_scratch, yyyy, mm, dd, rr, "odb", self.family1)
 
         # --- locate binaries ---
         shuffle_bin = self.get_binary("shuffle")
+        if not os.path.isfile(shuffle_bin):
+            shuffle_bin = self.get_binary("shuffle.x")
         bin_dir = os.path.dirname(shuffle_bin)
         for binary in ["shuffle", "ioassign", "merge_ioassign", "create_ioassign"]:
             src = os.path.join(bin_dir, binary)
+            if not os.path.isfile(src):
+                src = os.path.join(bin_dir, binary + ".x")
             if os.path.isfile(src) and not os.path.lexists(binary):
                 os.symlink(src, binary)
 
@@ -81,8 +85,8 @@ class OdbMerge(Task):
                             "OdbMerge: skipping empty subbase {} (no ECMA.dd)", obstype
                         )
                         continue
-                    if not os.path.lexists(f"ECMA.{obstype}"):
-                        os.symlink(ecma_src, f"ECMA.{obstype}")
+                    if not os.path.isdir(f"ECMA.{obstype}"):
+                        shutil.copytree(ecma_src, f"ECMA.{obstype}")
                     bases_to_merge.append(obstype)
 
         if not bases_to_merge:
@@ -95,6 +99,12 @@ class OdbMerge(Task):
         logger.info("OdbMerge: merging subbases: {}", bases_to_merge)
 
         # --- ODB environment ---
+        # Use non_reprod_seqno (UPDATED, single-table FROM hdr) for all streams.
+        # reprod_seqno_2 is READONLY with a multi-table join; the cmake ODB PUT fails
+        # with message code=-2 when timeslot_index.index.len is mismatched (NMDI ghost
+        # pools produced by cmake BATOR where odb1_create_table initialises index.len=NMDI
+        # and maketimeslot_index does not update all pools).
+        odb_reprod_seqno = "-1"
         rte = dict(os.environ)
         rte.update(
             {
@@ -102,7 +112,7 @@ class OdbMerge(Task):
                 "TO_ODB_SWAPOUT": "0",
                 "ODB_DEBUG": "0",
                 "ODB_CTX_DEBUG": "0",
-                "ODB_REPRODUCIBLE_SEQNO": "2",
+                "ODB_REPRODUCIBLE_SEQNO": odb_reprod_seqno,
                 "ODB_STATIC_LINKING": "1",
                 "ODB_IO_METHOD": "4",
                 "ODB_IO_FILESIZE": "128",
@@ -123,7 +133,10 @@ class OdbMerge(Task):
                 "ODB_SRCPATH_ECMA": os.path.join(self.wdir, "ECMA"),
                 "ODB_DATAPATH_ECMA": os.path.join(self.wdir, "ECMA"),
                 "ODB_SRCPATH_RSTBIAS": os.path.join(self.wdir, "ECMA"),
-                "ODB_ECMA_CREATE_POOLMASK": "1",
+                # Poolmask creation via gather4poolmask_counts crashes (SIGSEGV) when
+                # the cmake ODB BATOR produces ghost pools with index.body.len=NMDI.
+                # CANARI re-creates its own poolmask, so it is safe to skip here.
+                "ODB_ECMA_CREATE_POOLMASK": "0" if self.family1 == "surface" else "1",
                 "ODB_ECMA_POOLMASK_FILE": os.path.join(
                     self.wdir, "ECMA", "ECMA.poolmask"
                 ),

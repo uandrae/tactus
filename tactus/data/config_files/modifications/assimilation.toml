@@ -11,7 +11,8 @@
 
 # submission
 [submission]
-bindir = "/perm/sis/tactus_bin/@CYCLE@/@COMPILER@/@PRECISION@/bin"
+bindir = "/lus/h2resw01/scratch/sis/tactus/CY50t2_AROME_DKCOEXP_20250209/install/bin/"
+#bindir = "/perm/sis/tactus_bin/@CYCLE@/@COMPILER@/@PRECISION@/bin"
 precision = "R64"
 
 [system]
@@ -19,7 +20,7 @@ assimilation_input_definition = "@CYCLE@/assimilation.json"
 
 [suite_control]
   do_assimilation = true
-
+  mode = "start"
 # ------------------------------------------------------------------
 # DA section — paths and tuning
 # ------------------------------------------------------------------
@@ -30,17 +31,13 @@ assimilation_input_definition = "@CYCLE@/assimilation.json"
   obs_dir = "/scratch/sis/da/obs/"
 
   # Per-cycle scratch store for intermediate DA files (ODB, CCMA, analyses)
-  scratch = "@SCRATCH@/da/@CASE@/scratch"
+  scratch = "@SCRATCH@/@CASE@/da"
 
   # Directory containing DA constants:
   #   B-matrix (stabal96.cv/bal), error files (errgrib*),
-  #   RTTOV coefficients, blacklists (LISTE_NOIRE_DIAP, LISTE_LOC), etc.
+  #   RTTOV coefficients, blacklists (LISTE_NOIRE_DIAP, LISTE_LOC),
+  #   param_bator.cfg, param_obsconvert.cfg, param_rgb.
   const_dir = "/perm/sis/da/const"
-
-  # Directory containing DA namelists:
-  #   aldnml_canari, aldnml_screen, aldnml_minim,
-  #   aldnml_bator, aldnml_lamflag_<domain>, aldnml_rgb, etc.
-  namelist_dir = "/perm/sis/da/namelists"
   # Short-range background (first-guess) directory.
   # Expected files: <guess_dir>/YYYY/MM/DD/guess.YYYYMMDDRR[.gz]
   guess_dir = "@SCRATCH@/da/@CASE@/guess"
@@ -59,6 +56,10 @@ assimilation_input_definition = "@CYCLE@/assimilation.json"
 
   # RTTOV satellite channel coefficient files
   rttov_coef_dir = "/perm/sis/da/const/rttov"
+
+  # JSON file (relative to tactus data/input_definitions/) describing static
+  # constant files that OopsVar links into its working directory.
+  oovar_input_definition = "CY50t2/oovar_input_definition.json"
 
   # Number of ODB pools used by BATOR / SHUFFLE
   nbpool = 16
@@ -79,7 +80,7 @@ assimilation_input_definition = "@CYCLE@/assimilation.json"
   # Observation types for 3D-Var upper-air analysis
   obs_types_3dvar = [
     "synop", "gpssol",
-    "amdr", "geowind", "temp", "wp",
+    "amdar", "geowind", "temp", "wp",
     "seviri", "amsua", "amsub", "iasi", "ascat",
   ]
 
@@ -121,11 +122,13 @@ assimilation_input_definition = "@CYCLE@/assimilation.json"
 #               60 = hourly archive; all slots inside the assimilation
 #                    window are searched and results merged.
 #
-# Per-obstype sub-tables ([da.providers.<NAME>.<obstype>]):
+# Per-obstype sub-tables ([da.providers.<NAME>.obstypes.<obstype>]):
+#   format      — file format: "OBSOUL", "BUFR", "NETCDF", "GRIB".
+#                 local_name is derived as "<format>.<obstype>".
 #   candidates  — filename templates tried in order.  All matches
 #                 across all window slots are collected and merged.
 #                 Placeholders: {ymdrr}, {yyyy}, {mm}, {dd}, {rr}.
-#   local_name  — filename BATOR expects in the working directory.
+#   obs_step    — optional per-obstype override of the provider obs_step.
 #   source_dir  — optional; overrides da.obs_dir/YYYY/MM/DD as the
 #                 search root (supports @PLATFORM@ substitutions).
 # ==================================================================
@@ -138,8 +141,9 @@ assimilation_input_definition = "@CYCLE@/assimilation.json"
 [da.providers.LACE]
 obs_step = 60
 
-[da.providers.LACE.synop]
-
+[da.providers.LACE.obstypes.synop]
+obs_step   = 0
+format     = "OBSOUL"
 candidates = [
   "obsoul_1_xxxxxx_hu_{ymdrr}",
   "obsoul_1_xxxxxy_hu_{ymdrr}",
@@ -151,135 +155,143 @@ candidates = [
   "obsoul_1_xxxxxy_cr_{ymdrr}",
   "obsoul_1_xxxxxy_pl_{ymdrr}",
 ]
-local_name = "OBSOUL.synop"
-obs_step = 0
 
-[da.providers.LACE.gpssol]
+[da.providers.LACE.obstypes.gpssol]
+format     = "BUFR"
 candidates = ["bufr_1_ztd_egvap_{ymdrr}"]
-local_name  = "BUFR.gpssol"
 
-[da.providers.LACE.amdr]
+[da.providers.LACE.obstypes.amdar]
+format     = "OBSOUL"
 candidates = ["obsoul_2_xxxxxx_xx_{ymdrr}", "obsoul_2_ehs_eu_{ymdrr}"]
-local_name  = "OBSOUL.amdr"
 
-[da.providers.LACE.geowind]
+[da.providers.LACE.obstypes.geowind]
+obs_step   = 0
+format     = "BUFR"
 candidates = ["bufr_3_geowind_xx_{ymdrr}"]
-local_name  = "BUFR.geowind"
 
-[da.providers.LACE.temp]
+[da.providers.LACE.obstypes.temp]
+format     = "OBSOUL"
 candidates = ["obsoul_5_xxxxxx_xx_{ymdrr}"]
-local_name  = "OBSOUL.temp"
 
-[da.providers.LACE.wp]
+[da.providers.LACE.obstypes.wp]
+format     = "OBSOUL"
 candidates = ["obsoul_6_xxxxxx_xx_{ymdrr}"]
-local_name  = "OBSOUL.wp"
 
-[da.providers.LACE.amsua]
+[da.providers.LACE.obstypes.amsua]
+format     = "BUFR"
 candidates = [
   "bufr_7_amsua_metopc_{ymdrr}",
   "bufr_7_amsua_metopb_{ymdrr}",
   "bufr_7_amsua_noaa18_{ymdrr}",
   "bufr_7_amsua_noaa19_{ymdrr}",
 ]
-local_name = "BUFR.amsua"
 
-[da.providers.LACE.amsub]
+[da.providers.LACE.obstypes.amsub]
+format     = "BUFR"
 candidates = [
   "bufr_7_mhs_metopc_{ymdrr}",
   "bufr_7_mhs_metopb_{ymdrr}",
   "bufr_7_mhs_noaa19_{ymdrr}",
 ]
-local_name = "BUFR.amsub"
 
-[da.providers.LACE.seviri]
+[da.providers.LACE.obstypes.seviri]
+obs_step   = 0
+format     = "NETCDF"
 candidates = ["netcdf_7_seviri_xx_{ymdrr}"]
-local_name  = "NETCDF.seviri"
-obs_step    = 0
 
-[da.providers.LACE.iasi]
+[da.providers.LACE.obstypes.iasi]
+format     = "BUFR"
 candidates = [
   "bufr_7_iasi_metopb_{ymdrr}",
   "bufr_7_iasi_metopc_{ymdrr}",
 ]
-local_name = "BUFR.iasi"
 
-[da.providers.LACE.ascat]
+[da.providers.LACE.obstypes.ascat]
+format     = "BUFR"
 candidates = [
   "bufr_9_ascatC_metopb_{ymdrr}",
   "bufr_9_ascatC_metopc_{ymdrr}",
 ]
-local_name = "BUFR.ascat"
 
 # ------------------------------------------------------------------
 # UWC — United Weather Centres / ECMWF OPLACE convention.
-# Conventional obs as obsoul_<code>_xxxxxx_xx_<YYYYMMDDRR>;
-# satellite obs as BUFR_<YYYYMMDDRR>.<type> or NETCDF_*.
 # ------------------------------------------------------------------
 [da.providers.UWC]
 obs_step = 60
 
-[da.providers.UWC.synop]
+[da.providers.UWC.obstypes.synop]
+format     = "OBSOUL"
 candidates = ["obsoul_1_xxxxxx_xx_{ymdrr}"]
-local_name  = "OBSOUL.synop"
 
-[da.providers.UWC.synop_1]
+[da.providers.UWC.obstypes.synop_1]
+format     = "OBSOUL"
 candidates = ["obsoul_1_xxxxxy_xx_{ymdrr}"]
-local_name  = "OBSOUL.synop_1"
 
-[da.providers.UWC.amdr]
+[da.providers.UWC.obstypes.amdr]
+format     = "OBSOUL"
 candidates = ["obsoul_2_xxxxxx_xx_{ymdrr}"]
-local_name  = "OBSOUL.amdr"
 
-[da.providers.UWC.geowind]
+[da.providers.UWC.obstypes.geowind]
+format     = "OBSOUL"
 candidates = ["obsoul_3_xxxxxx_xx_{ymdrr}"]
-local_name  = "OBSOUL.geowind"
 
-[da.providers.UWC.temp]
+[da.providers.UWC.obstypes.temp]
+format     = "OBSOUL"
 candidates = ["obsoul_5_xxxxxx_xx_{ymdrr}"]
-local_name  = "OBSOUL.temp"
 
-[da.providers.UWC.wp]
+[da.providers.UWC.obstypes.wp]
+format     = "OBSOUL"
 candidates = ["obsoul_6_xxxxxx_xx_{ymdrr}"]
-local_name  = "OBSOUL.wp"
 
-[da.providers.UWC.gpssol]
+[da.providers.UWC.obstypes.gpssol]
+format     = "OBSOUL"
 candidates = ["obsoul_9_xxxxxx_xx_{ymdrr}"]
-local_name  = "OBSOUL.gpssol"
 
-[da.providers.UWC.amsua]
+[da.providers.UWC.obstypes.amsua]
+format     = "BUFR"
 candidates = [
   "bufr_7_amsua_metopc_{ymdrr}",
   "bufr_7_amsua_metopb_{ymdrr}",
   "bufr_7_amsua_noaa18_{ymdrr}",
   "bufr_7_amsua_noaa19_{ymdrr}",
 ]
-local_name = "BUFR.amsua"
 
-[da.providers.UWC.amsub]
+[da.providers.UWC.obstypes.amsub]
+format     = "BUFR"
 candidates = [
   "bufr_7_mhs_metopc_{ymdrr}",
   "bufr_7_mhs_metopb_{ymdrr}",
   "bufr_7_mhs_noaa19_{ymdrr}",
 ]
-local_name = "BUFR.amsub"
 
-[da.providers.UWC.seviri]
+[da.providers.UWC.obstypes.seviri]
+obs_step   = 0
+format     = "NETCDF"
 candidates = ["netcdf_7_seviri_xx_{ymdrr}"]
-local_name  = "NETCDF.seviri"
 
-[da.providers.UWC.iasi]
+[da.providers.UWC.obstypes.iasi]
+format     = "BUFR"
 candidates = [
   "bufr_7_iasi_metopb_{ymdrr}",
   "bufr_7_iasi_metopc_{ymdrr}",
 ]
-local_name = "BUFR.iasi"
 
-[da.providers.UWC.ascat]
+[da.providers.UWC.obstypes.ascat]
+format     = "BUFR"
 candidates = [
   "bufr_9_ascatC_metopb_{ymdrr}",
   "bufr_9_ascatC_metopc_{ymdrr}",
 ]
-local_name = "BUFR.ascat"
+
+# ------------------------------------------------------------------
+# RMI — Royal Meteorological Institute of Belgium.
+# ------------------------------------------------------------------
+[da.providers.RMI]
+obs_step = 0
+
+[da.providers.RMI.obstypes.synop]
+format     = "BUFR"
+candidates = ["synop_{ymdrr}00.bufr"]
 
 # ------------------------------------------------------------------
 # MF — Météo-France BDAP convention.
@@ -288,7 +300,7 @@ local_name = "BUFR.ascat"
 [da.providers.MF]
 obs_step = 60
 
-# Add MF or other provider's observation description 
+# Add MF observation types below
 
 # ------------------------------------------------------------------
 # Submission settings for DA tasks
@@ -321,7 +333,6 @@ obs_step = 60
   DR_HOOK_ASSERT_MPI_INITIALIZED = "0"
 
 [submission.task_exceptions.Obsconvert]
-  bindir = "/perm/sis/tactus_bin/@CYCLE@/@COMPILER@/@PRECISION@/bin_gmkpack"
   NPROC = 1
 
 [submission.task_exceptions.Obsconvert.BATCH]
@@ -337,7 +348,6 @@ obs_step = 60
 
 # ---- OdbMerge (shuffle + merge_ioassign) ----
 [submission.task_exceptions.OdbMerge]
-  bindir = "/perm/sis/tactus_bin/@CYCLE@/@COMPILER@/@PRECISION@/bin_gmkpack"  
   NPROC  = 1
 
 [submission.task_exceptions.OdbMerge.BATCH]
@@ -348,23 +358,21 @@ obs_step = 60
   01_INTEL = ["load", "intel/2023.2.0"]
 
 # ---- Canari (MASTERODB conf 701, surface OI) ----
+# libphyex_dp.so bakes in mpi_serial T symbols that override real OpenMPI W symbols
+# process-wide; MPL always sees NUMPROC=1. Run serial (srun -n 1) to match.
 [submission.task_exceptions.Canari]
-  bindir = "/perm/sis/tactus_bin/@CYCLE@/@COMPILER@/@PRECISION@/bin_gmkpack"
-  NPROC  = 16
+  NPROC  = 1
 
 [submission.task_exceptions.Canari.BATCH]
   NODES    = "#SBATCH --nodes=1"
-  NTASKS   = "#SBATCH --ntasks=16"
+  NTASKS   = "#SBATCH --ntasks=1"
   WALLTIME = "#SBATCH --time=00:30:00"
   QOS = "#SBATCH --qos=np"
   MEM = "#SBATCH --mem=120000MB"
 
 [submission.task_exceptions.Canari.MODULES]
-  01_INTEL = ["load", "intel/2023.2.0"]
-  OPENMPI = ["load", "openmpi/4.1.1.1"]
-
-
-
+  01_INTEL = ["load", "intel/2021.4.0"]
+  OPENMPI = ["load", "hpcx-openmpi/2.9.0"]
 
 # ---- BlendSur (serial BLENDSUR utility) ----
 [submission.task_exceptions.BlendSur]
@@ -394,8 +402,6 @@ obs_step = 60
 # ------------------------------------------------------------------
 
  [da.oops]
-#   namelist_dir = "@SCRATCH@/da/namelists"
-   namelist_dir = "/perm/sis/da/namelists/"
 #
 #   # Number of ODB pools for the upper-air 3D-Var (OOVAR).
 #   # Canari uses da.nbpool (default 16); OopsVar uses this key.

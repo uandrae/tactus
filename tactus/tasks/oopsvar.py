@@ -2,13 +2,18 @@
 """
 import datetime
 import glob
+import json
 import os
 import shutil
 import stat
 import subprocess
 
+import yaml
+
+from ..config_parser import ConfigPaths
 from ..datetime_utils import as_datetime
 from ..logs import logger
+from ..namelist import NamelistGenerator
 from ..os_utils import tactusmakedirs
 from .base import Task
 from .batch import BatchJob
@@ -33,9 +38,6 @@ class OopsVar(Task):
         self.da_scratch = self.platform.substitute(config["da.scratch"])
         self.da_const_dir = self.platform.substitute(config["da.const_dir"])
         self.domain = config["domain.name"]
-        self.oops_namelist_dir = self.platform.substitute(
-            config.get("da.oops.namelist_dir", "")
-        )
         self.varbc_dir = self.platform.substitute(config.get("da.varbc_dir", ""))
         self.varbc_init_dir = self.platform.substitute(config.get("da.varbc_init_dir", ""))
         self.analysis_dir = self.platform.substitute(config.get("da.analysis_dir", ""))
@@ -44,43 +46,8 @@ class OopsVar(Task):
             config.get("da.rttov_coef_dir", config.get("da.const_dir", ""))
         )
         self.nbpool = config.get("da.oops.nbpool", 128)
-
-        # Minimization parameters
-        self.niter = config.get("da.oops.niter", 66)
-        self.nsimu = config.get("da.oops.nsimu", 69)
-        self.rednmc = config.get("da.oops.rednmc", 0.5)
-
-        # Geometry / parallel I/O
-        self.nproma = config.get("da.oops.nproma", -32)
-        self.nprgpns = config.get("da.oops.nprgpns", 128)
-        self.nprgpew = config.get("da.oops.nprgpew", 1)
-        self.nprtrv = config.get("da.oops.nprtrv", 1)
-        self.nprtrw = config.get("da.oops.nprtrw", 128)
-        self.nstrin = config.get("da.oops.nstrin", 2)
-        self.nstrout = config.get("da.oops.nstrout", 2)
-
-        # JK transform / covariance parameters (Fortran .TRUE./.FALSE. strings)
-        def _f90bool(val):
-            return ".TRUE." if val else ".FALSE."
-
-        self.lejk = _f90bool(config.get("da.oops.lejk", False))
-        self.lsprt = _f90bool(config.get("da.oops.lsprt", False))
-        self.qlgp = _f90bool(config.get("da.oops.qlgp", True))
-        self.qlsp = _f90bool(config.get("da.oops.qlsp", False))
-        self.nsmaxjk = config.get("da.oops.nsmaxjk", 215)
-        self.alphakt = config.get("da.oops.alphakt", 0.70)
-        self.alphakvor = config.get("da.oops.alphakvor", 0.80)
-        self.alphakdiv = config.get("da.oops.alphakdiv", 0.10)
-        self.alphakq = config.get("da.oops.alphakq", 0.04)
-        self.alphakp = config.get("da.oops.alphakp", 0.0)
-        self.presinfjk = config.get("da.oops.presinfjk", 100500.0)
-        self.presupjk = config.get("da.oops.presupjk", 98000.0)
-        self.ntruncjk = config.get("da.oops.ntruncjk", 8)
-
-        if not self.oops_namelist_dir:
-            raise RuntimeError(
-                "OopsVar: da.oops.namelist_dir must be configured when da.do_upper_air = true."
-            )
+        self.oovar_input_def = config.get("da.oovar_input_definition", "")
+        self.nlgen = NamelistGenerator(config, "oovar")
         logger.debug("Constructed OopsVar task")
 
     # ------------------------------------------------------------------
@@ -190,58 +157,11 @@ class OopsVar(Task):
             else:
                 logger.warning("OopsVar: B-matrix file not found: {}", src)
 
-        # --- constant links ---
-        const_globs = [
-            "ATLAS_*", "ATLAS*", "errgrib*", "ECOZC", "MCICA", "RAD*",
-            "amv_*", "bcor_noaa.dat", "bcor_meto.dat",
-            "sigmab.dat", "scat*", "rmtberr*", "correl.dat", "rszcoef_fmt",
-            "iasichannels*",
-        ]
-        for pattern in const_globs:
-            for src in glob.glob(os.path.join(self.da_const_dir, pattern)):
-                link = os.path.basename(src)
-                if not os.path.lexists(link):
-                    os.symlink(src, link)
+        # --- constant file links ---
+        self._link_const_files()
 
-        # RTTOV coefficient and cloud-detection files from the rttov subfolder.
-        rttov_dir = os.path.join(self.da_const_dir, "rttov")
-        if os.path.isdir(rttov_dir):
-            for src in glob.glob(os.path.join(rttov_dir, "*")):
-                link = os.path.basename(src)
-                if not os.path.lexists(link):
-                    os.symlink(src, link)
-        else:
-            for pattern in ("sccldcoef*", "rtcoef_*"):
-                for src in glob.glob(os.path.join(self.da_const_dir, pattern)):
-                    link = os.path.basename(src)
-                    if not os.path.lexists(link):
-                        os.symlink(src, link)
-
-        # RTTOV looks for "amsub" coefficient files (sensor code 4), but MetOp and
-        # NOAA-19 ship MHS (the AMSU-B successor); their coef files are named "mhs".
-        # Create amsub aliases so RTTOV finds them under both names.
-        for mhs_link in glob.glob("rtcoef_*_mhs.*"):
-            amsub_link = mhs_link.replace("_mhs.", "_amsub.")
-            if not os.path.lexists(amsub_link):
-                os.symlink(os.path.realpath(mhs_link), amsub_link)
-
-        # UW IR emissivity atlas (required for IASI): link all files from ir_atlas subdir.
-        ir_atlas_dir = os.path.join(self.da_const_dir, "ir_atlas")
-        if os.path.isdir(ir_atlas_dir):
-            for src in glob.glob(os.path.join(ir_atlas_dir, "*")):
-                link = os.path.basename(src)
-                if not os.path.lexists(link):
-                    os.symlink(src, link)
-
-        # Optional LHN files (skip silently if absent)
-        for lhn_file in ("MAP_INCA_*.txt", "LHN_DUMMY.fa"):
-            for src in glob.glob(os.path.join(self.da_const_dir, lhn_file)):
-                link = os.path.basename(src)
-                if not os.path.lexists(link):
-                    os.symlink(src, link)
-
-        # --- OOPS namelists ---
-        self._link_oops_namelists(nproc, yyyy, mm, dd, rr)
+        # --- OOPS namelists and JSON config ---
+        self._link_oops_namelists(yyyy, mm, dd, rr)
 
         # --- ODB environment ---
         rte = dict(os.environ)
@@ -321,103 +241,82 @@ class OopsVar(Task):
     # Private helpers
     # ------------------------------------------------------------------
 
-    def _link_oops_namelists(self, nproc, yyyy, mm, dd, rr):
-        """Generate / link all OOPS namelist files from da.oops.namelist_dir."""
-        nd = self.oops_namelist_dir
-
-        # Substitution dict for the main minimization namelist template.
-        # "NBPROC" (no braces) handles the namelist_oops_leftovers style where
-        # all parallelism settings are written as bare NBPROC.
-        subst = {
-            "{NBPROC}":    str(nproc),
-            "NBPROC":      str(nproc),
-            "{NPRTRV}":    str(self.nprtrv),
-            "{NPRTRW}":    str(self.nprtrw),
-            "{NSTRIN}":    str(self.nstrin),
-            "{NSTROUT}":   str(self.nstrout),
-            "{NPROMA}":    str(self.nproma),
-            "{NPRGPEW}":   str(self.nprgpew),
-            "{NPRGPNS}":   str(self.nprgpns),
-            "{niter}":     str(self.niter),
-            "{nsimu}":     str(self.nsimu),
-            "{rednmc}":    str(self.rednmc),
-            "{LEJK}":      self.lejk,
-            "{LSPRT}":     self.lsprt,
-            "{qlsp}":      self.qlsp,
-            "{qlgp}":      self.qlgp,
-            "{NSMAXJK}":   str(self.nsmaxjk),
-            "{ALPHAKT}":   str(self.alphakt),
-            "{ALPHAKVOR}": str(self.alphakvor),
-            "{ALPHAKDIV}": str(self.alphakdiv),
-            "{ALPHAKQ}":   str(self.alphakq),
-            "{ALPHAKP}":   str(self.alphakp),
-            "{PRESINFJK}": str(self.presinfjk),
-            "{PRESUPJK}":  str(self.presupjk),
-            "{NTRUNCJK}":  str(self.ntruncjk),
+    def _link_oops_namelists(self, yyyy, mm, dd, rr):
+        """Generate all OOPS namelist files and oops.json from YAML sources."""
+        namelist_map = {
+            "oovar_fort4":          "fort.4",
+            "oovar_obs":            "naml_observations",
+            "oovar_obs_tlad":       "naml_observations_tlad",
+            "oovar_bmatrix":        "naml_bmatrix",
+            "oovar_geometry":       "naml_standard_geometry",
+            "oovar_traj":           "naml_traj_model",
+            "oovar_linmod":         "naml_linear_model",
+            "oovar_nonlinmod":      "naml_nonlinear_model",
+            "oovar_write_spec":     "naml_oops_write_spec",
+            "oovar_write_analysis": "naml_write_analysis",
+            "oovar_gom_setup":      "namelist_gom_setup",
+            "oovar_gom_setup_hres": "namelist_gom_setup_hres",
         }
-
-        # fort.4 from namelist_oops_leftovers template
-        self._fill_template(
-            os.path.join(nd, "namelist_oops_leftovers"), "fort.4", subst
-        )
-
-        # Geometry namelists — NPROMA may be hardcoded in the file; substitution
-        # is a no-op in that case but harmless.
-        geom_subst = {"{nproma}": str(self.nproma)}
-        self._fill_template(
-            os.path.join(nd, "naml_standard_geometry"),
-            "naml_standard_geometry",
-            geom_subst,
-        )
-        # geometry_tENS is only needed for 3D-EnVar; skip with a warning if absent
-        tENS_src = os.path.join(nd, "naml_geometry_tENS")
-        if os.path.isfile(tENS_src):
-            self._fill_template(tENS_src, "naml_standard_geometry_tENS", geom_subst)
-        else:
-            logger.warning("OopsVar: namelist_geometry_tENS not found, skipping (3D-Var only)")
-
-        # OOPS JSON — written as oops.json; date placeholders substituted if present
-        json_subst = {
-            "{yyyy}": yyyy,
-            "{mm}":   mm,
-            "{dd}":   dd,
-            "{hh}":   rr,
-            "{{now.iso8601()}}": f"{yyyy}-{mm}-{dd}T{rr}:00:00Z",
-        }
-        self._fill_template(
-            os.path.join(nd, "3dvar.json"), "oops.json", json_subst
-        )
-
-        # Namelists linked as-is (no substitution)
-        link_map = {
-            "naml_bmatrix":           "naml_bmatrix",
-            "naml_observations_tlad": "naml_observations_tlad",
-            "naml_observations":      "naml_observations",
-            "naml_traj_model":        "naml_traj_model",
-            "naml_linear_model":      "naml_linear_model",
-            "naml_nonlinear_model":   "naml_nonlinear_model",
-            "naml_oops_write_spec":   "naml_oops_write_spec",
-            "naml_write_analysis":    "naml_write_analysis",
-            "namelist_gom_setup_hres": "namelist_gom_setup_hres",
-            "namelist_gom_setup":      "namelist_gom_setup",
-        }
-        for src_name, link_name in link_map.items():
-            src = os.path.join(nd, src_name)
-            if os.path.isfile(src):
-                if not os.path.lexists(link_name):
-                    os.symlink(src, link_name)
-                    os.chmod(link_name, os.stat(link_name).st_mode | stat.S_IEXEC)
-            else:
-                logger.warning("OopsVar: OOPS namelist not found: {}", src)
+        for target, output_file in namelist_map.items():
+            self.nlgen.generate_namelist(target, output_file)
 
         # yomlocs.F90 opens namelist_gom_setup_<N> (indexed by obs type slot)
-        if os.path.lexists("namelist_gom_setup") and not os.path.lexists("namelist_gom_setup_0"):
+        if os.path.isfile("namelist_gom_setup") and not os.path.lexists("namelist_gom_setup_0"):
             os.symlink("namelist_gom_setup", "namelist_gom_setup_0")
 
-        # iasichannels — copy so OOVAR can read it
-        iasi = os.path.join(nd, "iasichannels")
-        if os.path.isfile(iasi):
-            shutil.copy2(iasi, "iasichannels")
+        self._render_oops_json(yyyy, mm, dd, rr)
+
+    def _render_oops_json(self, yyyy, mm, dd, rr):
+        """Render oovar_config.yml to oops.json with the analysis time substituted."""
+        config_yml = self.nlgen.nlfile.parent / "oovar_config.yml"
+        with open(config_yml) as f:
+            text = f.read()
+        analysis_time = f"{yyyy}-{mm}-{dd}T{rr}:00:00Z"
+        text = text.replace("{analysis_time}", analysis_time)
+        oops_config = yaml.safe_load(text)
+        with open("oops.json", "w") as f:
+            json.dump(oops_config, f, indent=2)
+        logger.debug("OopsVar: wrote oops.json for {}", analysis_time)
+
+    def _link_const_files(self):
+        """Symlink constant input files into the working directory."""
+        if not self.oovar_input_def:
+            logger.warning("OopsVar: da.oovar_input_definition not set; skipping constant file links")
+            return
+
+        def_path = ConfigPaths.path_from_subpath(self.oovar_input_def)
+        with open(def_path) as f:
+            entries = json.load(f)
+
+        base_map = {
+            "const_dir":      self.da_const_dir,
+            "rttov_coef_dir": self.rttov_coef_dir,
+            "ir_atlas_dir":   os.path.join(self.da_const_dir, "ir_atlas"),
+        }
+
+        for entry in entries:
+            if entry.get("amsub_alias"):
+                # RTTOV uses "amsub" sensor code but MetOp/NOAA-19 ship MHS coef files;
+                # create amsub aliases so RTTOV finds them under both names.
+                for mhs_link in glob.glob("rtcoef_*_mhs.*"):
+                    amsub_link = mhs_link.replace("_mhs.", "_amsub.")
+                    if not os.path.lexists(amsub_link):
+                        os.symlink(os.path.realpath(mhs_link), amsub_link)
+                continue
+
+            base_dir = base_map.get(entry["base"], "")
+            if not os.path.isdir(base_dir):
+                if not entry.get("optional", True):
+                    raise FileNotFoundError(
+                        f"OopsVar: base directory not found: {base_dir!r}"
+                    )
+                continue
+
+            dest = entry.get("destination")
+            for src in glob.glob(os.path.join(base_dir, entry["pattern"])):
+                link = dest if dest else os.path.basename(src)
+                if not os.path.lexists(link):
+                    os.symlink(src, link)
 
     @staticmethod
     def _sp2gp_first_guess(path: str) -> None:
@@ -475,20 +374,3 @@ print(converted)
             "OopsVar: SP→GP conversion completed for {} ({} fields)",
             path, result.stdout.strip(),
         )
-
-    @staticmethod
-    def _fill_template(src_path, dst_path, substitutions):
-        """Read *src_path*, apply *substitutions* dict, write to *dst_path*.
-
-        Raises FileNotFoundError if *src_path* does not exist.
-        """
-        if not os.path.isfile(src_path):
-            raise FileNotFoundError(
-                f"OopsVar: OOPS template not found: {src_path}"
-            )
-        text = open(src_path).read()
-        for placeholder, value in substitutions.items():
-            text = text.replace(placeholder, value)
-        with open(dst_path, "w") as fh:
-            fh.write(text)
-        logger.debug("OopsVar: wrote {} from template {}", dst_path, src_path)

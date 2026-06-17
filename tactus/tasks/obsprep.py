@@ -55,7 +55,7 @@ class ObsPrep(Task):
     DEFAULT_OBS_SURFACE = ["synop"] 
 
     DEFAULT_OBS_3DVAR = [
-        "synop", "gpssol", "amdr", "geowind", "hrwind",
+        "synop", "gpssol", "amdar", "geowind", "hrwind",
         "temp", "wp", "seviri", "amsua", "amsub", "iasi", "ascat", "radar",
     ]
 
@@ -88,6 +88,8 @@ class ObsPrep(Task):
             self._provider = {}
         else:
             self._provider = all_providers[self.obs_provider]
+        # New schema: obstypes nested under provider. Old schema: direct keys.
+        self._obstypes = self._provider.get("obstypes") or self._provider
 
         self.bator_window_len = config.get("da.bator_window_len", 180)
         self.bator_window_shift = config.get("da.bator_window_shift", -90)
@@ -195,7 +197,7 @@ class ObsPrep(Task):
     # Using the numeric code rather than a source-specific name (e.g. "amdar")
     # lets multiple aircraft sub-types (AMDAR, MODES, EHS …) all be accepted.
     _OBSOUL_MERGE_NAMES = {
-        "amdr": "2",   # OBSOUL type 2 = aircraft
+        "amdar": "2",   # OBSOUL type 2 = aircraft
     }
 
     def _stage_obstype(self, obstype, ymdrr):
@@ -204,12 +206,13 @@ class ObsPrep(Task):
         Returns True when at least one file was found and merged, False
         otherwise.
         """
-        spec = self._provider.get(obstype)
+        spec = self._obstypes.get(obstype)
         if not isinstance(spec, Mapping):
             return False
 
         candidates = spec.get("candidates", [])
-        local_name = spec.get("local_name", obstype)
+        fmt = spec.get("format", "")
+        local_name = f"{fmt}.{obstype}" if fmt else spec.get("local_name", obstype)
         if not candidates:
             return False
 
@@ -295,8 +298,9 @@ class ObsPrep(Task):
     def _merge_files(self, paths, local_name, obstype):
         """Merge *paths* into *local_name* using the format-appropriate method.
 
-        Format is inferred from the ``local_name`` prefix (BUFR, OBSOUL,
-        NETCDF, GRIB).  Single-file cases bypass merge logic entirely.
+        Format is derived from the ``local_name`` prefix (BUFR, OBSOUL,
+        NETCDF, GRIB), which is constructed as ``<format>.<obstype>``.
+        Single-file cases bypass merge logic entirely.
         """
         if len(paths) == 1:
             shutil.copy2(paths[0], local_name)

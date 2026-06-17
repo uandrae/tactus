@@ -1326,6 +1326,7 @@ class CycleFamily(EcflowSuiteFamily):
         ecf_files,
         trigger=None,
         ecf_files_remotely=None,
+        cycle_basetime=None,
     ):
         """Class initialization."""
         super().__init__(
@@ -1354,6 +1355,7 @@ class CycleFamily(EcflowSuiteFamily):
                 ecf_files,
                 trigger=initialization_family,
                 ecf_files_remotely=ecf_files_remotely,
+                cycle_basetime=cycle_basetime,
             )
             forecast_trigger = assimilation_family
         else:
@@ -1660,6 +1662,7 @@ class TimeDependentFamily(EcflowSuiteFamily):
                     ecf_files,
                     trigger=ready_for_cycle,
                     ecf_files_remotely=ecf_files_remotely,
+                    cycle_basetime=cycle.basetime,
                 )
                 member_cycle_families.append(cycle_family)
                 prev_cycle_triggers[member] = [cycle_family]

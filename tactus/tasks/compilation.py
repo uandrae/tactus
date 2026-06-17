@@ -81,6 +81,7 @@ class IALBundleBuild(Task):
         ial_dir = self.config["compile.ial_dir"]
         self.ial_dir = self.platform.substitute(ial_dir)
         self.arch = self.config["compile.arch"]
+        self.forecast_only = self.config.get("compile.forecast_only", True)
         bindir = "@CASEDIR@/install"
         builddir = "@CASEDIR@/build"
         bindir = self.platform.substitute(bindir)
@@ -94,10 +95,11 @@ class IALBundleBuild(Task):
 
     def execute(self):
         """Execute task."""
+        forecast_only_flag = "--forecast-only " if self.forecast_only else ""
         batch_job = BatchJob(os.environ)
         batch_job.run(
             f"cd {self.ial_dir}/bundle; ./ial-bundle build "
-            + f"--arch arch/{self.arch} --ninja --forecast-only "
+            + f"--arch arch/{self.arch} --ninja {forecast_only_flag}"
             + f"--install-dir={self.exp_bindir} --install "
             + f"--build-dir={self.exp_builddir}"
         )
