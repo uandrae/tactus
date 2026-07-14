@@ -10,6 +10,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased](https://github.com/destination-earth-digital-twins/Deode-Prototype/tree/HEAD)
 
 ### Added
+- Introduce CY50t2 test cases in the test-runner. [\#88](https://github.com/ACCORD-NWP/tactus/pull/88) (@uandrae)
+- Added suite control switch for grib calculations. [#102](https://github.com/ACCORD-NWP/tactus/pull/102) (@uandrae)
+- Introduce perturbation family and config section. [#87](https://github.com/ACCORD-NWP/tactus/pull/87) (@uandrae)
+
+### Changed
+- Change suite mirror trigger to a task instead of the full suite as a ecflow bug workaround. [#113](https://github.com/ACCORD-NWP/tactus/pull/113) (@uandrae)
+- Make general.times.end relative to general.times.start when defined as duration. [#101](https://github.com/ACCORD-NWP/tactus/pull/101) (@uandrae)
+- Update CY50t2 surfex namelists to make LAM -> LAM work. [#99](https://github.com/ACCORD-NWP/tactus/pull/99) (@uandrae)
+- Switch to accord owned path for static data on atos_bologna. [#106](https://github.com/ACCORD-NWP/tactus/pull/106) (@uandrae)
+
+### Fixed
+- Fix plugin task imports by ensuring plugin paths are added to `sys.path` before dynamic import. [#110](https://github.com/ACCORD-NWP/tactus/pull/110) (@kastelecn)
+- Correct lfitools name for CY50T2. [#114](https://github.com/ACCORD-NWP/tactus/pull/114) (@uandrae)
+- Correct basetime used for MARS data availability. [#108](https://github.com/ACCORD-NWP/tactus/pull/108) (@uandrae)
+- Correct input data path in E923Update. [#100](https://github.com/ACCORD-NWP/tactus/pull/100) (@uandrae)
+- Fix documentation deployment trigger on new releases. [#107](https://github.com/ACCORD-NWP/tactus/pull/107) (@mfroelund)
+- Fix ordering of setting `productDefinitionTemplateNumber` for EPS runs in `FaModelSource.yml`[\#91](https://github.com/ACCORD-NWP/tactus/pull/91) (@sbnielsen)
+
+## [1.1.0] - 2026-06-03
+
+### Added
+- Deactivate the cache for compilation by default[#95](https://github.com/ACCORD-NWP/tactus/pull/95) (@dhaumont)
+- Add gl bundle for compilation with IAL [\#28](https://github.com/ACCORD-NWP/tactus/pull/28) (@pardallio)
+- Add caching feature to avoid recompilation between cases [\#28](https://github.com/ACCORD-NWP/tactus/pull/28) (@pardallio)
+- Add possbility to compile in single precision [\#28](https://github.com/ACCORD-NWP/tactus/pull/28) (@pardallio)
+- Integrate tactus test-runner as command line argument. [\#56](https://github.com/ACCORD-NWP/tactus/pull/56) (@uandrae)
+- Add new Danish testing domain for DA [\#84](https://github.com/ACCORD-NWP/tactus/pull/84) (@romick-knmi)
+- Replace functionality of ecflow containers and nodes [\#37](https://github.com/ACCORD-NWP/tactus/pull/37) (@trygveasp)
+- Add suite mirror option [\#69](https://github.com/ACCORD-NWP/tactus/pull/69) (@uandrae)
 - Configuration files for NSC HPC Fahrenheit [\#16](https://github.com/ACCORD-NWP/tactus/pull/16) (@trygveasp)
 - Introduce gl namelist files for CY50T2 [\#35](https://github.com/ACCORD-NWP/tactus/pull/35) (@uandrae)
 - Introduce config files for CY50T2 [\#14](https://github.com/ACCORD-NWP/tactus/pull/14) (@uandrae)
@@ -20,6 +49,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Support multiple searchpaths for namelist files through TACTUS_CONFIG_DATA_DIR. [\#20](https://github.com/ACCORD-NWP/tactus/pull/20) (@mfroelund)
 
 ### Changed
+- Reduce number of repetitive test-runner tasks and parallelize the configuration step. [\#88](https://github.com/ACCORD-NWP/tactus/pull/88) (@uandrae)
+- Changed default submission settings to cy50 and added exceptions for previous config files [\#28](https://github.com/ACCORD-NWP/tactus/pull/28) (@pardallio)
+- Make CSC EPS config files cycle specific. [\#80](https://github.com/ACCORD-NWP/tactus/pull/80) (@uandrae)
+- Make package\_name and version as a arguments for a logger. [\#77](https://github.com/ACCORD-NWP/tactus/pull/77) (@kastelecn)
+- Shortcut EPS GRIB templates until [\#68](https://github.com/ACCORD-NWP/tactus/issues/68) is fixed. [\#72](https://github.com/ACCORD-NWP/tactus/pull/72) (@uandrae)
+- Switch off SPP until fixed in IAL. [\#71](https://github.com/ACCORD-NWP/tactus/pull/71) (@uandrae)
 - Switch on compilation by default. [\#60](https://github.com/ACCORD-NWP/tactus/pull/60) (@uandrae)
 - Use sys\_name in path generation templates. [\#45](https://github.com/ACCORD-NWP/tactus/pull/45) (@kastelecn)
 - Remove CY50T1 references as it will not be supported. [\#57](https://github.com/ACCORD-NWP/tactus/pull/57) (@uandrae)
@@ -36,6 +71,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Change deployment of documentation to not need github secrets to work. [\#22](https://github.com/ACCORD-NWP/tactus/pull/22) (@mfroelund)
 
 ### Fixed
+- Fix xlon0 and xlat0 replacement process in derived variables [\#78](https://github.com/ACCORD-NWP/tactus/pull/78) (@romick-knmi)
+- Disable default compilation for older cycles [\#90](https://github.com/ACCORD-NWP/tactus/pull/90) (@pardallio)
+- Changed binary fetching logic [\#28](https://github.com/ACCORD-NWP/tactus/pull/28) (@pardallio)
+- Bugfix for ecflow replacing in #37 [\#79](https://github.com/ACCORD-NWP/tactus/pull/79) (@trygveasp)
+- Fix IFSEPS control member MARS stream via new optional `stream_control` config key. [\#64](https://github.com/ACCORD-NWP/tactus/pull/64) (@kastelecn)
 - Set sys\_name in config file. [\#61](https://github.com/ACCORD-NWP/tactus/pull/61)(@kastelecn)
 - Temporary bindir setting for fa\_sfx2clim on deode\_49t2. [\#48](https://github.com/ACCORD-NWP/tactus/pull/55) (@kastelecn)
 - Correct documentation links. [\#49](https://github.com/ACCORD-NWP/tactus/pull/49) (@uandrae)
@@ -46,6 +86,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Use GDAL options object [\#15](https://github.com/ACCORD-NWP/tactus/pull/15) (@trygveasp)
 - Get wrapper with an empty default value. [\#17](https://github.com/ACCORD-NWP/tactus/pull/17) (@trygveasp)
 - Remove deode files. [\#4](https://github.com/ACCORD-NWP/tactus/pull/4) (@mfroelund)
+
+### Removed
+- Obsolete EPS config files. [\#80](https://github.com/ACCORD-NWP/tactus/pull/80) (@uandrae)
 
 ## [1.0.0] - 2026-04-30
 

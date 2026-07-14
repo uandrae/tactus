@@ -38,12 +38,13 @@ def set_times(config):
     if "start" not in times:
         times.update({"start": times["basetime"]})
         logger.debug("Set start to {}", times["start"])
+
     if "end" not in times:
         times.update({"end": times["basetime"]})
         logger.debug("Set end to {}", times["end"])
 
     times.update({"start": evaluate_date(times["start"])})
-    times.update({"end": evaluate_date(times["end"])})
+    times.update({"end": evaluate_date(times["end"], reference_date=times["start"])})
 
     if as_datetime(times["start"]) > as_datetime(times["end"]):
         raise ValueError(
@@ -195,12 +196,8 @@ def derived_variables(config, processor_layout=None):
         )
         raise NotImplementedError(msg)
 
-    xlat0 = config.get("domain.xlat0", "")
-    xlon0 = config.get("domain.xlon0", "")
-    if not xlat0:
-        xlat0 = config.get("domain.xlatcen")
-    if not xlon0:
-        xlon0 = config.get("domain.xloncen")
+    xlat0 = config.get("domain.xlat0", config.get("domain.xlatcen"))
+    xlon0 = config.get("domain.xlon0", config.get("domain.xloncen"))
 
     pi = 4.0 * atan(1.0)
     xrpk = sin(float(xlat0) * pi / 180.0)

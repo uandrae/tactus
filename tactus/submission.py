@@ -339,6 +339,7 @@ class TaskSettings(object):
                     "VALIDTIME",
                     "LOGLEVEL",
                     "ARGS",
+                    "FP_PRECISION",
                     "WRAPPER",
                     "NPROC",
                     "NPROC_IO",

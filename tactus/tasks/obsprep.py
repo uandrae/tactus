@@ -198,6 +198,7 @@ class ObsPrep(Task):
     # lets multiple aircraft sub-types (AMDAR, MODES, EHS …) all be accepted.
     _OBSOUL_MERGE_NAMES = {
         "amdar": "2",   # OBSOUL type 2 = aircraft
+        "synop": "1",   # OBSOUL type 1 = synop/ship
     }
 
     def _stage_obstype(self, obstype, ymdrr):

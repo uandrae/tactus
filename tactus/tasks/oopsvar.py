@@ -66,9 +66,9 @@ class OopsVar(Task):
             self.da_scratch, yyyy, mm, dd, rr, "odbmerge_3dvar", "ECMA"
         )
         # --- binary ---
-        oovar_bin = self.get_binary("OOVAR")
+        oovar_bin = self.get_binary("ifs4dvar.DP")
         bindir = os.path.dirname(oovar_bin)
-        os.symlink(oovar_bin, "OOVAR")
+        os.symlink(oovar_bin, "ifs4dvar.DP")
 
         # ioassign tools — must be executable in the working directory
         for tool in ("ioassign", "create_ioassign"):
@@ -123,7 +123,7 @@ class OopsVar(Task):
         # them (cold-start coupling files from ARPEGE FULLPOS use spectral storage
         # which RDFA2GP requests as gridpoint, causing FACILO DESACCORD CSP./PDG.)
         # self._sp2gp_first_guess("ICMSHOOPS+0000")
-        fg_local = os.path.abspath("ICMSHOOPS+0000")
+        fg_local = "ICMSHOOPS+0000"
         for link_name in (
             "ICMSHMINIIMIN", "ICMSHMINIINIT", "ICMRFMINI0000",
             "ICMSHOOPSINIT", "ICMSHOOPSIMIN",
@@ -167,6 +167,7 @@ class OopsVar(Task):
         rte = dict(os.environ)
         rte.update(
             {
+                "ECKIT_MPI_FORCE": "parallel",
                 "EC_MEMINFO": "0",
                 "EC_LINUX_TRBK": "1",
                 "EC_MPI_ATEXIT": "0",
@@ -179,6 +180,7 @@ class OopsVar(Task):
                 "DR_HOOK": "0",
                 "DR_HOOK_SILENT": "1",
                 "DR_HOOK_IGNORE_SIGNALS": "-1",
+                "DR_HOOK_ASSERT_MPI_INITIALIZED": "0",
                 # ODB
                 "BASETIME": ymdrr,  # hretr_conv.F90:380 expects YYYYMMDDHH, not ISO 8601
                 "ODB_ANALYSIS_DATE": f"{yyyy}{mm}{dd}",
@@ -213,9 +215,10 @@ class OopsVar(Task):
         )
 
         # --- run OOVAR ---
-        BatchJob(rte, wrapper=self.platform.substitute(self.wrapper)).run(
-            "./OOVAR oops.json"
-        )
+        with open("oops.log", "a") as oops_log:
+            BatchJob(rte, wrapper=self.platform.substitute(self.wrapper)).run(
+                "./ifs4dvar.DP oops.json", logfile=oops_log
+            )
 
         # --- verify and archive ---
         analysis = "ICMSHOOPS+0000"

@@ -71,7 +71,8 @@ canari_base:
     LAEPDS: false
     LAERFO: true
     LAESNM: false
-    LAESST: true
+    LAESNM_IMS: false
+    LAESST: false
     LAESTA: false
     LAESTU: false
     LAET2M: true

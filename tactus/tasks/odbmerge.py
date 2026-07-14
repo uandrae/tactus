@@ -60,14 +60,14 @@ class OdbMerge(Task):
 
         # --- locate binaries ---
         shuffle_bin = self.get_binary("shuffle")
-        if not os.path.isfile(shuffle_bin):
+        if not os.access(shuffle_bin, os.X_OK):
             shuffle_bin = self.get_binary("shuffle.x")
         bin_dir = os.path.dirname(shuffle_bin)
         for binary in ["shuffle", "ioassign", "merge_ioassign", "create_ioassign"]:
             src = os.path.join(bin_dir, binary)
-            if not os.path.isfile(src):
+            if not os.access(src, os.X_OK):
                 src = os.path.join(bin_dir, binary + ".x")
-            if os.path.isfile(src) and not os.path.lexists(binary):
+            if os.access(src, os.X_OK) and not os.path.lexists(binary):
                 os.symlink(src, binary)
 
         # --- collect available BATOR subbases for this stream ---
@@ -141,6 +141,7 @@ class OdbMerge(Task):
                     self.wdir, "ECMA", "ECMA.poolmask"
                 ),
                 "IOASSIGN": os.path.join(self.wdir, "ECMA", "IOASSIGN"),
+                "DR_HOOK_ASSERT_MPI_INITIALIZED": "0",
             }
         )
 

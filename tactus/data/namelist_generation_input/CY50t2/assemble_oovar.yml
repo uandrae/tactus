@@ -1,0 +1,35 @@
+oovar_fort4:
+  - oovar_fort4_base
+
+oovar_obs:
+  - oovar_obs_base
+
+oovar_obs_tlad:
+  - oovar_obs_tlad_base
+
+oovar_bmatrix:
+  - oovar_bmatrix_base
+
+oovar_geometry:
+  - oovar_geometry_base
+
+oovar_traj:
+  - oovar_traj_base
+
+oovar_linmod:
+  - oovar_linmod_base
+
+oovar_nonlinmod:
+  - oovar_nonlinmod_base
+
+oovar_write_spec:
+  - oovar_write_spec_base
+
+oovar_write_analysis:
+  - oovar_write_analysis_base
+
+oovar_gom_setup:
+  - oovar_gom_setup_base
+
+oovar_gom_setup_hres:
+  - oovar_gom_setup_hres_base

@@ -3,7 +3,6 @@
 import json
 import os
 import shutil
-import subprocess
 
 from ..config_parser import ConfigPaths
 from ..datetime_utils import as_datetime

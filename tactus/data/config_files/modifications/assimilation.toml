@@ -358,8 +358,6 @@ obs_step = 60
   01_INTEL = ["load", "intel/2023.2.0"]
 
 # ---- Canari (MASTERODB conf 701, surface OI) ----
-# libphyex_dp.so bakes in mpi_serial T symbols that override real OpenMPI W symbols
-# process-wide; MPL always sees NUMPROC=1. Run serial (srun -n 1) to match.
 [submission.task_exceptions.Canari]
   NPROC  = 1
 
@@ -415,8 +413,8 @@ obs_step = 60
 
 # ---- OopsVar (OOPS-based 3D-Var, single OOVAR call) ----
 [submission.task_exceptions.OopsVar]
-  bindir = "/perm/sis/tactus_bin/@CYCLE@/@COMPILER@/@PRECISION@/bin_gmkpack"
   NPROC  = 128
+  WRAPPER = "srun -n @NPROC@"
 
 [submission.task_exceptions.OopsVar.BATCH]
   NODES       = "#SBATCH --nodes=10"
@@ -425,10 +423,11 @@ obs_step = 60
   HINT        = "#SBATCH --hint=nomultithread"
   WALLTIME    = "#SBATCH --time=01:00:00"
 
+[submission.task_exceptions.OopsVar.ENV]
+  ECKIT_MPI_FORCE = "parallel"
+
 [submission.task_exceptions.OopsVar.MODULES]
-  01_INTEL = ["load", "intel/2023.2.0"]
-  MPIPACKAGE1 = ["unload", "hpcx-openmpi/2.9.0"]
-  MPIPACKAGE2 = ["load", "openmpi/4.1.1.1"]
+  01_INTEL = ["load", "intel/2021.4.0"]
 
 # ---- Screen (MASTERODB observational screening, OpenMP) ----
 [submission.task_exceptions.Screen]
