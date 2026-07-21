@@ -98,11 +98,12 @@ class Marsprep(Task):
         self.basetime = as_datetime(self.config["general.times.basetime"])
         forecast_range = as_timedelta(self.config["general.times.forecast_range"])
 
-        # Check if there are data for specific date in mars
-        check_data_available(self.basetime, self.mars)
-
         # Get boundary informations
         self.boundary = Boundary(config)
+
+        # Check if there are data for specific date in mars
+        check_data_available(self.boundary.bd_basetime, self.mars)
+
         self.steps = get_steplist(
             self.boundary.bd_offset, forecast_range, self.boundary.bdint
         )
@@ -206,7 +207,9 @@ class Marsprep(Task):
             request.update_request({"LEVELIST": "1"})
 
         # Set stream
-        base_stream = get_value_from_dict(self.mars["stream"], request.time)
+        base_stream = get_value_from_dict(
+            self.mars["stream"], self.init_date_str, request.time
+        )
         if bdmember == [0]:
             stream = self.mars.get("stream_control", base_stream)
         else:
