@@ -39,7 +39,7 @@ class Provider:
         """Construct the object.
 
         Args:
-            config (tactus.ParsedConfig): Configuration
+            config (ParsedConfig): Configuration
             identifier (str): Identifier string
             fetch (bool, optional): Fetch data. Defaults to False.
 
@@ -82,7 +82,7 @@ class Platform:
         """Construct object.
 
         Args:
-            config (tactus.ParsedConfig): Config.
+            config (ParsedConfig): Config.
 
         """
         self.config = config
@@ -700,7 +700,7 @@ class FileManager:
         """Construct the object.
 
         Args:
-            config (tactus.ParsedConfig): Configuration
+            config (ParsedConfig): Configuration
 
         """
         self.config = config
@@ -1138,7 +1138,7 @@ class LocalFileSystemSymlink(Provider):
         """Construct the object.
 
         Args:
-            config (tactus.ParsedConfig): Configuration
+            config (ParsedConfig): Configuration
             pattern (str): Identifier string
             fetch (bool, optional): Fetch data. Defaults to True.
 
@@ -1180,7 +1180,7 @@ class LocalFileSystemCopy(Provider):
         """Construct the object.
 
         Args:
-            config (tactus.ParsedConfig): Configuration
+            config (ParsedConfig): Configuration
             pattern (str): Identifier string
             fetch (bool, optional): Fetch data. Defaults to False.
 
@@ -1224,7 +1224,7 @@ class LocalFileSystemMove(Provider):
         """Construct the object.
 
         Args:
-            config (tactus.ParsedConfig): Configuration
+            config (ParsedConfig): Configuration
             pattern (str): Identifier string
             fetch (bool, optional): Fetch data. Defaults to False.
 
@@ -1268,7 +1268,7 @@ class ArchiveProvider(Provider):
         """Construct the object.
 
         Args:
-            config (tactus.ParsedConfig): Configuration
+            config (ParsedConfig): Configuration
             pattern (str): Filepattern
             fetch (bool, optional): Fetch the data. Defaults to True.
 
@@ -1295,7 +1295,7 @@ class ECFS(ArchiveProvider):
         """Construct ECFS provider.
 
         Args:
-            config (tactus.ParsedConfig): Configuration
+            config (ParsedConfig): Configuration
             pattern (str): Filepattern
             fetch (bool, optional): Fetch the data. Defaults to True.
         """
@@ -1328,7 +1328,7 @@ class SCP(ArchiveProvider):
         """Construct SCP provider.
 
         Args:
-            config (tactus.ParsedConfig): Configuration
+            config (ParsedConfig): Configuration
             pattern (str): Filepattern
             fetch (bool, optional): Fetch the data. Defaults to True.
         """
@@ -1382,7 +1382,7 @@ class FDB(ArchiveProvider):
         """Construct FDB provider.
 
         Args:
-            config (tactus.ParsedConfig): Configuration
+            config (ParsedConfig): Configuration
             pattern (str): Filepattern
             fetch (bool, optional): Fetch the data. Defaults to True.
         """
@@ -1601,7 +1601,7 @@ class Resource:
         """Construct resource.
 
         Args:
-            _config (tactus.ParsedConfig): Configuration
+            _config (ParsedConfig): Configuration
             identifier (str): Resource identifier
 
         """
@@ -1616,7 +1616,7 @@ class LocalFileOnDisk(Resource):
         """Construct local file on disk.
 
         Args:
-            config (tactus.ParsedConfig): Configuration
+            config (ParsedConfig): Configuration
             pattern (str): Identifier pattern
             basetime (datetime.datetime, optional): Base time. Defaults to None.
             validtime (datetime.datetime, optional): Valid time. Defaults to None.
