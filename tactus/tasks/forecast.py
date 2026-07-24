@@ -70,11 +70,11 @@ class Forecast(PySurfexBaseTask):
     def post(self):
         """Do special post for Foreast."""
         logger.debug("Forecast class post")
-        self.fmanager.dump_storage(Path(self.wrk), self.name)
         if not self.iomerge_is_external:
             # Clean workdir
             if self.config["general.keep_workdirs"]:
-                self.rename_wdir(prefix="Finished_task_")
+                finished_wdir = self.rename_wdir(prefix="Finished_task_")
+                self.fmanager.dump_storage(Path(self.wrk), self.name, config_dir=finished_wdir)
             else:
                 self.remove_wdir()
 
@@ -135,7 +135,7 @@ class Forecast(PySurfexBaseTask):
             source = self.platform.substitute(
                 self.config["file_templates.sstfile.archive"], bd_index=i
             )
-            self.fmanager.input(f"{intp_bddir}/{source}", source)
+            self.fmanager.input(f"{intp_bddir}/{source}", source, register="system.intp_bddir")
             current_datetime += self.bdint
             i += 1
 
@@ -240,12 +240,12 @@ class Forecast(PySurfexBaseTask):
 
         # Initial files
         initfile, initfile_sfx = InitialConditions(self.config).find_initial_files()
-        self.fmanager.input(initfile, f"ICMSH{self.cnmexp}INIT")
+        self.fmanager.input(initfile, f"ICMSH{self.cnmexp}INIT", register="system.intp_bddir")
         if not self.surfex:
             initfile_sfx = None
 
         if initfile_sfx is not None:
-            self.fmanager.input(initfile_sfx, f"ICMSH{self.cnmexp}INIT.sfx")
+            self.fmanager.input(initfile_sfx, f"ICMSH{self.cnmexp}INIT.sfx", register="system.intp_bddir_sfx")
 
         # Use explicitly defined boundary dir if defined
         intp_bddir = self.config.get("system.intp_bddir", self.wrk)
@@ -257,7 +257,7 @@ class Forecast(PySurfexBaseTask):
             bd_index=0,
         )
 
-        self.fmanager.input(initfile, initfile_model)
+        self.fmanager.input(initfile, initfile_model, register = "system.intp_bddir")
 
         current_datetime = self.basetime + self.bdint
         end_datetime = self.basetime + as_timedelta(self.forecast_range)
@@ -273,7 +273,7 @@ class Forecast(PySurfexBaseTask):
                 validtime=current_datetime,
                 bd_index=i,
             )
-            self.fmanager.input(f"{intp_bddir}/{source}", target)
+            self.fmanager.input(f"{intp_bddir}/{source}", target, register="system.intp_bddir")
             current_datetime += self.bdint
             i += 1
 

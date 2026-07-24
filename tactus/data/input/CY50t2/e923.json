@@ -1,5 +1,6 @@
 {
   "rrtm": {
+    "register": "system.rrtm_dir",
     "path": "@RRTM_DIR@",
     "files": [
       "MCICA",
@@ -37,12 +38,14 @@
   },
   "part3": {
     "path": "@E923_DATA@",
+    "register": "system.e923_data",
     "files": {
       "N108_GL": "N108/N108_GL"
     }
   },
   "constant": {
     "path": "@E923_DATA@",
+    "register": "system.e923_data",
     "files": {
       "z0v_GL": "SURFACE_G/z0v_GL",
       "alv_GL": "SURFACE_G/alv_GL",
@@ -65,6 +68,7 @@
   },
   "part4": {
     "path": "@E923_DATA@",
+    "register": "system.e923_data",
     "param": [
       "veg",
       "lai"
@@ -76,6 +80,7 @@
   },
   "part5": {
     "path": "@E923_DATA@",
+    "register": "system.e923_data",
     "param": [
       "veg",
       "lai"
@@ -101,12 +106,14 @@
   },
   "part8": {
     "path": "@E923_DATA@",
+    "register": "system.e923_data",
     "files": {
       "abc_coef": "abc_O3/abc_quadra_@MM@"
     }
   },
   "part9": {
     "path": "@E923_DATA@",
+    "register": "system.e923_data",
     "files": {
       "aero_GL": "aero_tegen/aero.tegen.m@MM@_GL"
     }

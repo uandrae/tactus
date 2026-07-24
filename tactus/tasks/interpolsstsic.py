@@ -50,11 +50,12 @@ class InterpolSstSic(Task):
             self.config["file_templates.pgd.archive"], basetime=self.basetime
         )
 
-        self.fmanager.input(f"{climdir}/{climfile}", climfile)
+        self.fmanager.input(f"{climdir}/{climfile}", climfile, register="system.climdir")
 
         # Boundary input file(s)
         bddir_sst = self.config["system.bddir_sst"]
 
+        batch = BatchJob(os.environ, wrapper=self.wrapper)
         for bd_index, bd_time in self.boundary.bd_index_time_dict.items():
             merge_ocean_models = ""
             merge_ocean_files = ""
@@ -77,6 +78,7 @@ class InterpolSstSic(Task):
                         infile,
                         basetime=self.boundary.bd_basetime,
                         validtime=as_datetime(bd_time),
+                        register = "system.bddir_sst",
                     )
                 else:
                     raise NotImplementedError(f"SST model '{sstmodel}' not implemented")
@@ -123,9 +125,9 @@ class InterpolSstSic(Task):
             # Run gl
             outfile = self.platform.substitute(self.outfile, bd_index=bd_index)
             target = self.platform.substitute(self.target, bd_index=bd_index)
-            batch = BatchJob(os.environ, wrapper=self.wrapper)
-            batch.run(f"{self.gl} -sst3 -n namgl -o {outfile}")
+            #batch.run(f"{self.gl} -sst3 -n namgl -o {outfile}")
 
             logger.debug("WRKDIR: {}", self.wrk)
             logger.debug("OUTPUT {}", outfile)
-            self.fmanager.output(outfile, target)
+            #self.fmanager.output(outfile, target)
+            self.fmanager.output(infile, target)

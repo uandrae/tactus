@@ -62,4 +62,4 @@
   host_case = "@HOST_CASE@"
   host_domain = "@HOST_DOMAIN@"
   host_suite = "@HOST_CASE@"
-  test_data_path = "/perm/snh/ttr/data"
+  test_data_path = "@SCRATCH@/tactus_input_data/@TAG@_@SUBTAG@"

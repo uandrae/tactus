@@ -571,6 +571,13 @@ def get_args_parser(program_name=GeneralConstants.PACKAGE_NAME):
         help="Prepare binaries from an IAL hash",
     )
     parser_test.add_argument(
+        "--prepare-tasks",
+        "-t",
+        action="store_true",
+        default=False,
+        help="Prepare task input data",
+    )
+    parser_test.add_argument(
         "-m",
         action="store_true",
         dest="configure",

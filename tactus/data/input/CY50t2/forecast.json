@@ -1,6 +1,7 @@
 {
   "climate": {
     "path": "@CLIMDIR@",
+    "register": "system.climdir",
     "files": {
       "Const.Clim": "Const.Clim.@MM@",
       "const.clim.@FPDOMAIN@": "Const.Clim.@MM@",
@@ -9,6 +10,7 @@
   },
   "eclipse": {
     "path": "@ECLIPSE_DATA_DIR@",
+    "register": "platform.eclipse_data_dir",
     "files": [
       "sun_pos.dta",
       "moon_pos.dta"
@@ -16,6 +18,7 @@
   },
   "radiation_input": {
     "path": "@NCDIR@",
+    "register": "platform.ncdir",
     "files": [
       "aerosol_cams_climatology_43R3a.nc",
       "aerosol_cams_climatology_43R3_3D.nc",
@@ -29,6 +32,7 @@
   },
   "rrtm": {
     "path": "@RRTM_DIR@",
+    "register": "platform.rrtm_dir",
     "files": [
       "C11CLIM",
       "C12CLIM",
@@ -73,6 +77,7 @@
   },
   "rttov": {
     "path": "@RTTOV_COEFDIR@",
+    "register": "platform.rttov_coefdir",
     "files": [
       "rtcoef_meteosat_9_seviri.dat",
       "sccldcoef_meteosat_9_seviri.dat"

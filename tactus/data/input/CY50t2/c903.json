@@ -1,18 +1,21 @@
 {
   "climate": {
     "path": "@CLIMDIR@",
+    "register": "system.climdir",
     "files": {
       "@FPDOMAIN@_@MM@": "Const.Clim.@MM@"
     }
   },
   "rrtm": {
     "path": "@RRTM_DIR@",
+    "register": "system.rrtm_dir",
     "files": [
       "ECOZC"
     ]
   },
   "host_model_static_files": {
     "path": "@BDDIR@",
+    "register": "system.bddir",
     "files": {
       "ICMSHMARSINIT": "ICMSH_@BDMEMBER@+@L@",
       "ICMSHMARS": "ICMSH_@BDMEMBER@+@L@",
@@ -24,6 +27,7 @@
   },
   "host_model_files": {
     "path": "@BDDIR@",
+    "register": "system.bddir",
     "files": {
       "ICMSHMARS+00000@NNN@": "ICMSH_@BDMEMBER@+@L@",
       "ICMGGMARS+00000@NNN@": "ICMGG_@BDMEMBER@+@L@",

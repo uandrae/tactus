@@ -613,6 +613,9 @@ def run_test(args, config=None):
     if args.prepare_binaries:
         t.get_binaries()
 
+    elif args.prepare_tasks:
+        t.prep_tasks()
+
     elif args.list:
         t.list()
 

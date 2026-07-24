@@ -7,7 +7,6 @@
   famodel = "destine-@CYCLE@-@CSC@-oper"
   keep_workdirs = true
   surfex = true
-  trace_input_patterns = "@STATIC_DATA@"
   upd_sst_sic = true
 
 [general.namelist]

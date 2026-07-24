@@ -715,13 +715,14 @@ class FileManager:
                 self.do_storage = self.do_storage or self.storage[key]["active"]
                 self.storage[key].pop("active")
 
-    def dump_storage(self, target, name, storage=None):
+    def dump_storage(self, target, name, storage=None, config_dir=None):
         """Dump a storage registry.
 
         Args:
             target (Path): Output directory
             name (str): Output name tag
             storage (dict, optional): Optional storage dict
+            config_dir (str, optional): Optional path to config file
 
         """
         if self.do_storage:
@@ -731,6 +732,8 @@ class FileManager:
                 _storage = {}
                 for header, body in storage.items():
                     _storage[header] = body["data"] if "patterns" in body else body
+                if config_dir is not None:
+                    _storage["config"] = f"{config_dir}/config.toml"
                 logger.info(_storage)
                 json_object = json.dumps(_storage, indent=4)
                 filename = target / f"{name}_storage.json"
@@ -791,6 +794,7 @@ class FileManager:
         validtime=None,
         check_archive=False,
         provider_id="symlink",
+        register=None,
     ):
         """Set input data to tactus.
 
@@ -829,11 +833,20 @@ class FileManager:
         if provider.create_resource(destination):
             logger.debug("Using provider_id {}", provider_id)
             if self.do_storage and "input" in self.storage:
-                if provider_id not in self.storage["input"]["data"]:
-                    self.storage["input"]["data"][provider_id] = []
-                self.storage["input"]["data"][provider_id].append(
-                    {str(provider.identifier): destination.identifier}
-                )
+                if register is None:
+                    if provider_id not in self.storage["input"]["data"]:
+                        self.storage["input"]["data"][provider_id] = []
+                    self.storage["input"]["data"][provider_id].append(
+                        {str(provider.identifier): destination.identifier}
+                    )
+                else:
+                    if register not in self.storage["input"]["data"]:
+                        self.storage["input"]["data"][register] = {}
+                    if provider_id not in self.storage["input"]["data"][register]:
+                        self.storage["input"]["data"][register][provider_id] = []
+                    self.storage["input"]["data"][register][provider_id].append(
+                        {str(provider.identifier): destination.identifier}
+                    )
             return provider, destination
 
         # TODO check archive for file
@@ -882,6 +895,7 @@ class FileManager:
         for data_type, data in input_data_definition.items():
             logger.info("Link data type: {}", data_type)
             files = data["files"]
+            register = data["register"] if "register" in data else None
             if isinstance(files, list):
                 for filename in files:
                     self.input(
@@ -890,6 +904,7 @@ class FileManager:
                         basetime=basetime,
                         validtime=validtime,
                         provider_id=provider_id,
+                        register=register,
                     )
             elif isinstance(files, dict):
                 for outfile, infile in files.items():
@@ -899,6 +914,7 @@ class FileManager:
                         basetime=basetime,
                         validtime=validtime,
                         provider_id=provider_id,
+                        register=register,
                     )
             else:
                 raise RuntimeError(f"Unknown data type in {input_data_definition}")
@@ -911,6 +927,7 @@ class FileManager:
         validtime=None,
         check_archive=False,
         provider_id="symlink",
+        register=None,
     ):
         """Set input data to tactus.
 
@@ -930,6 +947,7 @@ class FileManager:
             validtime=validtime,
             check_archive=check_archive,
             provider_id=provider_id,
+            register=register,
         )
 
     def get_output(

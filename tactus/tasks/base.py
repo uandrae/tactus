@@ -191,6 +191,9 @@ class Task(object):
             fdir = f"{fdir}_{pid}"
             shutil.move(source, fdir)
             logger.info("Renamed {} to {}", source, fdir)
+            return fdir
+
+        return None
 
     def get_binary(self, binary_name, task_name=None):
         """Determine binary path from task or system config section.
@@ -278,11 +281,11 @@ class Task(object):
 
         """
         logger.debug("Base class post")
-        self.fmanager.dump_storage(Path(self.wrk), self.name)
 
         # Clean workdir
         if self.config["general.keep_workdirs"]:
-            self.rename_wdir(prefix="Finished_task_", source=source, target=target)
+            finished_wdir = self.rename_wdir(prefix="Finished_task_", source=source, target=target)
+            self.fmanager.dump_storage(Path(self.wrk), self.name, config_dir=finished_wdir)
         else:
             self.remove_wdir(wdir=source)
 

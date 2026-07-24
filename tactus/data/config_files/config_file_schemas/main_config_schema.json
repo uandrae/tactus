@@ -1047,26 +1047,6 @@
           "description": "Allow usage of static namelists as input for the tasks. The namelist should be located in the directory specified by platform.namelists and named with the convention namelist_{kind}_{task} where kind could be surfex or master and task forecast/pgd or similar. For the extraction of namelist see [namelists.md](../docs/namelists.md).",
           "type": "boolean"
         },
-        "trace_input_patterns": {
-          "description": "Defines patterns to search for in input file paths. Switches on the tracing of input files. Will dump a json summary in the work directory",
-          "default": [],
-          "oneOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "array",
-              "items": {
-                "anyOf": [
-                  {
-                    "type": "string",
-                    "format": "duration_slice"
-                  }
-                ]
-              }
-            }
-          ]
-        },
         "case": {
           "description": "Experiment name",
           "default": "tactus_case",
