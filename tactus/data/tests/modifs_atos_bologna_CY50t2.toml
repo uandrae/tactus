@@ -18,6 +18,7 @@
   os_macros = ["PERM"]
 
 [modifs.platform]
+  references_folder = "/scratch/snh/tactus_io_track/task_data"
   reference_data = "@SCRATCH@/@SYS_NAME@/@CYCLE@"
   ref_case = "@SUBTAG@_@CYCLE@_@CSC@_@DOMAIN@_@YMD_START@@CASE_SUFFIX@"
   refcheck_root = "/ec/project/accord/tactus/tactus_references"
@@ -58,8 +59,9 @@
 
 [modifs.system]
   # Picks up the case name and domain from the host run
-  case_suffix = ""
+  #case_suffix = ""
   host_case = "@HOST_CASE@"
   host_domain = "@HOST_DOMAIN@"
   host_suite = "@HOST_CASE@"
-  test_data_path = "@SCRATCH@/tactus_input_data/@TAG@_@SUBTAG@"
+  #test_data_path = "@SCRATCH@/tactus_input_data/@TAG@_@SUBTAG@"
+  test_data_path = "/scratch/snh/tactus_io_track/task_data/io_tracker_AROME_20260720T00/"

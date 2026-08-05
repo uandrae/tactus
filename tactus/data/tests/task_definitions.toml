@@ -12,12 +12,4 @@
   intp_bddir_sfx = "@CASE_DATA@"
 
 [cases.cy50t2_arome]
-  tasks = ["E923Constant"]
-
-[cases.cy50t2_arome.modifs.system]
-  input_case = "/scratch/snh/tactus/io_tracker_AROME_20260720T00"
-  case_data = "@TEST_DATA_PATH@/cy50t2_arome"
-  climdir = "@CASE_DATA@"
-  intp_bddir = "@CASE_DATA@"
-  intp_bddir_sfx = "@CASE_DATA@"
-
+  tasks = ["InterpolSstSic", "Forecast"]
