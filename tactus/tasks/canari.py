@@ -92,6 +92,7 @@ class Canari(Task):
         self.clim_dir = self.platform.get_system_value("climdir")
         self.nbpool = config.get("da.nbpool", 12)
         self.nlgen = NamelistGenerator(config, "canari")
+        self.nlgen_surfex = NamelistGenerator(config, "surfex")
         logger.debug("Constructed Canari task")
 
     def execute(self):
@@ -202,9 +203,9 @@ class Canari(Task):
                 "TO_ODB_SWAPOUT": "0",
                 "ODB_DEBUG": "0",
                 "ODB_CTX_DEBUG": "0",
-                "ODB_REPRODUCIBLE_SEQNO": "2",
+                "ODB_REPRODUCIBLE_SEQNO": "4",
                 "ODB_STATIC_LINKING": "1",
-                "ODB_IO_METHOD": "4",
+                "ODB_IO_METHOD": "1",
                 "ODB_IO_FILESIZE": "128",
                 "ODB_IO_GRPSIZE": str(self.nbpool),
                 "EC_PROFILE_HEAP": "0",
@@ -242,23 +243,14 @@ class Canari(Task):
             os.symlink(polynomes_src, "fort.61")
 
         # EXSEG1.nam is read by MASTERODB's SURFEX OI (unit 39) when LAEICS_SX=.T.
-        # Without it, NECHGU and LAROME in MODD_ASSIM are uninitialized (→ NECHGU=0,
-        # XRSCALDW=NECHGU/6=0, division-by-zero crash inside OI_CONTROL).
-        with open("EXSEG1.nam", "w") as _f:
-            _f.write(
-                "&NAM_NACVEG\n"
-                "  NECHGU=3,\n"
-                "  XSIGH2MO=0.1,\n"
-                "  XSIGT2MO=1.,\n"
-                "  LOBSWG=.FALSE.,\n"
-                "  LOBS2M=.TRUE.,\n"
-                "/\n"
-                "&NAM_ASSIM\n"
-                "  LAROME=.TRUE.,\n"
-                "  NPRINTLEV=1,\n"
-                "  LAESNM=.FALSE.,\n"
-                "/\n"
-            )
+        # Generated via the same nlgen_surfex/assemble_surfex.yml plumbing as Forecast's
+        # EXSEG1.nam ("canari" target = forecast's full scheme config + the NAM_NACVEG/
+        # NAM_ASSIM overrides CANARI's OI needs), so CANARI's SURFEX runs with the same
+        # LECOSG/NAM_IO_OFFLINE/ISBA-patch configuration as the forecast model that
+        # produced its PGD/PREP input, instead of falling back to SURFEX's own defaults.
+        self.nlgen_surfex.load("canari")
+        surfex_settings = self.nlgen_surfex.assemble_namelist("canari")
+        self.nlgen_surfex.write_namelist(surfex_settings, "EXSEG1.nam")
 
         # libphyex_dp.so bakes in mpi_serial stubs as T (strong) symbols, which
         # override the W (weak) mpi_initialized_ from libmpi_mpifh.so process-wide.
@@ -273,9 +265,16 @@ class Canari(Task):
         # so the SLURM task count matches MPL, regardless of SLURM --ntasks allocation.
         nproc = self.config.get("submission.task_exceptions.Canari.NPROC", 1)
         output_file = "ICMSHANAL+0000"
-        BatchJob(rte, wrapper=f"srun -n {nproc}").run(
-            "./MASTERODB"
-        )
+        # Plain execution (no ddt): with the non-degenerate NPRTRW/NPRTRV split,
+        # two consecutive runs under DDT's --mem-debug=fast both completed
+        # cleanly (no crash) - but a plain run with this exact same config
+        # crashed identically before (SIGSEGV in oi_control_/NMASK deallocate).
+        # DDT's allocator wrapper adds padding/guard bytes around every
+        # allocation, which can shift heap layout enough to mask a real
+        # corruption bug without fixing it (classic Heisenbug pattern). This
+        # run is the decisive test: does it crash plain, or is it genuinely
+        # fixed regardless of DDT?
+        BatchJob(rte, wrapper=f"srun -n {nproc}").run("./MASTERODB")
 
         if not os.path.isfile(output_file) or os.path.getsize(output_file) == 0:
             raise RuntimeError(f"Canari: {output_file} not produced or empty.")

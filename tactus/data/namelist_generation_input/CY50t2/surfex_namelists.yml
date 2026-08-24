@@ -154,6 +154,23 @@ sfx_forecast_AROME:
     XZ0HSN: 0.001
     XZ0SN: 0.01
 
+# CANARI surface OI (MASTERODB unit 39, read when LAEICS_SX=.T.). Without these,
+# NECHGU and LAROME in MODD_ASSIM are uninitialized (-> NECHGU=0, XRSCALDW=NECHGU/6=0,
+# division-by-zero crash inside OI_CONTROL). Layered on top of ${forecast} (see the
+# "canari" assembly target) so CANARI's SURFEX otherwise shares the same scheme
+# configuration (LECOSG, NAM_IO_OFFLINE, ISBA/patch settings, etc.) as the forecast model.
+sfx_canari_oi:
+  NAM_NACVEG:
+    NECHGU: 3
+    XSIGH2MO: 0.1
+    XSIGT2MO: 1.
+    LOBSWG: False
+    LOBS2M: True
+  NAM_ASSIM:
+    LAROME: True
+    NPRINTLEV: 1
+    LAESNM: False
+
 sfx_forecast_ALARO:
   NAM_DIAG_SURFN:
     N2M: 0

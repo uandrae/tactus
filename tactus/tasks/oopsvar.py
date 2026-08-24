@@ -190,7 +190,7 @@ class OopsVar(Task):
                 "ODB_TRACE_FILE": "List_odb",
                 "TO_ODB_DEBUG": "0",
                 "ODB_TRACE_PROC": "0",
-                "ODB_IO_METHOD": "4",
+                "ODB_IO_METHOD": "1",
                 "ODB_IO_FILESIZE": "128",
                 "ODB_IO_GRPSIZE": str(self.nbpool),
                 "BATOR_NBSLOT": str(self.config.get("da.bator_nbslot", 1)),

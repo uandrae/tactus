@@ -4,6 +4,7 @@ Uses the SHUFFLE binary and merge_ioassign.
 """
 import datetime
 import os
+import shlex
 import shutil
 
 from ..datetime_utils import as_datetime
@@ -99,12 +100,7 @@ class OdbMerge(Task):
         logger.info("OdbMerge: merging subbases: {}", bases_to_merge)
 
         # --- ODB environment ---
-        # Use non_reprod_seqno (UPDATED, single-table FROM hdr) for all streams.
-        # reprod_seqno_2 is READONLY with a multi-table join; the cmake ODB PUT fails
-        # with message code=-2 when timeslot_index.index.len is mismatched (NMDI ghost
-        # pools produced by cmake BATOR where odb1_create_table initialises index.len=NMDI
-        # and maketimeslot_index does not update all pools).
-        odb_reprod_seqno = "-1"
+        odb_reprod_seqno = "2"
         rte = dict(os.environ)
         rte.update(
             {
@@ -114,7 +110,7 @@ class OdbMerge(Task):
                 "ODB_CTX_DEBUG": "0",
                 "ODB_REPRODUCIBLE_SEQNO": odb_reprod_seqno,
                 "ODB_STATIC_LINKING": "1",
-                "ODB_IO_METHOD": "4",
+                "ODB_IO_METHOD": "1",
                 "ODB_IO_FILESIZE": "128",
                 "ODB_IO_GRPSIZE": str(self.nbpool),
                 "EC_PROFILE_HEAP": "0",
@@ -133,10 +129,7 @@ class OdbMerge(Task):
                 "ODB_SRCPATH_ECMA": os.path.join(self.wdir, "ECMA"),
                 "ODB_DATAPATH_ECMA": os.path.join(self.wdir, "ECMA"),
                 "ODB_SRCPATH_RSTBIAS": os.path.join(self.wdir, "ECMA"),
-                # Poolmask creation via gather4poolmask_counts crashes (SIGSEGV) when
-                # the cmake ODB BATOR produces ghost pools with index.body.len=NMDI.
-                # CANARI re-creates its own poolmask, so it is safe to skip here.
-                "ODB_ECMA_CREATE_POOLMASK": "0" if self.family1 == "surface" else "1",
+                "ODB_ECMA_CREATE_POOLMASK": "1",
                 "ODB_ECMA_POOLMASK_FILE": os.path.join(
                     self.wdir, "ECMA", "ECMA.poolmask"
                 ),
@@ -168,8 +161,11 @@ class OdbMerge(Task):
         # -b1: BATOR always runs as a single process regardless of NPROC.
         # NPROC (= da.oops.nbpool for 3dvar) determines how many shuffle MPI
         # tasks srun launches, which sets the number of output pool files.
-        shuffle_cmd = f"./shuffle -iECMA -oECMA -b1 -a{na}"
-        BatchJob(rte, wrapper=self.platform.substitute(self.wrapper)).run(shuffle_cmd)
+        shuffle_bin_cmd = f"./shuffle -iECMA -oECMA -b1 -a{na}"
+        with open("env_dump.sh", "w") as fh:
+            for key, value in rte.items():
+                fh.write(f"export {key}={shlex.quote(value)}\n")
+        BatchJob(rte, wrapper=self.platform.substitute(self.wrapper)).run(shuffle_bin_cmd)
 
         if not os.path.isdir("ECMA"):
             raise RuntimeError("OdbMerge: shuffle did not produce an ECMA database.")

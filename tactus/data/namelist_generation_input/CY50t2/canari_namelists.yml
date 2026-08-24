@@ -339,10 +339,8 @@ canari_base:
   NAMPAR0:
     NOUTPUT: 1
     NPROC: ${cfg:submission.task_exceptions.Canari.NPROC,16}
-    NPRTRW: ${cfg:submission.task_exceptions.Canari.NPROC,16}
     NPRGPNS: ${cfg:submission.task_exceptions.Canari.NPROC,16}
     NPRGPEW: 1
-    NPRTRV: 1
     MP_TYPE: 2
     MBX_SIZE: 2048000000
   NAMPAR1:

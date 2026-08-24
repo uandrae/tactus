@@ -62,7 +62,15 @@ class OdbIngestionTask(Task):
         obsprep_dir = os.path.join(self.da_scratch, yyyy, mm, dd, rr, "obsprep")
 
         # --- binary ---
-        bin_path = self.get_binary(self._BINARY_NAME)
+        # Allow a per-obstype override (e.g. "Bator_synop") so a single
+        # obstype can point at a different build than the rest of this task.
+        specific_task = f"{self.name}_{self.obstype}"
+        task_name = (
+            specific_task
+            if self.config.get(f"submission.task_exceptions.{specific_task}") is not None
+            else None
+        )
+        bin_path = self.get_binary(self._BINARY_NAME, task_name=task_name)
         bindir = os.path.dirname(bin_path)
         for tool in ["create_ioassign", "ioassign"]:
             src = os.path.join(bindir, tool)
@@ -100,7 +108,7 @@ class OdbIngestionTask(Task):
                 "ODB_CTX_DEBUG": "0",
                 "ODB_REPRODUCIBLE_SEQNO": "2",
                 "ODB_STATIC_LINKING": "1",
-                "ODB_IO_METHOD": "4",
+                "ODB_IO_METHOD": "1",
                 "ODB_IO_FILESIZE": "128",
                 "ODB_IO_GRPSIZE": str(self.nbpool),
                 "EC_PROFILE_HEAP": "0",
@@ -126,7 +134,7 @@ class OdbIngestionTask(Task):
                 "ODB_SRCPATH_ECMA": os.path.join(self.wdir, f"ECMA.{self.obstype}"),
                 "ODB_SRCPATH_RSTBIAS": os.path.join(self.wdir, "ECMA"),
                 "ODB_DATAPATH_ECMA": os.path.join(self.wdir, f"ECMA.{self.obstype}"),
-                "ODB_ECMA_CREATE_POOLMASK": "1",
+                "ODB_ECMA_CREATE_POOLMASK": "2",
                 "ODB_ECMA_POOLMASK_FILE": os.path.join(
                     self.wdir, f"ECMA.{self.obstype}", "ECMA.poolmask"
                 ),
