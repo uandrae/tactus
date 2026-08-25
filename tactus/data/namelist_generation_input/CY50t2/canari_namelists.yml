@@ -3,7 +3,7 @@ canari_base:
     LFDBOP: false
     NSPPR: 0
   NAMDIM:
-    NPROMA: -1
+    NPROMA: -50
   NAMARG:
     LELAM: true
     NCONF: 701
@@ -16,7 +16,9 @@ canari_base:
     LVERTFE: true
     CVFE_ETAH: CHORDAL
     NVFE_TYPE: 3
-  NAMDYNA: {}
+    LAPRXPK: true
+  NAMDYNA:
+    LSLAG: true
   NAMDYNCORE: {}
   NAMRIP:
     CSTOP: h0
@@ -25,6 +27,15 @@ canari_base:
     NBITCS: 30
     NBITPG: 30
     NSTRON: -1
+    YFAL: CLOUD_WATER
+    YFAL%NBITS: 16
+    YFAI: ICE_CRYSTAL
+    YFAI%NBITS: 16
+    YFAS: SNOW
+    YFAS%NBITS: 16
+    YFAR: RAIN
+    YFAR%NBITS: 16
+    YFAG: GRAUPEL
   NAMFAINIT:
     JPXTRO: 2000
   NAMGRIB:
@@ -35,7 +46,11 @@ canari_base:
   NEMCT0: {}
   NEMDIM: {}
   NEMDYN: {}
-  NEMELBC0A: {}
+  NEMELBC0A:
+    NBICOU: 0
+    NBICOT: 0
+    NBICOP: 0
+    NECRIPL: 0
   NEMELBC0B: {}
   NEMFPEZO: {}
   NEMGEO: {}
@@ -72,7 +87,7 @@ canari_base:
     LAERFO: true
     LAESNM: false
     LAESNM_IMS: false
-    LAESST: false
+    LAESST: true
     LAESTA: false
     LAESTU: false
     LAET2M: true
@@ -170,6 +185,7 @@ canari_base:
   NAMDFI: {}
   NAMDPHY:
     LDIRCLSMOD: true   # take T2M directly from atm FA first guess (CLAEF1k style)
+    NCSNEC: 1
   NAMDVISI: {}
   NAMDWET: {}
   # ---- full-pos / output (must be present, empty for CANARI) ----
@@ -195,9 +211,42 @@ canari_base:
   NAMGFL:
     YQ_NL%CNAME: HUMI.SPECIFI
     YQ_NL%LGP: true
-    YQ_NL%LREQOUT: true
+    YQ_NL%LREQOUT: false
     YQ_NL%LSP: false
     YQ_NL%NREQIN: 1
+    YI_NL%LGPINGP: false
+    YI_NL%LGP: true
+    YI_NL%LT1: true
+    YI_NL%LPHY: false
+    YI_NL%NREQIN: 0
+    YI_NL%REFVALI: 0.
+    YI_NL%LREQOUT: false
+    YL_NL%LGPINGP: false
+    YL_NL%LGP: true
+    YL_NL%LT1: true
+    YL_NL%LPHY: false
+    YL_NL%NREQIN: 0
+    YL_NL%REFVALI: 0.
+    YL_NL%LREQOUT: false
+    YR_NL%LGPINGP: false
+    YR_NL%LGP: true
+    YR_NL%LT1: true
+    YR_NL%LPHY: false
+    YR_NL%NREQIN: 0
+    YR_NL%REFVALI: 0.
+    YR_NL%LREQOUT: false
+    YS_NL%LGPINGP: false
+    YS_NL%LGP: true
+    YS_NL%LT1: true
+    YS_NL%LPHY: false
+    YS_NL%NREQIN: 0
+    YS_NL%REFVALI: 0.
+    YS_NL%LREQOUT: false
+    YTKE_NL%LGP: true
+    YTKE_NL%LGPINGP: false
+    YTKE_NL%LREQOUT: false
+    YTKE_NL%LT1: true
+    YTKE_NL%NREQIN: 0
   # ---- gravity wave drag ----
   NAMGWD: {}
   NAMGWDIAG: {}
@@ -239,7 +288,9 @@ canari_base:
   NAMCLI: {}
   NAMCLOP15: {}
   NAMCLTC: {}
-  NAMCOK: {}
+  NAMCOK:
+    RCT2SY: 3.9
+    RCH2SY: 2.5
   NAMCOM: {}
   NAMCOMPO: {}
   NAMCOSJO: {}
@@ -271,14 +322,32 @@ canari_base:
   NAMNUDGLH: {}
   NAMOOPS: {}
   NAMOPTCMEM: {}
-  NAMPARAR: {}
+  NAMPARAR:
+    CMICRO: NONE
   NAMPERTOBS: {}
   NAMPERTPAR: {}
-  NAMPHMSE: {}
-  NAMPHY: {}
-  NAMPHY0: {}
+  NAMPHMSE:
+    LPGDFWR: false
+  NAMPHY:
+    LNEBN: false
+    LVGSN: false
+    LO3ABC: false
+    LCONDWT: false
+    LAEROSEA: false
+    LAEROLAN: false
+    LAEROSOO: false
+    LAERODES: false
+  NAMPHY0:
+    USURIC: 0.175
+    USURICE: 0.5
+    USURICL: 1.
+    USURID: 0.1
+    EDK: 1.
+    EDD: 1.
   NAMPHY1: {}
-  NAMPHY2: {}
+  NAMPHY2:
+    LRAFTUR: false
+    XMULAF: 0.
   NAMPHY3: {}
   NAMPHYDS: {}
   NAMPPC: {}
@@ -301,7 +370,9 @@ canari_base:
   NAMSCM: {}
   NAMSEKF: {}
   NAMSENS: {}
-  NAMSFXCMP: {}
+  NAMSFXCMP:
+    CFLDNAME(1): '????????????????'
+    NBBITS(1): 24
   NAMSIMPHL: {}
   NAMSPNG: {}
   NAMSPP: {}
@@ -329,7 +400,13 @@ canari_base:
   NAMAERDET: {}
   NAMAERO: {}
   # ---- AROME-specific (empty for conf 701) ----
-  NAM_CANAPE: {}
+  NAM_CANAPE:
+    REF_A_H2: 100000.
+    REF_A_T2: 100000.
+    REF_S_H2: 0.1
+    REF_S_T2: 1.6
+    REF_S_SST: 0.8
+    REF_A_SST: 200000.
   NAM_NEBN: {}
   NAM_PARAM_ICEN: {}
   NAM_PARAM_MFSHALLN: {}
@@ -341,6 +418,8 @@ canari_base:
     NPROC: ${cfg:submission.task_exceptions.Canari.NPROC,16}
     NPRGPNS: ${cfg:submission.task_exceptions.Canari.NPROC,16}
     NPRGPEW: 1
+    NPRTRW: ${cfg:submission.task_exceptions.Canari.NPROC,16}
+    NPRTRV: 1
     MP_TYPE: 2
     MBX_SIZE: 2048000000
   NAMPAR1:

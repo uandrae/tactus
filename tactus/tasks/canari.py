@@ -259,22 +259,52 @@ class Canari(Task):
         # CANARI surface OI computation is unaffected (it does not need real MPI).
         rte["DR_HOOK_ASSERT_MPI_INITIALIZED"] = "0"
 
+        # RESOLVED (2026-08-25): CANARI's oi_control_ SIGSEGV (TBB allocator
+        # internals, oi_control.F90:562/573) was multi-rank specific — see the
+        # full writeup in this experiment's config.toml under
+        # [submission.task_exceptions.Canari]. NPROC is pinned to 1 there and
+        # picked up below via self.config.get(...), which re-reads that TOML
+        # fresh on every run. [submission.task_exceptions.Canari.ENV] also
+        # documents OMPI_MCA_pml=ob1 (needed for a separate MPI_Finalize/UCX
+        # crash, still present even at NPROC=1) for the record, but .ENV
+        # entries are only baked into the generated job script at suite
+        # regeneration time ("tactus case -c ..."), unlike self.config reads
+        # — confirmed the hard way (job ran with NPROC=1 correctly but no
+        # OMPI_MCA_pml in its environment, and crashed again). Set explicitly
+        # here too so it actually takes effect without needing a live-suite
+        # regeneration.
+        rte["OMPI_MCA_pml"] = "ob1"
+
+        # Kept from that investigation as cheap, still-useful safety nets:
+        rte["OMP_NUM_THREADS"] = "1"  # harmless; not itself the fix
+        rte["UCX_HANDLE_ERRORS"] = "bt"  # gets a backtrace out of UCX's signal handler, if it ever fires again
+
+        # Diagnostic only (10-50x slowdown from Valgrind's instrumentation);
+        # leave VALGRIND_CANARI unset for normal runs.
+        _use_valgrind = os.environ.get("VALGRIND_CANARI", "0") == "1"
+
         # --- run MASTERODB (CANARI conf 701) ---
         # cmake MASTERODB: libphyex_dp.so bakes in mpi_serial T symbols that override
-        # real OpenMPI W symbols process-wide → MPL_NUMPROC=1 always. Force srun -n 1
-        # so the SLURM task count matches MPL, regardless of SLURM --ntasks allocation.
+        # real OpenMPI W symbols process-wide → MPL_NUMPROC=1 always. Force srun -n
+        # {nproc} so the SLURM task count matches MPL, regardless of SLURM --ntasks
+        # allocation (nproc is 1 — see the resolution note above).
         nproc = self.config.get("submission.task_exceptions.Canari.NPROC", 1)
         output_file = "ICMSHANAL+0000"
-        # Plain execution (no ddt): with the non-degenerate NPRTRW/NPRTRV split,
-        # two consecutive runs under DDT's --mem-debug=fast both completed
-        # cleanly (no crash) - but a plain run with this exact same config
-        # crashed identically before (SIGSEGV in oi_control_/NMASK deallocate).
-        # DDT's allocator wrapper adds padding/guard bytes around every
-        # allocation, which can shift heap layout enough to mask a real
-        # corruption bug without fixing it (classic Heisenbug pattern). This
-        # run is the decisive test: does it crash plain, or is it genuinely
-        # fixed regardless of DDT?
-        BatchJob(rte, wrapper=f"srun -n {nproc}").run("./MASTERODB")
+        # `ulimit -c unlimited` before exec so a core file is produced on any
+        # future SIGSEGV/SIGABRT — gdb on the core gives the exact faulting
+        # frame regardless of which runtime's signal handler (or none)
+        # intercepts it. This is exactly what pinned down the TBB allocator
+        # fault during the investigation above.
+        if _use_valgrind:
+            inner = (
+                "valgrind --tool=memcheck --track-origins=yes --error-limit=no "
+                "--log-file=valgrind.rank%p.log ./MASTERODB"
+            )
+        else:
+            inner = "./MASTERODB"
+        BatchJob(rte, wrapper=f"srun -n {nproc}").run(
+            f"bash -c 'ulimit -c unlimited; exec {inner}'"
+        )
 
         if not os.path.isfile(output_file) or os.path.getsize(output_file) == 0:
             raise RuntimeError(f"Canari: {output_file} not produced or empty.")
