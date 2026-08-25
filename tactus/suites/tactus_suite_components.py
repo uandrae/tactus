@@ -812,12 +812,16 @@ class LBCSubFamilyGenerator(EcflowSuiteFamily):
             interpolation_task_name = "E927"
         for bd_index_time_dict in self.lbc_time_generator:
             bd_index_time_dict_sst = bd_index_time_dict.copy()
-            if (
-                self.config["suite_control.mode"] == "restart" and 0 in bd_index_time_dict
-            ) or (
-                self.config["suite_control.mode"] == "start"
-                and 0 in bd_index_time_dict
-                and not self.is_first_cycle
+            if not self.config["suite_control.do_assimilation"] and (
+                (
+                    self.config["suite_control.mode"] == "restart"
+                    and 0 in bd_index_time_dict
+                )
+                or (
+                    self.config["suite_control.mode"] == "start"
+                    and 0 in bd_index_time_dict
+                    and not self.is_first_cycle
+                )
             ):
                 del bd_index_time_dict[0]
 
