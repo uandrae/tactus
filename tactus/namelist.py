@@ -144,7 +144,7 @@ class NamelistComparator:
         """Construct the comparator.
 
         Args:
-            config (tactus.ParsedConfig): Configuration
+            config (ParsedConfig): Configuration
 
         Raises:
             SystemExit
@@ -315,7 +315,7 @@ class NamelistGenerator:
         """Construct the generator.
 
         Args:
-            config (tactus.ParsedConfig): Configuration
+            config (ParsedConfig): Configuration
             kind (str): namelist kind, e.g. 'master', 'surfex', or any DA task
                 such as 'bator'.  The corresponding files
                 ``<cycle>/assemble_<kind>.yml`` and
@@ -662,7 +662,7 @@ class NamelistIntegrator:
         """Construct the integrator.
 
         Args:
-            config (tactus.ParsedConfig): Configuration
+            config (ParsedConfig): Configuration
 
         Raises:
             SystemExit   # noqa: DAR401

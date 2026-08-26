@@ -33,7 +33,7 @@ def mars_selection(selection: str, config: ParsedConfig) -> dict:
 
     Args:
         selection             (str): The selection to use.
-        config (tactus.ParsedConfig): Configuration object
+        config (ParsedConfig): Configuration object
 
     Returns:
          mars                (dict): mars config section
@@ -265,6 +265,10 @@ def get_steps_and_members_to_retrieve(
     if perturbed_members:
         members_dict["perturbed_members"] = perturbed_members
 
+    # Populate members_dict to make sure we wait for missing files
+    if len(waitfor_steps) > 0 and len(members_dict) == 0:
+        members_dict["no_member_info"] = [None]
+
     return (
         steps,
         waitfor_steps,
@@ -302,7 +306,7 @@ def get_domain_data(config):
     """Read and return domain data.
 
     Args:
-        config (tactus.ParsedConfig): Configuration from which we get the domain data
+        config (ParsedConfig): Configuration from which we get the domain data
     Returns:
         String containing the domain info for MARS
     """

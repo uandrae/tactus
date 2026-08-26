@@ -46,6 +46,8 @@
     },
     "da": {
       "$ref": "#/da"
+    "genesis": {
+      "$ref": "#/definitions/genesis"
     }
   },
   "required": [
@@ -334,13 +336,25 @@
       "properties": {
         "pertana": {
           "title": "Perturbation of initial atmospheric conditions with boundary data.",
-          "type": "boolean",
-          "default": false
+          "type": "object",
+          "properties": {
+            "active": {
+              "title": "Activate pertana perturbations",
+              "type": "boolean",
+              "default": false
+            }
+          }
         },
         "pertsurf": {
           "title": "Perturbation of initial surfex conditions",
-          "type": "boolean",
-          "default": false
+          "type": "object",
+          "properties": {
+            "active": {
+              "title": "Activate pertsurf perturbations",
+              "type": "boolean",
+              "default": false
+            }
+          }
         }
       }
     },
@@ -475,6 +489,11 @@
           "type": "boolean"
         },
         "split_mars": {
+          "description": "Split Marsprep in multiple tasks for each data type",
+          "type": "boolean",
+          "default": true
+        },
+        "split_mars_by_step": {
           "description": "Do marsprep only for one step before c903",
           "type": "boolean",
           "default": false
@@ -739,6 +758,33 @@
           "type": "string",
           "description": "whether to use chache build/install folders",
           "default": "@REFERENCE_DATA@/bundle_cache"
+        }
+      }
+    },
+    "genesis": {
+      "title": "Genesis information",
+      "description": "Genesis information of the configuration file",
+      "type": "object",
+      "properties": {
+        "command": {
+          "description": "The command used to generate the configuration file",
+          "type": "string"
+        },
+        "package": {
+          "description": "The package used to generate the configuration file",
+          "type": "string"
+        },
+        "version": {
+          "description": "The version of the package used to generate the configuration file",
+          "type": "string"
+        },
+        "user": {
+          "description": "The user who generated the configuration file",
+          "type": "string"
+        },
+        "time": {
+          "description": "The time when the configuration file was generated",
+          "type": "string"
         }
       }
     },
@@ -1162,7 +1208,7 @@
             "sice",
             "none"
           ],
-          "default": "sice"
+          "default": "none"
         }
       },
       "required": [

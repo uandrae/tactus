@@ -80,7 +80,8 @@ class Canari(Task):
         """Construct Canari task.
 
         Args:
-            config (tactus.ParsedConfig): Experiment configuration.
+            config (ParsedConfig): Configuration
+
         """
         Task.__init__(self, config, __class__.__name__)
         self.basetime = as_datetime(config["general.times.basetime"])
