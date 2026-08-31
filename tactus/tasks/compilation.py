@@ -47,33 +47,6 @@ class IALClone(Task):
             batch_job.run(f"cd {self.ial_dir}; git checkout {self.git_ial_branch}")
 
 
-class IALBundleCreate(Task):
-    """IAL create bundle."""
-
-    def __init__(self, config):
-        """Construct object.
-
-        Args:
-            config (tactus.ParsedConfig): Configuration
-        """
-        Task.__init__(self, config, __class__.__name__)
-
-        ial_dir = self.config["compile.ial_dir"]
-        git_token = self.config["compile.git_token"]
-        git_token_str = ""
-        if git_token:
-            git_token_str = f"--github-token {git_token}"
-        self.git_token_str = git_token_str
-        self.ial_dir = self.platform.substitute(ial_dir)
-
-    def execute(self):
-        """Execute task."""
-        batch_job = BatchJob(os.environ)
-        if not self.git_token_str:
-            os.environ["GITHUB"] = "git@github.com:"
-        batch_job.run(f"cd {self.ial_dir}/bundle; ./ial-bundle create {self.git_token_str}")
-
-
 class TactusBundleCreate(Task):
     """tactus create bundle."""
 
@@ -205,14 +178,6 @@ class TactusBundleBuild(Task):
 
         self.arch = self.config["compile.arch"]
 
-        ial_dir = self.config.get("compile.ial_dir", None)
-        self.ial_dir = self.platform.substitute(ial_dir) if ial_dir else None
-
-        self.forecast_only = self.config.get("compile.forecast_only", True)
-        bindir = "@CASEDIR@/install"
-        builddir = "@CASEDIR@/build"
-
-
         # check for existing builds in cache_dir
         if self.config["compile.cache"]:
             try:
@@ -330,22 +295,13 @@ class TactusBundleBuild(Task):
 
     def execute(self):
         """Execute task."""
-
-        forecast_only_flag = "--forecast-only " if self.forecast_only else ""
-        batch_job = BatchJob(os.environ)
-        if self.ial_dir:
-            batch_job.run(
-                f"cd {self.ial_dir}/bundle; ./ial-bundle build "
-                + f"--arch arch/{self.arch} --ninja {forecast_only_flag}"
-                + f"--install-dir={self.exp_bindir} --install "
-                + f"--build-dir={self.exp_builddir}"
-            )
-        elif not self.skip_build:
+        if not self.skip_build:
             logger.info("Building bundle sources at {}", self.exp_builddir)
+            batch_job = BatchJob(os.environ)
             nthreads = os.environ.get("OMP_NUM_THREADS")
             batch_job.run(
                 f"cd {self.bundle_dir};  {self.ecbundle_bin} build "
-                + f"--arch {self.arch} {self.ninja_arg} {forecast_only_flag}"
+                + f"--arch {self.arch} {self.ninja_arg}"
                 + f" {self.rebuild_args} {self.prec_arg} -j{nthreads} "
                 + f"--install-dir={self.exp_bindir} --install "
                 + f"--build-dir={self.exp_builddir}"
@@ -358,4 +314,3 @@ class TactusBundleBuild(Task):
 
         else:
             logger.info("found existing install for this bundle at {}", self.exp_bindir)
-

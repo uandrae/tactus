@@ -161,7 +161,7 @@ class Canari(Task):
         # --- first guess (atmosphere FA + surface sfx) ---
         # Delegate to the same logic used by Initialization/FirstGuess so
         # that cold-start, restart, and cycling modes are all handled correctly.
-        fg_atm, fg_sfx = InitialConditions(self.config).find_initial_files()
+        fg_atm, fg_sfx, _ = InitialConditions(self.config).find_initial_files("Canari")
         for link in ["ICMSHCYCLINIT", "ICMGGCYCLINIT", "ELSCFCYCLALBC000", "ELSCFANALALBC000", "ICMSHANALINIT"]:
             if not os.path.lexists(link):
                 os.symlink(fg_atm, link)

@@ -8,10 +8,15 @@
 #
 # Required: fill in [da] paths below for your site / experiment.
 # ------------------------------------------------------------------
+#
+[general.times]
+  start = "2025-02-09T00:00:00Z"
+  end   = "2025-02-09T03:00:00Z"
+
 
 # submission
 [submission]
-bindir = "/lus/h2resw01/scratch/sis/tactus/CY50t2_AROME_DKCOEXP_20250209/install/bin/"
+#bindir = "/lus/h2resw01/scratch/sis/tactus/CY50t2_AROME_DKCOEXP_20250209/install/bin/"
 #bindir = "/perm/sis/tactus_bin/@CYCLE@/@COMPILER@/@PRECISION@/bin"
 precision = "R64"
 
@@ -66,7 +71,7 @@ assimilation_input_definition = "@CYCLE@/assimilation.json"
 
   # Cold-start basetime (YYYYMMDDRR): skips VARBC / first-guess checks.
   # Set to the first cycle of a new experiment.
-  bgcycle = ""
+  bgcycle = "2025020900"
 
   # Enable OpenMP threading in MASTERODB screening step
   openmp = true

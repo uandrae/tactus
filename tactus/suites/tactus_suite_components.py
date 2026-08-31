@@ -1493,13 +1493,13 @@ class CycleFamily(EcflowSuiteFamily):
                 task_settings,
                 input_template,
                 ecf_files,
-                trigger=initialization_family,
+                trigger=perturbation_family,
                 ecf_files_remotely=ecf_files_remotely,
                 cycle_basetime=cycle_basetime,
             )
             forecast_trigger = assimilation_family
         else:
-            forecast_trigger = initialization_family
+            forecast_trigger = perturbation_family
 
         ForecastFamily(
             self,

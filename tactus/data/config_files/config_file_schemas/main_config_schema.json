@@ -46,6 +46,7 @@
     },
     "da": {
       "$ref": "#/da"
+    },
     "genesis": {
       "$ref": "#/definitions/genesis"
     }
