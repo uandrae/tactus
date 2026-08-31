@@ -142,6 +142,20 @@
 [submission.task_exceptions.Topography.MODULES]
   GDAL = ["load", "gdal/3.6.2"]
 
+[submission.task_exceptions.Addpert]
+  binary = "ADDPERT"
+  WRAPPER = "srun"
+
+[submission.task_exceptions.Addpert.BATCH]
+  CPUS = "#SBATCH --cpus-per-task=1"
+  MEM = "#SBATCH --mem=32GB"
+  NODES = "#SBATCH --nodes=1"
+  NTASKS = "#SBATCH --ntasks=1"
+  WALLTIME = "#SBATCH --time=00:30:00"
+
+[submission.task_exceptions.Addpert.ENV]
+  DR_HOOK_ASSERT_MPI_INITIALIZED = 0
+
 [submission.types.GMKPACK_EXECUTABLES]
   NPROC = 1
   NPROC_IO = 0
@@ -187,20 +201,6 @@
   NETCDF = ["load", "netcdf4/4.9.3"]
   OPENMPI = ["load", "openmpi/4.1.1.1"]
 
-[submission.task_exceptions.Addpert]
-  binary = "ADDPERT"
-  WRAPPER = "srun"
-
-[submission.task_exceptions.Addpert.BATCH]
-  CPUS = "#SBATCH --cpus-per-task=1"
-  MEM = "#SBATCH --mem=32GB"
-  NODES = "#SBATCH --nodes=1"
-  NTASKS = "#SBATCH --ntasks=1"
-  WALLTIME = "#SBATCH --time=00:30:00"
-
-[submission.task_exceptions.Addpert.ENV]
-  DR_HOOK_ASSERT_MPI_INITIALIZED = 0
-
 [submission.types.background_hpc]
   SCHOST = "localhost"
   tasks = ["Background_hpc", "UnitTest"]
@@ -229,7 +229,16 @@
 [submission.types.parallel]
   NPROC = 32
   SCHOST = "hpc"
-  tasks = ["Forecast", "E927", "Pgd", "Prep", "C903", "IALBundleBuild", "OopsVar", "Canari"]
+  tasks = [
+    "Forecast",
+    "E927",
+    "Pgd",
+    "Prep",
+    "C903",
+    "IALBundleBuild",
+    "OopsVar",
+    "Canari"
+  ]
   WRAPPER = "srun"
 
 [submission.types.parallel.BATCH]

@@ -72,7 +72,7 @@ e923_base:
     NSUPERSEDE: 0
   NAMCLA:
     FENVN: 0.0
-    LIPGD: false  
+    LIPGD: false
     LKEYF: true
     LNEWORO: false
     LNEWORO2: false

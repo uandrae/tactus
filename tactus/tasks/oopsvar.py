@@ -1,5 +1,5 @@
-"""OopsVar task — OOPS-based 3D-Var (screening + minimization via OOVAR).
-"""
+"""OopsVar task — OOPS-based 3D-Var (screening + minimization via OOVAR)."""
+
 import datetime
 import glob
 import json
@@ -39,7 +39,9 @@ class OopsVar(Task):
         self.da_const_dir = self.platform.substitute(config["da.const_dir"])
         self.domain = config["domain.name"]
         self.varbc_dir = self.platform.substitute(config.get("da.varbc_dir", ""))
-        self.varbc_init_dir = self.platform.substitute(config.get("da.varbc_init_dir", ""))
+        self.varbc_init_dir = self.platform.substitute(
+            config.get("da.varbc_init_dir", "")
+        )
         self.analysis_dir = self.platform.substitute(config.get("da.analysis_dir", ""))
         self.da_bgcycle = config.get("da.bgcycle", "")
         self.rttov_coef_dir = self.platform.substitute(
@@ -79,9 +81,7 @@ class OopsVar(Task):
 
         # --- ECMA ODB ---
         if not os.path.isdir(odb_dir):
-            raise FileNotFoundError(
-                f"OopsVar: merged ECMA ODB not found at {odb_dir}"
-            )
+            raise FileNotFoundError(f"OopsVar: merged ECMA ODB not found at {odb_dir}")
         shutil.copytree(odb_dir, "ECMA", symlinks=True)
         # The merged IOASSIGN references subbases as ../ECMA.{obstype}/ relative to
         # ECMA/, so they must exist alongside ECMA in the work dir.
@@ -111,7 +111,13 @@ class OopsVar(Task):
 
         # --- first guess: blended surface analysis from BlendSur ---
         blendsur_file = os.path.join(
-            self.da_scratch, yyyy, mm, dd, rr, "blendsur", "ICMSHANAL+0000_updated_surface"
+            self.da_scratch,
+            yyyy,
+            mm,
+            dd,
+            rr,
+            "blendsur",
+            "ICMSHANAL+0000_updated_surface",
         )
         if not os.path.isfile(blendsur_file):
             raise FileNotFoundError(
@@ -125,8 +131,11 @@ class OopsVar(Task):
         # self._sp2gp_first_guess("ICMSHOOPS+0000")
         fg_local = "ICMSHOOPS+0000"
         for link_name in (
-            "ICMSHMINIIMIN", "ICMSHMINIINIT", "ICMRFMINI0000",
-            "ICMSHOOPSINIT", "ICMSHOOPSIMIN",
+            "ICMSHMINIIMIN",
+            "ICMSHMINIINIT",
+            "ICMRFMINI0000",
+            "ICMSHOOPSINIT",
+            "ICMSHOOPSIMIN",
             "ICMSHSCREINIT",
         ):
             if not os.path.lexists(link_name):
@@ -135,7 +144,11 @@ class OopsVar(Task):
         # --- VarBC ---
         dateprev = (self.basetime - datetime.timedelta(days=1)).strftime("%Y/%m/%d")
         varbc_src = os.path.join(self.varbc_dir, dateprev, f"VARBC.cycle_{rr}")
-        varbc_init_src = os.path.join(self.varbc_init_dir, f"VARBC.cycle_{rr}") if self.varbc_init_dir else ""
+        varbc_init_src = (
+            os.path.join(self.varbc_init_dir, f"VARBC.cycle_{rr}")
+            if self.varbc_init_dir
+            else ""
+        )
         if os.path.isfile(varbc_src):
             shutil.copy2(varbc_src, "VARBC.cycle")
         elif varbc_init_src and os.path.isfile(varbc_init_src):
@@ -165,54 +178,52 @@ class OopsVar(Task):
 
         # --- ODB environment ---
         rte = dict(os.environ)
-        rte.update(
-            {
-                "ECKIT_MPI_FORCE": "parallel",
-                "EC_MEMINFO": "0",
-                "EC_LINUX_TRBK": "1",
-                "EC_MPI_ATEXIT": "0",
-                "EC_PROFILE_HEAP": "0",
-                "OOPS_LOGFILE": "oops.log",
-                "OMP_NUM_THREADS": os.environ.get("OMP_NUM_THREADS", "1"),
-                "F_UFMTENDIAN": "big",
-                "F_RECLUNIT": "BYTE",
-                "MKL_DYNAMIC": "FALSE",
-                "DR_HOOK": "0",
-                "DR_HOOK_SILENT": "1",
-                "DR_HOOK_IGNORE_SIGNALS": "-1",
-                "DR_HOOK_ASSERT_MPI_INITIALIZED": "0",
-                # ODB
-                "BASETIME": ymdrr,  # hretr_conv.F90:380 expects YYYYMMDDHH, not ISO 8601
-                "ODB_ANALYSIS_DATE": f"{yyyy}{mm}{dd}",
-                "ODB_ANALYSIS_TIME": f"{rr}0000",
-                "ODB_STATIC_LINKING": "1",
-                "TO_ODB_ECMWF": "0",
-                "ODB_TRACE_FILE": "List_odb",
-                "TO_ODB_DEBUG": "0",
-                "ODB_TRACE_PROC": "0",
-                "ODB_IO_METHOD": "1",
-                "ODB_IO_FILESIZE": "128",
-                "ODB_IO_GRPSIZE": str(self.nbpool),
-                "BATOR_NBSLOT": str(self.config.get("da.bator_nbslot", 1)),
-                "ODB_CCMA_CREATE_DIRECT": "1",
-                "BATOR_WINDOW_LEN": str(self.config.get("da.bator_window_len", 180)),
-                "BATOR_WINDOW_SHIFT": str(self.config.get("da.bator_window_shift", -90)),
-                "BATOR_SLOT_LEN": str(self.config.get("da.bator_slot_len", 0)),
-                "BATOR_CENTER_LEN": "0",
-                "ODB_SRCPATH_RSTBIAS": os.path.join(self.wdir, "ECMA"),
-                "ODB_SRCPATH_ECMA": os.path.join(self.wdir, "ECMA"),
-                "ODB_DATAPATH_ECMA": os.path.join(self.wdir, "ECMA"),
-                "ODB_SRCPATH_CCMA": os.path.join(self.wdir, "CCMA"),
-                "ODB_DATAPATH_CCMA": os.path.join(self.wdir, "CCMA"),
-                "ODB_CCMA_CREATE_POOLMASK": "1",
-                "ODB_CCMA_POOLMASK_FILE": os.path.join(self.wdir, "CCMA", "CCMA.poolmask"),
-                "ODB_CMA": "CCMA",
-                "IOASSIGN": os.path.join(self.wdir, "IOASSIGN"),
-                "RTTOV_COEFDIR": self.rttov_coef_dir,
-                "PATH": f"{os.getcwd()}:{rte.get('PATH', '')}",
-                "OOPS_TRACE": "1",
-            }
-        )
+        rte.update({
+            "ECKIT_MPI_FORCE": "parallel",
+            "EC_MEMINFO": "0",
+            "EC_LINUX_TRBK": "1",
+            "EC_MPI_ATEXIT": "0",
+            "EC_PROFILE_HEAP": "0",
+            "OOPS_LOGFILE": "oops.log",
+            "OMP_NUM_THREADS": os.environ.get("OMP_NUM_THREADS", "1"),
+            "F_UFMTENDIAN": "big",
+            "F_RECLUNIT": "BYTE",
+            "MKL_DYNAMIC": "FALSE",
+            "DR_HOOK": "0",
+            "DR_HOOK_SILENT": "1",
+            "DR_HOOK_IGNORE_SIGNALS": "-1",
+            "DR_HOOK_ASSERT_MPI_INITIALIZED": "0",
+            # ODB
+            "BASETIME": ymdrr,  # hretr_conv.F90:380 expects YYYYMMDDHH, not ISO 8601
+            "ODB_ANALYSIS_DATE": f"{yyyy}{mm}{dd}",
+            "ODB_ANALYSIS_TIME": f"{rr}0000",
+            "ODB_STATIC_LINKING": "1",
+            "TO_ODB_ECMWF": "0",
+            "ODB_TRACE_FILE": "List_odb",
+            "TO_ODB_DEBUG": "0",
+            "ODB_TRACE_PROC": "0",
+            "ODB_IO_METHOD": "1",
+            "ODB_IO_FILESIZE": "128",
+            "ODB_IO_GRPSIZE": str(self.nbpool),
+            "BATOR_NBSLOT": str(self.config.get("da.bator_nbslot", 1)),
+            "ODB_CCMA_CREATE_DIRECT": "1",
+            "BATOR_WINDOW_LEN": str(self.config.get("da.bator_window_len", 180)),
+            "BATOR_WINDOW_SHIFT": str(self.config.get("da.bator_window_shift", -90)),
+            "BATOR_SLOT_LEN": str(self.config.get("da.bator_slot_len", 0)),
+            "BATOR_CENTER_LEN": "0",
+            "ODB_SRCPATH_RSTBIAS": os.path.join(self.wdir, "ECMA"),
+            "ODB_SRCPATH_ECMA": os.path.join(self.wdir, "ECMA"),
+            "ODB_DATAPATH_ECMA": os.path.join(self.wdir, "ECMA"),
+            "ODB_SRCPATH_CCMA": os.path.join(self.wdir, "CCMA"),
+            "ODB_DATAPATH_CCMA": os.path.join(self.wdir, "CCMA"),
+            "ODB_CCMA_CREATE_POOLMASK": "1",
+            "ODB_CCMA_POOLMASK_FILE": os.path.join(self.wdir, "CCMA", "CCMA.poolmask"),
+            "ODB_CMA": "CCMA",
+            "IOASSIGN": os.path.join(self.wdir, "IOASSIGN"),
+            "RTTOV_COEFDIR": self.rttov_coef_dir,
+            "PATH": f"{os.getcwd()}:{rte.get('PATH', '')}",
+            "OOPS_TRACE": "1",
+        })
 
         # --- run OOVAR ---
         with open("oops.log", "a") as oops_log:
@@ -247,24 +258,26 @@ class OopsVar(Task):
     def _link_oops_namelists(self, yyyy, mm, dd, rr):
         """Generate all OOPS namelist files and oops.json from YAML sources."""
         namelist_map = {
-            "oovar_fort4":          "fort.4",
-            "oovar_obs":            "naml_observations",
-            "oovar_obs_tlad":       "naml_observations_tlad",
-            "oovar_bmatrix":        "naml_bmatrix",
-            "oovar_geometry":       "naml_standard_geometry",
-            "oovar_traj":           "naml_traj_model",
-            "oovar_linmod":         "naml_linear_model",
-            "oovar_nonlinmod":      "naml_nonlinear_model",
-            "oovar_write_spec":     "naml_oops_write_spec",
+            "oovar_fort4": "fort.4",
+            "oovar_obs": "naml_observations",
+            "oovar_obs_tlad": "naml_observations_tlad",
+            "oovar_bmatrix": "naml_bmatrix",
+            "oovar_geometry": "naml_standard_geometry",
+            "oovar_traj": "naml_traj_model",
+            "oovar_linmod": "naml_linear_model",
+            "oovar_nonlinmod": "naml_nonlinear_model",
+            "oovar_write_spec": "naml_oops_write_spec",
             "oovar_write_analysis": "naml_write_analysis",
-            "oovar_gom_setup":      "namelist_gom_setup",
+            "oovar_gom_setup": "namelist_gom_setup",
             "oovar_gom_setup_hres": "namelist_gom_setup_hres",
         }
         for target, output_file in namelist_map.items():
             self.nlgen.generate_namelist(target, output_file)
 
         # yomlocs.F90 opens namelist_gom_setup_<N> (indexed by obs type slot)
-        if os.path.isfile("namelist_gom_setup") and not os.path.lexists("namelist_gom_setup_0"):
+        if os.path.isfile("namelist_gom_setup") and not os.path.lexists(
+            "namelist_gom_setup_0"
+        ):
             os.symlink("namelist_gom_setup", "namelist_gom_setup_0")
 
         self._render_oops_json(yyyy, mm, dd, rr)
@@ -284,7 +297,9 @@ class OopsVar(Task):
     def _link_const_files(self):
         """Symlink constant input files into the working directory."""
         if not self.oovar_input_def:
-            logger.warning("OopsVar: da.oovar_input_definition not set; skipping constant file links")
+            logger.warning(
+                "OopsVar: da.oovar_input_definition not set; skipping constant file links"
+            )
             return
 
         def_path = ConfigPaths.path_from_subpath(self.oovar_input_def)
@@ -292,9 +307,9 @@ class OopsVar(Task):
             entries = json.load(f)
 
         base_map = {
-            "const_dir":      self.da_const_dir,
+            "const_dir": self.da_const_dir,
             "rttov_coef_dir": self.rttov_coef_dir,
-            "ir_atlas_dir":   os.path.join(self.da_const_dir, "ir_atlas"),
+            "ir_atlas_dir": os.path.join(self.da_const_dir, "ir_atlas"),
         }
 
         for entry in entries:
@@ -375,5 +390,6 @@ print(converted)
             )
         logger.info(
             "OopsVar: SP→GP conversion completed for {} ({} fields)",
-            path, result.stdout.strip(),
+            path,
+            result.stdout.strip(),
         )

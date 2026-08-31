@@ -1,21 +1,113 @@
 [
-  {"base": "const_dir", "pattern": "ATLAS_*",         "destination": null, "optional": true},
-  {"base": "const_dir", "pattern": "errgrib*",        "destination": null, "optional": true},
-  {"base": "const_dir", "pattern": "ECOZC",           "destination": null, "optional": true},
-  {"base": "const_dir", "pattern": "MCICA",           "destination": null, "optional": true},
-  {"base": "const_dir", "pattern": "RAD*",            "destination": null, "optional": true},
-  {"base": "const_dir", "pattern": "amv_*",           "destination": null, "optional": true},
-  {"base": "const_dir", "pattern": "bcor_noaa.dat",   "destination": null, "optional": true},
-  {"base": "const_dir", "pattern": "bcor_meto.dat",   "destination": null, "optional": true},
-  {"base": "const_dir", "pattern": "sigmab.dat",      "destination": null, "optional": true},
-  {"base": "const_dir", "pattern": "scat*",           "destination": null, "optional": true},
-  {"base": "const_dir", "pattern": "rmtberr*",        "destination": null, "optional": true},
-  {"base": "const_dir", "pattern": "correl.dat",      "destination": null, "optional": true},
-  {"base": "const_dir", "pattern": "rszcoef_fmt",     "destination": null, "optional": true},
-  {"base": "const_dir", "pattern": "iasichannels*",   "destination": null, "optional": true},
-  {"base": "const_dir", "pattern": "MAP_INCA_*.txt",  "destination": null, "optional": true},
-  {"base": "const_dir", "pattern": "LHN_DUMMY.fa",    "destination": null, "optional": true},
-  {"base": "rttov_coef_dir", "pattern": "*",          "destination": null, "optional": true},
-  {"base": "ir_atlas_dir",   "pattern": "*",          "destination": null, "optional": true},
-  {"amsub_alias": true}
+  {
+    "base": "const_dir",
+    "pattern": "ATLAS_*",
+    "destination": null,
+    "optional": true
+  },
+  {
+    "base": "const_dir",
+    "pattern": "errgrib*",
+    "destination": null,
+    "optional": true
+  },
+  {
+    "base": "const_dir",
+    "pattern": "ECOZC",
+    "destination": null,
+    "optional": true
+  },
+  {
+    "base": "const_dir",
+    "pattern": "MCICA",
+    "destination": null,
+    "optional": true
+  },
+  {
+    "base": "const_dir",
+    "pattern": "RAD*",
+    "destination": null,
+    "optional": true
+  },
+  {
+    "base": "const_dir",
+    "pattern": "amv_*",
+    "destination": null,
+    "optional": true
+  },
+  {
+    "base": "const_dir",
+    "pattern": "bcor_noaa.dat",
+    "destination": null,
+    "optional": true
+  },
+  {
+    "base": "const_dir",
+    "pattern": "bcor_meto.dat",
+    "destination": null,
+    "optional": true
+  },
+  {
+    "base": "const_dir",
+    "pattern": "sigmab.dat",
+    "destination": null,
+    "optional": true
+  },
+  {
+    "base": "const_dir",
+    "pattern": "scat*",
+    "destination": null,
+    "optional": true
+  },
+  {
+    "base": "const_dir",
+    "pattern": "rmtberr*",
+    "destination": null,
+    "optional": true
+  },
+  {
+    "base": "const_dir",
+    "pattern": "correl.dat",
+    "destination": null,
+    "optional": true
+  },
+  {
+    "base": "const_dir",
+    "pattern": "rszcoef_fmt",
+    "destination": null,
+    "optional": true
+  },
+  {
+    "base": "const_dir",
+    "pattern": "iasichannels*",
+    "destination": null,
+    "optional": true
+  },
+  {
+    "base": "const_dir",
+    "pattern": "MAP_INCA_*.txt",
+    "destination": null,
+    "optional": true
+  },
+  {
+    "base": "const_dir",
+    "pattern": "LHN_DUMMY.fa",
+    "destination": null,
+    "optional": true
+  },
+  {
+    "base": "rttov_coef_dir",
+    "pattern": "*",
+    "destination": null,
+    "optional": true
+  },
+  {
+    "base": "ir_atlas_dir",
+    "pattern": "*",
+    "destination": null,
+    "optional": true
+  },
+  {
+    "amsub_alias": true
+  }
 ]

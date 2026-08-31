@@ -8,6 +8,7 @@ Output ``surface.YYYYMMDDRR`` is the blended surface field used as the
 first guess for 3D-Var screening and as the Forecast initial conditions.
 
 """
+
 import os
 import shutil
 
@@ -33,9 +34,7 @@ class BlendSur(Task):
         self.cnmexp = config["general.cnmexp"]
         self.da_scratch = self.platform.substitute(config["da.scratch"])
         # Location of the +0000 LBC file (from InterpolationFamily)
-        self.intp_bddir = self.platform.substitute(
-            config.get("system.intp_bddir", "")
-        )
+        self.intp_bddir = self.platform.substitute(config.get("system.intp_bddir", ""))
         logger.debug("Constructed BlendSur task")
 
     def execute(self):
@@ -50,13 +49,9 @@ class BlendSur(Task):
 
         # --- inputs ---
         # LBC +000 file
-        lbc_file = os.path.join(
-            self.intp_bddir, f"ELSCF{self.cnmexp}ALBC000"
-        )
+        lbc_file = os.path.join(self.intp_bddir, f"ELSCF{self.cnmexp}ALBC000")
         if not os.path.isfile(lbc_file):
-            raise FileNotFoundError(
-                f"BlendSur: LBC +0000 not found at {lbc_file}"
-            )
+            raise FileNotFoundError(f"BlendSur: LBC +0000 not found at {lbc_file}")
         shutil.copy2(lbc_file, "AL_LBC")
 
         # CANARI analysis
@@ -112,7 +107,7 @@ class BlendSur(Task):
         BatchJob(rte, wrapper="").run(blendsur_bin)
         self._check_node("NODE2")
 
-        surface_out = f"ICMSHANAL+0000_updated_surface"
+        surface_out = "ICMSHANAL+0000_updated_surface"
         os.rename("AL_A", surface_out)
 
         # --- archive ---
@@ -130,6 +125,4 @@ class BlendSur(Task):
         if os.path.isfile(logfile):
             with open(logfile) as fh:
                 if "ERROR" in fh.read():
-                    raise RuntimeError(
-                        f"BlendSur: BLENDSUR failed — see {logfile}."
-                    )
+                    raise RuntimeError(f"BlendSur: BLENDSUR failed — see {logfile}.")

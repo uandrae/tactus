@@ -11,21 +11,163 @@
 #
 [general.times]
   start = "2025-02-09T00:00:00Z"
-  end   = "2025-02-09T03:00:00Z"
-
+  end = "2025-02-09T03:00:00Z"
 
 # submission
 [submission]
-#bindir = "/lus/h2resw01/scratch/sis/tactus/CY50t2_AROME_DKCOEXP_20250209/install/bin/"
-#bindir = "/perm/sis/tactus_bin/@CYCLE@/@COMPILER@/@PRECISION@/bin"
-precision = "R64"
+  # bindir = "/lus/h2resw01/scratch/sis/tactus/CY50t2_AROME_DKCOEXP_20250209/install/bin/"
+  # bindir = "/perm/sis/tactus_bin/@CYCLE@/@COMPILER@/@PRECISION@/bin"
+  precision = "R64"
+
+[submission.task_exceptions.ObsPrep]
+  NPROC = 1
+
+[submission.task_exceptions.ObsPrep.BATCH]
+  NTASKS = "#SBATCH --ntasks=1"
+  WALLTIME = "#SBATCH --time=00:20:00"
+
+# ---- BATOR (one task per obs type, serial per type) ----
+# BATOR is NOT yet built by the IAL CMake pipeline (which only produces MASTERODB).
+# It comes from a separate ARPEGE/ALADIN ODB compilation.
+# Point to the directory that contains BATOR, BLENDSUR,
+# shuffle, create_ioassign, ioassign, and merge_ioassign.
+[submission.task_exceptions.Bator]
+  bindir = "/perm/sis/tactus_bin/@CYCLE@/@COMPILER@/@PRECISION@/bin_gmkpack"
+  NPROC = 1
+
+[submission.task_exceptions.Bator.BATCH]
+  NTASKS = "#SBATCH --ntasks=1"
+  WALLTIME = "#SBATCH --time=00:10:00"
+
+[submission.task_exceptions.Bator.MODULES]
+  01_INTEL = ["load", "intel/2023.2.0"]
+
+[submission.task_exceptions.Bator.ENV]
+  DR_HOOK_ASSERT_MPI_INITIALIZED = "0"
+
+[submission.task_exceptions.Obsconvert]
+  NPROC = 1
+
+[submission.task_exceptions.Obsconvert.BATCH]
+  NTASKS = "#SBATCH --ntasks=1"
+  WALLTIME = "#SBATCH --time=00:10:00"
+
+[submission.task_exceptions.Obsconvert.ENV]
+  DR_HOOK_ASSERT_MPI_INITIALIZED = "0"
+
+[submission.task_exceptions.Obsconvert.MODULES]
+  01_INTEL = ["load", "intel/2023.2.0"]
+  OPENMPI = ["load", "openmpi/4.1.1.1"]
+
+# ---- OdbMerge (shuffle + merge_ioassign) ----
+[submission.task_exceptions.OdbMerge]
+  NPROC = 1
+
+[submission.task_exceptions.OdbMerge.BATCH]
+  NTASKS = "#SBATCH --ntasks=1"
+  WALLTIME = "#SBATCH --time=00:15:00"
+
+[submission.task_exceptions.OdbMerge.MODULES]
+  01_INTEL = ["load", "intel/2023.2.0"]
+
+# ---- Canari (MASTERODB conf 701, surface OI) ----
+[submission.task_exceptions.Canari]
+  NPROC = 1
+
+[submission.task_exceptions.Canari.BATCH]
+  NODES = "#SBATCH --nodes=1"
+  NTASKS = "#SBATCH --ntasks=1"
+  WALLTIME = "#SBATCH --time=00:30:00"
+  QOS = "#SBATCH --qos=np"
+  MEM = "#SBATCH --mem=120000MB"
+
+[submission.task_exceptions.Canari.MODULES]
+  01_INTEL = ["load", "intel/2021.4.0"]
+  OPENMPI = ["load", "hpcx-openmpi/2.9.0"]
+
+# ---- BlendSur (serial BLENDSUR utility) ----
+[submission.task_exceptions.BlendSur]
+  bindir = "/perm/sis/tactus_bin/@CYCLE@/@COMPILER@/@PRECISION@/bin_gmkpack"
+  binary = "BLENDSUR"
+  NPROC = 1
+
+[submission.task_exceptions.BlendSur.BATCH]
+  NTASKS = "#SBATCH --ntasks=1"
+  WALLTIME = "#SBATCH --time=00:10:00"
+
+[submission.task_exceptions.BlendSur.MODULES]
+  01_INTEL = ["load", "intel/2023.2.0"]
+
+  # ------------------------------------------------------------------
+  # Surface-only DA mode
+  # ------------------------------------------------------------------
+  # By default both surface OI (CANARI) and upper-air 3D-Var (OOVAR) are run.
+  # Set da.do_upper_air = false to run the surface chain only (CANARI +
+  # BlendSur) without the UpperAir family.  Useful for refining the CANARI
+  # chain independently or for surface-analysis-only experiments.
+  #
+  # do_upper_air = false
+
+  # ------------------------------------------------------------------
+  # OOPS-based 3D-Var (upper-air analysis via OOVAR)
+  # ------------------------------------------------------------------
+
+# ---- OopsVar (OOPS-based 3D-Var, single OOVAR call) ----
+[submission.task_exceptions.OopsVar]
+  NPROC = 128
+  WRAPPER = "srun -n @NPROC@"
+
+[submission.task_exceptions.OopsVar.BATCH]
+  NODES = "#SBATCH --nodes=10"
+  NTASKS = "#SBATCH --ntasks=128"
+  QOS = "#SBATCH --qos=np"
+  HINT = "#SBATCH --hint=nomultithread"
+  WALLTIME = "#SBATCH --time=01:00:00"
+
+[submission.task_exceptions.OopsVar.ENV]
+  ECKIT_MPI_FORCE = "parallel"
+
+[submission.task_exceptions.OopsVar.MODULES]
+  01_INTEL = ["load", "intel/2021.4.0"]
+
+# ---- Screen (MASTERODB observational screening, OpenMP) ----
+[submission.task_exceptions.Screen]
+  bindir = "@INSTALL_DIR@/@CYCLE@/@COMPILER@/@PRECISION@/@IAL_VERSION@/bin"
+  NPROC = 128
+
+[submission.task_exceptions.Screen.BATCH]
+  NODES = "#SBATCH --nodes=6"
+  NTASKS = "#SBATCH --ntasks=128"
+  CPUSPERTASK = "#SBATCH --cpus-per-task=2"
+  MEM = "#SBATCH --mem=200GB"
+  WALLTIME = "#SBATCH --time=00:30:00"
+
+[submission.task_exceptions.Screen.ENV]
+  OMP_NUM_THREADS = "2"
+  OMP_PLACES = "threads"
+
+# ---- Minim (MASTERODB 3D-Var minimization, OpenMP) ----
+[submission.task_exceptions.Minim]
+  bindir = "@INSTALL_DIR@/@CYCLE@/@COMPILER@/@PRECISION@/@IAL_VERSION@/bin"
+  NPROC = 128
+
+[submission.task_exceptions.Minim.BATCH]
+  NODES = "#SBATCH --nodes=16"
+  NTASKS = "#SBATCH --ntasks-per-node=16"
+  CPUSPERTASK = "#SBATCH --cpus-per-task=8"
+  WALLTIME = "#SBATCH --time=00:45:00"
+
+[submission.task_exceptions.Minim.ENV]
+  OMP_NUM_THREADS = "8"
+  OMP_PLACES = "threads"
 
 [system]
-assimilation_input_definition = "@CYCLE@/assimilation.json"
+  assimilation_input_definition = "@CYCLE@/assimilation.json"
 
 [suite_control]
   do_assimilation = true
   mode = "start"
+
 # ------------------------------------------------------------------
 # DA section — paths and tuning
 # ------------------------------------------------------------------
@@ -76,17 +218,25 @@ assimilation_input_definition = "@CYCLE@/assimilation.json"
   # Enable OpenMP threading in MASTERODB screening step
   openmp = true
 
-  odb_task_surface = "Obsconvert"   # default, can be "Bator"
-  odb_task_3dvar   = "Obsconvert"        # default, can be "Obsconvert"
+  odb_task_surface = "Obsconvert"  # default, can be "Bator"
+  odb_task_3dvar = "Obsconvert"  # default, can be "Obsconvert"
 
   # Observation types for CANARI surface analysis (obsprep + BATOR)
   obs_types_surface = ["synop"]
 
   # Observation types for 3D-Var upper-air analysis
   obs_types_3dvar = [
-    "synop", "gpssol",
-    "amdar", "geowind", "temp", "wp",
-    "seviri", "amsua", "amsub", "iasi", "ascat",
+    "synop",
+    "gpssol",
+    "amdar",
+    "geowind",
+    "temp",
+    "wp",
+    "seviri",
+    "amsua",
+    "amsub",
+    "iasi",
+    "ascat",
   ]
 
   # ------------------------------------------------------------------
@@ -98,45 +248,45 @@ assimilation_input_definition = "@CYCLE@/assimilation.json"
   # add a new network.
   obs_provider = "LACE"
 
-# ------------------------------------------------------------------
-# BATOR window / slot configuration
-# ------------------------------------------------------------------
-  bator_window_len   = 180   # window length [minutes], symmetric around analysis time
-  bator_window_shift = -90   # window start offset [minutes] (negative = before)
-  bator_slot_len     = 0     # slot length [minutes]; 0 = single slot
-  bator_nbslot       = 1     # number of BATOR time slots
+  # ------------------------------------------------------------------
+  # BATOR window / slot configuration
+  # ------------------------------------------------------------------
+  bator_window_len = 180  # window length [minutes], symmetric around analysis time
+  bator_window_shift = -90  # window start offset [minutes] (negative = before)
+  bator_slot_len = 0  # slot length [minutes]; 0 = single slot
+  bator_nbslot = 1  # number of BATOR time slots
 
   # Path to the obsoul_merge.pl script used to merge multiple OBSOUL files.
   # Supports @CYCLE@, @COMPILER@, @PRECISION@ substitutions.
   obsoul_merge_script = "/perm/sis/tactus_bin/@CYCLE@/@COMPILER@/@PRECISION@/bin/obsoul_merge.pl"
 
-# ------------------------------------------------------------------
-# GPS station whitelist for BATOR (list_gpssol)
-# ------------------------------------------------------------------
+  # ------------------------------------------------------------------
+  # GPS station whitelist for BATOR (list_gpssol)
+  # ------------------------------------------------------------------
   gpssol_stations = []
 
-# ==================================================================
-# Observation network registry
-# ==================================================================
-# Each [da.providers.<NAME>] block defines one observation provider.
-# ObsPrep reads the block selected by da.obs_provider at runtime.
-#
-# Network-level settings:
-#   obs_step  — minutes between archive file slots.
-#               0 = single slot at basetime (windowing disabled).
-#               60 = hourly archive; all slots inside the assimilation
-#                    window are searched and results merged.
-#
-# Per-obstype sub-tables ([da.providers.<NAME>.obstypes.<obstype>]):
-#   format      — file format: "OBSOUL", "BUFR", "NETCDF", "GRIB".
-#                 local_name is derived as "<format>.<obstype>".
-#   candidates  — filename templates tried in order.  All matches
-#                 across all window slots are collected and merged.
-#                 Placeholders: {ymdrr}, {yyyy}, {mm}, {dd}, {rr}.
-#   obs_step    — optional per-obstype override of the provider obs_step.
-#   source_dir  — optional; overrides da.obs_dir/YYYY/MM/DD as the
-#                 search root (supports @PLATFORM@ substitutions).
-# ==================================================================
+  # ==================================================================
+  # Observation network registry
+  # ==================================================================
+  # Each [da.providers.<NAME>] block defines one observation provider.
+  # ObsPrep reads the block selected by da.obs_provider at runtime.
+  #
+  # Network-level settings:
+  #   obs_step  — minutes between archive file slots.
+  #               0 = single slot at basetime (windowing disabled).
+  #               60 = hourly archive; all slots inside the assimilation
+  #                    window are searched and results merged.
+  #
+  # Per-obstype sub-tables ([da.providers.<NAME>.obstypes.<obstype>]):
+  #   format      — file format: "OBSOUL", "BUFR", "NETCDF", "GRIB".
+  #                 local_name is derived as "<format>.<obstype>".
+  #   candidates  — filename templates tried in order.  All matches
+  #                 across all window slots are collected and merged.
+  #                 Placeholders: {ymdrr}, {yyyy}, {mm}, {dd}, {rr}.
+  #   obs_step    — optional per-obstype override of the provider obs_step.
+  #   source_dir  — optional; overrides da.obs_dir/YYYY/MM/DD as the
+  #                 search root (supports @PLATFORM@ substitutions).
+  # ==================================================================
 
 # ------------------------------------------------------------------
 # LACE — Central-European limited-area consortium convention.
@@ -144,323 +294,181 @@ assimilation_input_definition = "@CYCLE@/assimilation.json"
 # Files are stored as hourly chunks; obs_step=60 collects the full window.
 # ------------------------------------------------------------------
 [da.providers.LACE]
-obs_step = 60
+  obs_step = 60
 
 [da.providers.LACE.obstypes.synop]
-obs_step   = 0
-format     = "OBSOUL"
-candidates = [
-  "obsoul_1_xxxxxx_hu_{ymdrr}",
-  "obsoul_1_xxxxxy_hu_{ymdrr}",
-  "obsoul_1_xxxxxy_at_{ymdrr}",
-  "obsoul_1_xxxxxy_cz_{ymdrr}",
-  "obsoul_1_xxxxxy_sk_{ymdrr}",
-  "obsoul_1_xxxxxy_ro_{ymdrr}",
-  "obsoul_1_xxxxxy_si_{ymdrr}",
-  "obsoul_1_xxxxxy_cr_{ymdrr}",
-  "obsoul_1_xxxxxy_pl_{ymdrr}",
-]
+  obs_step = 0
+  format = "OBSOUL"
+  candidates = [
+    "obsoul_1_xxxxxx_hu_{ymdrr}",
+    "obsoul_1_xxxxxy_hu_{ymdrr}",
+    "obsoul_1_xxxxxy_at_{ymdrr}",
+    "obsoul_1_xxxxxy_cz_{ymdrr}",
+    "obsoul_1_xxxxxy_sk_{ymdrr}",
+    "obsoul_1_xxxxxy_ro_{ymdrr}",
+    "obsoul_1_xxxxxy_si_{ymdrr}",
+    "obsoul_1_xxxxxy_cr_{ymdrr}",
+    "obsoul_1_xxxxxy_pl_{ymdrr}",
+  ]
 
 [da.providers.LACE.obstypes.gpssol]
-format     = "BUFR"
-candidates = ["bufr_1_ztd_egvap_{ymdrr}"]
+  format = "BUFR"
+  candidates = ["bufr_1_ztd_egvap_{ymdrr}"]
 
 [da.providers.LACE.obstypes.amdar]
-format     = "OBSOUL"
-candidates = ["obsoul_2_xxxxxx_xx_{ymdrr}", "obsoul_2_ehs_eu_{ymdrr}"]
+  format = "OBSOUL"
+  candidates = ["obsoul_2_xxxxxx_xx_{ymdrr}", "obsoul_2_ehs_eu_{ymdrr}"]
 
 [da.providers.LACE.obstypes.geowind]
-obs_step   = 0
-format     = "BUFR"
-candidates = ["bufr_3_geowind_xx_{ymdrr}"]
+  obs_step = 0
+  format = "BUFR"
+  candidates = ["bufr_3_geowind_xx_{ymdrr}"]
 
 [da.providers.LACE.obstypes.temp]
-format     = "OBSOUL"
-candidates = ["obsoul_5_xxxxxx_xx_{ymdrr}"]
+  format = "OBSOUL"
+  candidates = ["obsoul_5_xxxxxx_xx_{ymdrr}"]
 
 [da.providers.LACE.obstypes.wp]
-format     = "OBSOUL"
-candidates = ["obsoul_6_xxxxxx_xx_{ymdrr}"]
+  format = "OBSOUL"
+  candidates = ["obsoul_6_xxxxxx_xx_{ymdrr}"]
 
 [da.providers.LACE.obstypes.amsua]
-format     = "BUFR"
-candidates = [
-  "bufr_7_amsua_metopc_{ymdrr}",
-  "bufr_7_amsua_metopb_{ymdrr}",
-  "bufr_7_amsua_noaa18_{ymdrr}",
-  "bufr_7_amsua_noaa19_{ymdrr}",
-]
+  format = "BUFR"
+  candidates = [
+    "bufr_7_amsua_metopc_{ymdrr}",
+    "bufr_7_amsua_metopb_{ymdrr}",
+    "bufr_7_amsua_noaa18_{ymdrr}",
+    "bufr_7_amsua_noaa19_{ymdrr}",
+  ]
 
 [da.providers.LACE.obstypes.amsub]
-format     = "BUFR"
-candidates = [
-  "bufr_7_mhs_metopc_{ymdrr}",
-  "bufr_7_mhs_metopb_{ymdrr}",
-  "bufr_7_mhs_noaa19_{ymdrr}",
-]
+  format = "BUFR"
+  candidates = [
+    "bufr_7_mhs_metopc_{ymdrr}",
+    "bufr_7_mhs_metopb_{ymdrr}",
+    "bufr_7_mhs_noaa19_{ymdrr}",
+  ]
 
 [da.providers.LACE.obstypes.seviri]
-obs_step   = 0
-format     = "NETCDF"
-candidates = ["netcdf_7_seviri_xx_{ymdrr}"]
+  obs_step = 0
+  format = "NETCDF"
+  candidates = ["netcdf_7_seviri_xx_{ymdrr}"]
 
 [da.providers.LACE.obstypes.iasi]
-format     = "BUFR"
-candidates = [
-  "bufr_7_iasi_metopb_{ymdrr}",
-  "bufr_7_iasi_metopc_{ymdrr}",
-]
+  format = "BUFR"
+  candidates = [
+    "bufr_7_iasi_metopb_{ymdrr}",
+    "bufr_7_iasi_metopc_{ymdrr}",
+  ]
 
 [da.providers.LACE.obstypes.ascat]
-format     = "BUFR"
-candidates = [
-  "bufr_9_ascatC_metopb_{ymdrr}",
-  "bufr_9_ascatC_metopc_{ymdrr}",
-]
+  format = "BUFR"
+  candidates = [
+    "bufr_9_ascatC_metopb_{ymdrr}",
+    "bufr_9_ascatC_metopc_{ymdrr}",
+  ]
 
 # ------------------------------------------------------------------
 # UWC — United Weather Centres / ECMWF OPLACE convention.
 # ------------------------------------------------------------------
 [da.providers.UWC]
-obs_step = 60
+  obs_step = 60
 
 [da.providers.UWC.obstypes.synop]
-format     = "OBSOUL"
-candidates = ["obsoul_1_xxxxxx_xx_{ymdrr}"]
+  format = "OBSOUL"
+  candidates = ["obsoul_1_xxxxxx_xx_{ymdrr}"]
 
 [da.providers.UWC.obstypes.synop_1]
-format     = "OBSOUL"
-candidates = ["obsoul_1_xxxxxy_xx_{ymdrr}"]
+  format = "OBSOUL"
+  candidates = ["obsoul_1_xxxxxy_xx_{ymdrr}"]
 
 [da.providers.UWC.obstypes.amdr]
-format     = "OBSOUL"
-candidates = ["obsoul_2_xxxxxx_xx_{ymdrr}"]
+  format = "OBSOUL"
+  candidates = ["obsoul_2_xxxxxx_xx_{ymdrr}"]
 
 [da.providers.UWC.obstypes.geowind]
-format     = "OBSOUL"
-candidates = ["obsoul_3_xxxxxx_xx_{ymdrr}"]
+  format = "OBSOUL"
+  candidates = ["obsoul_3_xxxxxx_xx_{ymdrr}"]
 
 [da.providers.UWC.obstypes.temp]
-format     = "OBSOUL"
-candidates = ["obsoul_5_xxxxxx_xx_{ymdrr}"]
+  format = "OBSOUL"
+  candidates = ["obsoul_5_xxxxxx_xx_{ymdrr}"]
 
 [da.providers.UWC.obstypes.wp]
-format     = "OBSOUL"
-candidates = ["obsoul_6_xxxxxx_xx_{ymdrr}"]
+  format = "OBSOUL"
+  candidates = ["obsoul_6_xxxxxx_xx_{ymdrr}"]
 
 [da.providers.UWC.obstypes.gpssol]
-format     = "OBSOUL"
-candidates = ["obsoul_9_xxxxxx_xx_{ymdrr}"]
+  format = "OBSOUL"
+  candidates = ["obsoul_9_xxxxxx_xx_{ymdrr}"]
 
 [da.providers.UWC.obstypes.amsua]
-format     = "BUFR"
-candidates = [
-  "bufr_7_amsua_metopc_{ymdrr}",
-  "bufr_7_amsua_metopb_{ymdrr}",
-  "bufr_7_amsua_noaa18_{ymdrr}",
-  "bufr_7_amsua_noaa19_{ymdrr}",
-]
+  format = "BUFR"
+  candidates = [
+    "bufr_7_amsua_metopc_{ymdrr}",
+    "bufr_7_amsua_metopb_{ymdrr}",
+    "bufr_7_amsua_noaa18_{ymdrr}",
+    "bufr_7_amsua_noaa19_{ymdrr}",
+  ]
 
 [da.providers.UWC.obstypes.amsub]
-format     = "BUFR"
-candidates = [
-  "bufr_7_mhs_metopc_{ymdrr}",
-  "bufr_7_mhs_metopb_{ymdrr}",
-  "bufr_7_mhs_noaa19_{ymdrr}",
-]
+  format = "BUFR"
+  candidates = [
+    "bufr_7_mhs_metopc_{ymdrr}",
+    "bufr_7_mhs_metopb_{ymdrr}",
+    "bufr_7_mhs_noaa19_{ymdrr}",
+  ]
 
 [da.providers.UWC.obstypes.seviri]
-obs_step   = 0
-format     = "NETCDF"
-candidates = ["netcdf_7_seviri_xx_{ymdrr}"]
+  obs_step = 0
+  format = "NETCDF"
+  candidates = ["netcdf_7_seviri_xx_{ymdrr}"]
 
 [da.providers.UWC.obstypes.iasi]
-format     = "BUFR"
-candidates = [
-  "bufr_7_iasi_metopb_{ymdrr}",
-  "bufr_7_iasi_metopc_{ymdrr}",
-]
+  format = "BUFR"
+  candidates = [
+    "bufr_7_iasi_metopb_{ymdrr}",
+    "bufr_7_iasi_metopc_{ymdrr}",
+  ]
 
 [da.providers.UWC.obstypes.ascat]
-format     = "BUFR"
-candidates = [
-  "bufr_9_ascatC_metopb_{ymdrr}",
-  "bufr_9_ascatC_metopc_{ymdrr}",
-]
+  format = "BUFR"
+  candidates = [
+    "bufr_9_ascatC_metopb_{ymdrr}",
+    "bufr_9_ascatC_metopc_{ymdrr}",
+  ]
 
 # ------------------------------------------------------------------
 # RMI — Royal Meteorological Institute of Belgium.
 # ------------------------------------------------------------------
 [da.providers.RMI]
-obs_step = 0
+  obs_step = 0
 
 [da.providers.RMI.obstypes.synop]
-format     = "BUFR"
-candidates = ["synop_{ymdrr}00.bufr"]
+  format = "BUFR"
+  candidates = ["synop_{ymdrr}00.bufr"]
 
 # ------------------------------------------------------------------
 # MF — Météo-France BDAP convention.
 # Fill in correct filenames for your BDAP access point.
 # ------------------------------------------------------------------
 [da.providers.MF]
-obs_step = 60
+  obs_step = 60
 
-# Add MF observation types below
+  # Add MF observation types below
 
-# ------------------------------------------------------------------
-# Submission settings for DA tasks
-# ------------------------------------------------------------------
+  # ------------------------------------------------------------------
+  # Submission settings for DA tasks
+  # ------------------------------------------------------------------
 
-[submission.task_exceptions.ObsPrep]
-  NPROC = 1
-
-[submission.task_exceptions.ObsPrep.BATCH]
-  NTASKS   = "#SBATCH --ntasks=1"
-  WALLTIME = "#SBATCH --time=00:20:00"
-
-# ---- BATOR (one task per obs type, serial per type) ----
-# BATOR is NOT yet built by the IAL CMake pipeline (which only produces MASTERODB).
-# It comes from a separate ARPEGE/ALADIN ODB compilation.
-# Point to the directory that contains BATOR, BLENDSUR,
-# shuffle, create_ioassign, ioassign, and merge_ioassign.
-[submission.task_exceptions.Bator]
-  bindir = "/perm/sis/tactus_bin/@CYCLE@/@COMPILER@/@PRECISION@/bin_gmkpack"
-  NPROC  = 1
-
-[submission.task_exceptions.Bator.BATCH]
-  NTASKS   = "#SBATCH --ntasks=1"
-  WALLTIME = "#SBATCH --time=00:10:00"
-
-[submission.task_exceptions.Bator.MODULES]
-  01_INTEL = ["load", "intel/2023.2.0"]
-
-[submission.task_exceptions.Bator.ENV]
-  DR_HOOK_ASSERT_MPI_INITIALIZED = "0"
-
-[submission.task_exceptions.Obsconvert]
-  NPROC = 1
-
-[submission.task_exceptions.Obsconvert.BATCH]
-  NTASKS = "#SBATCH --ntasks=1"
-  WALLTIME = "#SBATCH --time=00:10:00"
-
-[submission.task_exceptions.Obsconvert.ENV]
-  DR_HOOK_ASSERT_MPI_INITIALIZED = "0"
-
-[submission.task_exceptions.Obsconvert.MODULES]
-  01_INTEL = ["load", "intel/2023.2.0"]
-  OPENMPI = ["load", "openmpi/4.1.1.1"]
-
-# ---- OdbMerge (shuffle + merge_ioassign) ----
-[submission.task_exceptions.OdbMerge]
-  NPROC  = 1
-
-[submission.task_exceptions.OdbMerge.BATCH]
-  NTASKS   = "#SBATCH --ntasks=1"
-  WALLTIME = "#SBATCH --time=00:15:00"
-
-[submission.task_exceptions.OdbMerge.MODULES]
-  01_INTEL = ["load", "intel/2023.2.0"]
-
-# ---- Canari (MASTERODB conf 701, surface OI) ----
-[submission.task_exceptions.Canari]
-  NPROC  = 1
-
-[submission.task_exceptions.Canari.BATCH]
-  NODES    = "#SBATCH --nodes=1"
-  NTASKS   = "#SBATCH --ntasks=1"
-  WALLTIME = "#SBATCH --time=00:30:00"
-  QOS = "#SBATCH --qos=np"
-  MEM = "#SBATCH --mem=120000MB"
-
-[submission.task_exceptions.Canari.MODULES]
-  01_INTEL = ["load", "intel/2021.4.0"]
-  OPENMPI = ["load", "hpcx-openmpi/2.9.0"]
-
-# ---- BlendSur (serial BLENDSUR utility) ----
-[submission.task_exceptions.BlendSur]
-  bindir = "/perm/sis/tactus_bin/@CYCLE@/@COMPILER@/@PRECISION@/bin_gmkpack"
-  binary = "BLENDSUR"
-  NPROC  = 1
-
-[submission.task_exceptions.BlendSur.BATCH]
-  NTASKS   = "#SBATCH --ntasks=1"
-  WALLTIME = "#SBATCH --time=00:10:00"
-
-[submission.task_exceptions.BlendSur.MODULES]
-  01_INTEL = ["load", "intel/2023.2.0"]
-
-# ------------------------------------------------------------------
-# Surface-only DA mode
-# ------------------------------------------------------------------
-# By default both surface OI (CANARI) and upper-air 3D-Var (OOVAR) are run.
-# Set da.do_upper_air = false to run the surface chain only (CANARI +
-# BlendSur) without the UpperAir family.  Useful for refining the CANARI
-# chain independently or for surface-analysis-only experiments.
-#
-# do_upper_air = false
-
-# ------------------------------------------------------------------
-# OOPS-based 3D-Var (upper-air analysis via OOVAR)
-# ------------------------------------------------------------------
-
- [da.oops]
-#
-#   # Number of ODB pools for the upper-air 3D-Var (OOVAR).
-#   # Canari uses da.nbpool (default 16); OopsVar uses this key.
-   nbpool = 128
-#
-#   # Minimization inner-loop settings
-#   niter    = 66
-#   nsimu    = 69
-#   rednmc   = 0.5
-#
-
-# ---- OopsVar (OOPS-based 3D-Var, single OOVAR call) ----
-[submission.task_exceptions.OopsVar]
-  NPROC  = 128
-  WRAPPER = "srun -n @NPROC@"
-
-[submission.task_exceptions.OopsVar.BATCH]
-  NODES       = "#SBATCH --nodes=10"
-  NTASKS      = "#SBATCH --ntasks=128"
-  QOS         = "#SBATCH --qos=np"
-  HINT        = "#SBATCH --hint=nomultithread"
-  WALLTIME    = "#SBATCH --time=01:00:00"
-
-[submission.task_exceptions.OopsVar.ENV]
-  ECKIT_MPI_FORCE = "parallel"
-
-[submission.task_exceptions.OopsVar.MODULES]
-  01_INTEL = ["load", "intel/2021.4.0"]
-
-# ---- Screen (MASTERODB observational screening, OpenMP) ----
-[submission.task_exceptions.Screen]
-  bindir = "@INSTALL_DIR@/@CYCLE@/@COMPILER@/@PRECISION@/@IAL_VERSION@/bin"
-  NPROC  = 128
-
-[submission.task_exceptions.Screen.BATCH]
-  NODES       = "#SBATCH --nodes=6"
-  NTASKS      = "#SBATCH --ntasks=128"
-  CPUSPERTASK = "#SBATCH --cpus-per-task=2"
-  MEM         = "#SBATCH --mem=200GB"
-  WALLTIME    = "#SBATCH --time=00:30:00"
-
-[submission.task_exceptions.Screen.ENV]
-  OMP_NUM_THREADS = "2"
-  OMP_PLACES      = "threads"
-
-# ---- Minim (MASTERODB 3D-Var minimization, OpenMP) ----
-[submission.task_exceptions.Minim]
-  bindir = "@INSTALL_DIR@/@CYCLE@/@COMPILER@/@PRECISION@/@IAL_VERSION@/bin"
-  NPROC  = 128
-
-[submission.task_exceptions.Minim.BATCH]
-  NODES       = "#SBATCH --nodes=16"
-  NTASKS      = "#SBATCH --ntasks-per-node=16"
-  CPUSPERTASK = "#SBATCH --cpus-per-task=8"
-  WALLTIME    = "#SBATCH --time=00:45:00"
-
-[submission.task_exceptions.Minim.ENV]
-  OMP_NUM_THREADS = "8"
-  OMP_PLACES      = "threads"
+[da.oops]
+  #
+  #   # Number of ODB pools for the upper-air 3D-Var (OOVAR).
+  #   # Canari uses da.nbpool (default 16); OopsVar uses this key.
+  nbpool = 128
+  #
+  #   # Minimization inner-loop settings
+  #   niter    = 66
+  #   nsimu    = 69
+  #   rednmc   = 0.5
+  #

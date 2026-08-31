@@ -1,4 +1,5 @@
 """Shared base for ODB observation-ingestion tasks (Bator, Obsconvert)."""
+
 import os
 import shutil
 import subprocess
@@ -83,7 +84,7 @@ class OdbIngestionTask(Task):
 
         for static_file, link_name in [
             (self._PARAM_CFG_NAME, "param.cfg"),
-            ("param_rgb",          "namelist_rgb"),
+            ("param_rgb", "namelist_rgb"),
         ]:
             src = os.path.join(self.da_const_dir, static_file)
             if os.path.isfile(src):
@@ -100,54 +101,53 @@ class OdbIngestionTask(Task):
 
         # --- ODB environment ---
         rte = dict(os.environ)
-        rte.update(
-            {
-                "TO_ODB_ECMWF": "0",
-                "TO_ODB_SWAPOUT": "0",
-                "ODB_DEBUG": "0",
-                "ODB_CTX_DEBUG": "0",
-                "ODB_REPRODUCIBLE_SEQNO": "2",
-                "ODB_STATIC_LINKING": "1",
-                "ODB_IO_METHOD": "1",
-                "ODB_IO_FILESIZE": "128",
-                "ODB_IO_GRPSIZE": str(self.nbpool),
-                "EC_PROFILE_HEAP": "0",
-                "F_RECLUNIT": "BYTE",
-                "F_UFMTENDIAN": "big",
-                "ODB_ANALYSIS_DATE": f"{yyyy}{mm}{dd}",
-                "ODB_ANALYSIS_TIME": f"{rr}0000",
-                "TIME_INIT_YYYYMMDD": f"{yyyy}{mm}{dd}",
-                "TIME_INIT_HHMMSS": f"{rr}0000",
-                "ODB_FEBINPATH": bindir,
-                "ODB_CMA": "ECMA",
-                "NBPOOL": str(self.nbpool),
-                "BATOR_NBPOOL": str(self.nbpool),
-                "BATOR_WINDOW_LEN": str(self.bator_window_len),
-                "BATOR_WINDOW_SHIFT": str(self.bator_window_shift),
-                "BATOR_SLOT_LEN": str(self.bator_slot_len),
-                "BATOR_CENTER_LEN": str(self.bator_center_len),
-                "BATOR_NBSLOT": str(self.bator_nbslot),
-                "BATOR_BASE": bindir,
-                "BATOR_LAMFLAG": bator_lamflag,
-                "IOASSIGN": os.path.join(self.wdir, "IOASSIGN"),
-                "SWAPP_ODB_IOASSIGN": os.path.join(self.wdir, "IOASSIGN"),
-                "ODB_SRCPATH_ECMA": os.path.join(self.wdir, f"ECMA.{self.obstype}"),
-                "ODB_SRCPATH_RSTBIAS": os.path.join(self.wdir, "ECMA"),
-                "ODB_DATAPATH_ECMA": os.path.join(self.wdir, f"ECMA.{self.obstype}"),
-                "ODB_ECMA_CREATE_POOLMASK": "2",
-                "ODB_ECMA_POOLMASK_FILE": os.path.join(
-                    self.wdir, f"ECMA.{self.obstype}", "ECMA.poolmask"
-                ),
-                "DR_HOOK_ASSERT_MPI_INITIALIZED": "0",
-            }
-        )
+        rte.update({
+            "TO_ODB_ECMWF": "0",
+            "TO_ODB_SWAPOUT": "0",
+            "ODB_DEBUG": "0",
+            "ODB_CTX_DEBUG": "0",
+            "ODB_REPRODUCIBLE_SEQNO": "2",
+            "ODB_STATIC_LINKING": "1",
+            "ODB_IO_METHOD": "1",
+            "ODB_IO_FILESIZE": "128",
+            "ODB_IO_GRPSIZE": str(self.nbpool),
+            "EC_PROFILE_HEAP": "0",
+            "F_RECLUNIT": "BYTE",
+            "F_UFMTENDIAN": "big",
+            "ODB_ANALYSIS_DATE": f"{yyyy}{mm}{dd}",
+            "ODB_ANALYSIS_TIME": f"{rr}0000",
+            "TIME_INIT_YYYYMMDD": f"{yyyy}{mm}{dd}",
+            "TIME_INIT_HHMMSS": f"{rr}0000",
+            "ODB_FEBINPATH": bindir,
+            "ODB_CMA": "ECMA",
+            "NBPOOL": str(self.nbpool),
+            "BATOR_NBPOOL": str(self.nbpool),
+            "BATOR_WINDOW_LEN": str(self.bator_window_len),
+            "BATOR_WINDOW_SHIFT": str(self.bator_window_shift),
+            "BATOR_SLOT_LEN": str(self.bator_slot_len),
+            "BATOR_CENTER_LEN": str(self.bator_center_len),
+            "BATOR_NBSLOT": str(self.bator_nbslot),
+            "BATOR_BASE": bindir,
+            "BATOR_LAMFLAG": bator_lamflag,
+            "IOASSIGN": os.path.join(self.wdir, "IOASSIGN"),
+            "SWAPP_ODB_IOASSIGN": os.path.join(self.wdir, "IOASSIGN"),
+            "ODB_SRCPATH_ECMA": os.path.join(self.wdir, f"ECMA.{self.obstype}"),
+            "ODB_SRCPATH_RSTBIAS": os.path.join(self.wdir, "ECMA"),
+            "ODB_DATAPATH_ECMA": os.path.join(self.wdir, f"ECMA.{self.obstype}"),
+            "ODB_ECMA_CREATE_POOLMASK": "2",
+            "ODB_ECMA_POOLMASK_FILE": os.path.join(
+                self.wdir, f"ECMA.{self.obstype}", "ECMA.poolmask"
+            ),
+            "DR_HOOK_ASSERT_MPI_INITIALIZED": "0",
+        })
 
         # --- stage obs file(s) from ObsPrep output ---
         local_name = self._stage_obs(obsprep_dir)
         if not local_name:
             logger.info(
                 "{}: no obs file for obstype '{}' — skipping run.",
-                self._LOG_TAG, self.obstype,
+                self._LOG_TAG,
+                self.obstype,
             )
             return
 
@@ -187,18 +187,21 @@ class OdbIngestionTask(Task):
         if not os.path.isdir(ecma_out):
             logger.warning(
                 "{} did not produce {} — marking as complete with warning.",
-                self._LOG_TAG, ecma_out,
+                self._LOG_TAG,
+                ecma_out,
             )
 
         # --- archive output ---
         # Use stream-specific subdirectory so surface (16-pool) and upper-air (128-pool)
         # archives don't overwrite each other when both streams process the same obstype.
-        out_dir = os.path.join(self.da_scratch, yyyy, mm, dd, rr, "odb", self.family1, self.obstype)
+        out_dir = os.path.join(
+            self.da_scratch, yyyy, mm, dd, rr, "odb", self.family1, self.obstype
+        )
         tactusmakedirs(out_dir)
         if os.path.isdir(ecma_out):
             dst = os.path.join(out_dir, ecma_out)
             if os.path.exists(dst):
-                subprocess.run(['rm', '-rf', dst], check=True)
+                subprocess.run(["rm", "-rf", dst], check=True)
             shutil.copytree(ecma_out, dst, symlinks=True, dirs_exist_ok=True)
             logger.info("{}: archived {} to {}", self._LOG_TAG, ecma_out, out_dir)
 
@@ -217,17 +220,22 @@ class OdbIngestionTask(Task):
         if not isinstance(spec, Mapping):
             logger.info(
                 "{}: no provider entry for obstype '{}' — skipping.",
-                self._LOG_TAG, self.obstype,
+                self._LOG_TAG,
+                self.obstype,
             )
             return None
 
         fmt = spec.get("format", "")
-        local_name = f"{fmt}.{self.obstype}" if fmt else spec.get("local_name", self.obstype)
+        local_name = (
+            f"{fmt}.{self.obstype}" if fmt else spec.get("local_name", self.obstype)
+        )
         src = os.path.join(obsprep_dir, local_name)
         if not os.path.isfile(src):
             logger.info(
                 "{}: no obs file '{}' in obsprep dir for obstype '{}' — skipping.",
-                self._LOG_TAG, local_name, self.obstype,
+                self._LOG_TAG,
+                local_name,
+                self.obstype,
             )
             return None
 
@@ -264,19 +272,16 @@ class OdbIngestionTask(Task):
         if not fmt:
             logger.warning(
                 "{}: cannot derive format from local_name '{}' — skipping refdata/batormap",
-                self._LOG_TAG, local_name,
+                self._LOG_TAG,
+                local_name,
             )
             return
 
         bator_name = self.obstype
         with open("refdata", "w") as fh:
-            fh.write(
-                f"{self.obstype:<8} {fmt:<8} {bator_name:<16} {yyyy}{mm}{dd} {rr}\n"
-            )
+            fh.write(f"{self.obstype:<8} {fmt:<8} {bator_name:<16} {yyyy}{mm}{dd} {rr}\n")
         with open("batormap", "w") as fh:
-            fh.write(
-                f"{self.obstype:<8} {self.obstype:<8} {fmt:<8} {bator_name}\n"
-            )
+            fh.write(f"{self.obstype:<8} {self.obstype:<8} {fmt:<8} {bator_name}\n")
 
     def _write_gpssol_list(self):
         """Write list_gpssol from da.gpssol_stations config (may be empty)."""
@@ -364,5 +369,11 @@ class OdbIngestionTask(Task):
             fh.write("/\n")
         logger.debug(
             "{}: wrote NAM_lamflag for domain {} ({}x{} @ {}m, SW={:.4f},{:.4f})",
-            self._LOG_TAG, self.domain, nlon, nlat, xdx, lat1, lon1,
+            self._LOG_TAG,
+            self.domain,
+            nlon,
+            nlat,
+            xdx,
+            lat1,
+            lon1,
         )

@@ -185,7 +185,6 @@
           "type": "object",
           "properties": {
             "selection": {
-
               "type": "string",
               "description": "Selection",
               "enum": [
@@ -1253,14 +1252,34 @@
       "obs_types_surface": {
         "description": "Observation types used for the surface analysis.",
         "type": "array",
-        "items": { "type": "string" },
-        "default": ["synop"]
+        "items": {
+          "type": "string"
+        },
+        "default": [
+          "synop"
+        ]
       },
       "obs_types_3dvar": {
         "description": "Observation types used for the 3D-Var upper-air analysis.",
         "type": "array",
-        "items": { "type": "string" },
-        "default": ["synop","gpssol","amdr","geowind","hrwind","temp","wp","seviri","amsua","amsub","iasi","ascat","radar"]
+        "items": {
+          "type": "string"
+        },
+        "default": [
+          "synop",
+          "gpssol",
+          "amdr",
+          "geowind",
+          "hrwind",
+          "temp",
+          "wp",
+          "seviri",
+          "amsua",
+          "amsub",
+          "iasi",
+          "ascat",
+          "radar"
+        ]
       },
       "obs_sources": {
         "description": "Per-obstype source definitions. Keys are obstype names.",
@@ -1271,7 +1290,9 @@
             "candidates": {
               "description": "List of filename templates to try. Supports {ymdrr}, {yyyy}, {mm}, {dd}, {rr} placeholders.",
               "type": "array",
-              "items": { "type": "string" }
+              "items": {
+                "type": "string"
+              }
             },
             "local_name": {
               "description": "Filename BATOR/OBSCONVERT expects in the working directory. Same placeholders as candidates.",
@@ -1365,7 +1386,9 @@
       "gpssol_stations": {
         "description": "List of GPS station IDs to include in list_gpssol (BATOR GPS-ZTD input). When set, Bator writes list_gpssol from this list. When absent, the file is linked from da.namelist_dir if available.",
         "type": "array",
-        "items": { "type": "string" },
+        "items": {
+          "type": "string"
+        },
         "default": []
       },
       "do_upper_air": {

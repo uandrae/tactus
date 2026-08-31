@@ -1,4 +1,5 @@
 """Bator task — ODB subbase creation via the BATOR binary."""
+
 from .obs_ingestion import OdbIngestionTask
 
 

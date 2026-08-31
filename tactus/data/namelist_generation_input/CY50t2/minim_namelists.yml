@@ -6,7 +6,7 @@ minim_base:
     LSLAG: false
     LTWOTL: false
     LSUSPECA_GP: true
-    LSUSPECA_GP_UV: true 
+    LSUSPECA_GP_UV: true
   NAMDIM:
     NPROMA: -1
   NAMARG:

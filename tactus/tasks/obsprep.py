@@ -10,14 +10,14 @@ e.g. obs_provider = "LACE"
 Multi-file merging
 ------------------
 All candidates found in the archive are merged into a single file per obs
-type.  
+type.
 
 - **BUFR / GRIB**: files are concatenated byte-for-byte.
 - **OBSOUL**: files are merged via ``obsoul_merge.pl`` (configured via
-  ``da.obsoul_merge_script``).  
+  ``da.obsoul_merge_script``).
 - **NETCDF**: only the first file is used; a warning is issued when more
   than one is found.
-- **HDF**: No merging performed - radar files should be linked as site${i}   
+- **HDF**: No merging performed - radar files should be linked as site${i}
 
 Temporal windowing
 ------------------
@@ -31,6 +31,7 @@ Example: basetime 00 UTC, window_shift=-90 min, window_len=180 min →
 slots 23, 00, 01 should be searched (three different hours, possibly across
 two calendar dates).
 """
+
 import datetime as dt
 import os
 import shutil
@@ -52,11 +53,22 @@ class ObsPrep(Task):
     - ``3dvar``   stages all configured obs types for 3D-Var.
     """
 
-    DEFAULT_OBS_SURFACE = ["synop"] 
+    DEFAULT_OBS_SURFACE = ["synop"]
 
     DEFAULT_OBS_3DVAR = [
-        "synop", "gpssol", "amdar", "geowind", "hrwind",
-        "temp", "wp", "seviri", "amsua", "amsub", "iasi", "ascat", "radar",
+        "synop",
+        "gpssol",
+        "amdar",
+        "geowind",
+        "hrwind",
+        "temp",
+        "wp",
+        "seviri",
+        "amsua",
+        "amsub",
+        "iasi",
+        "ascat",
+        "radar",
     ]
 
     def __init__(self, config):
@@ -83,7 +95,8 @@ class ObsPrep(Task):
             logger.warning(
                 "ObsPrep: obs_provider '{}' not defined in da.providers — "
                 "no obs sources will be found; add a [da.providers.{}] block.",
-                self.obs_provider, self.obs_provider,
+                self.obs_provider,
+                self.obs_provider,
             )
             self._provider = {}
         else:
@@ -103,7 +116,9 @@ class ObsPrep(Task):
 
         logger.debug(
             "Constructed ObsPrep for family={} obs_provider={} obs_step={}min",
-            self.family, self.obs_provider, self.obs_step,
+            self.family,
+            self.obs_provider,
+            self.obs_step,
         )
 
     def execute(self):
@@ -141,7 +156,10 @@ class ObsPrep(Task):
         with open(obstypes_file, "w") as fh:
             fh.write("\n".join(available_types) + "\n")
         logger.info(
-            "ObsPrep: available obs types for {}: {} in {}", ymdrr, available_types, self.obs_dir
+            "ObsPrep: available obs types for {}: {} in {}",
+            ymdrr,
+            available_types,
+            self.obs_dir,
         )
 
         out_dir = os.path.join(self.da_scratch, yyyy, mm, dd, rr, "obsprep")
@@ -179,9 +197,7 @@ class ObsPrep(Task):
             minutes=self.bator_window_shift + self.bator_window_len
         )
 
-        t_epoch = (
-            int(calendar.timegm(window_start.timetuple()) // step_sec) * step_sec
-        )
+        t_epoch = int(calendar.timegm(window_start.timetuple()) // step_sec) * step_sec
         end_epoch = calendar.timegm(window_end.timetuple())
 
         slots = []
@@ -197,8 +213,8 @@ class ObsPrep(Task):
     # Using the numeric code rather than a source-specific name (e.g. "amdar")
     # lets multiple aircraft sub-types (AMDAR, MODES, EHS …) all be accepted.
     _OBSOUL_MERGE_NAMES = {
-        "amdar": "2",   # OBSOUL type 2 = aircraft
-        "synop": "1",   # OBSOUL type 1 = synop/ship
+        "amdar": "2",  # OBSOUL type 2 = aircraft
+        "synop": "1",  # OBSOUL type 1 = synop/ship
     }
 
     def _stage_obstype(self, obstype, ymdrr):
@@ -245,7 +261,9 @@ class ObsPrep(Task):
                     collected.append((path, is_tmp))
                     logger.debug(
                         "ObsPrep: found {} for type {} slot {}",
-                        fname, obstype, slot_ymdrr,
+                        fname,
+                        obstype,
+                        slot_ymdrr,
                     )
 
         if not collected:
@@ -285,7 +303,8 @@ class ObsPrep(Task):
             merge_name = self._OBSOUL_MERGE_NAMES.get(obstype) if obstype else None
             prefix = f"obsoul_{merge_name}_" if merge_name else None
             tmp = tempfile.NamedTemporaryFile(
-                delete=False, suffix=".obsprep.tmp",
+                delete=False,
+                suffix=".obsprep.tmp",
                 **({"prefix": prefix} if prefix else {}),
                 dir=".",
             )
@@ -315,14 +334,11 @@ class ObsPrep(Task):
                 for p in paths:
                     with open(p, "rb") as inp:
                         shutil.copyfileobj(inp, out)
-            logger.info(
-                "ObsPrep: merged {} {} files -> {}", len(paths), fmt, local_name
-            )
+            logger.info("ObsPrep: merged {} {} files -> {}", len(paths), fmt, local_name)
 
         elif fmt == "OBSOUL":
-            merge_ok = (
+            merge_ok = self.obsoul_merge_script and os.path.isfile(
                 self.obsoul_merge_script
-                and os.path.isfile(self.obsoul_merge_script)
             )
             if merge_ok:
                 list_tmp = tempfile.NamedTemporaryFile(
@@ -335,8 +351,10 @@ class ObsPrep(Task):
                         [
                             "perl",
                             self.obsoul_merge_script,
-                            "-o", local_name,
-                            "-f", list_tmp.name,
+                            "-o",
+                            local_name,
+                            "-f",
+                            list_tmp.name,
                         ],
                         check=True,
                     )
@@ -347,7 +365,8 @@ class ObsPrep(Task):
                         pass
                 logger.info(
                     "ObsPrep: merged {} OBSOUL files -> {} via obsoul_merge.pl",
-                    len(paths), local_name,
+                    len(paths),
+                    local_name,
                 )
             else:
                 raise RuntimeError(
@@ -362,5 +381,7 @@ class ObsPrep(Task):
                 logger.warning(
                     "ObsPrep: cannot merge {} files of format '{}' for type '{}'; "
                     "using first file only.",
-                    len(paths), fmt, obstype,
+                    len(paths),
+                    fmt,
+                    obstype,
                 )

@@ -1,5 +1,5 @@
-"""Canari — surface OI analysis using MASTERODB (configuration 701).
-"""
+"""Canari — surface OI analysis using MASTERODB (configuration 701)."""
+
 import json
 import os
 import shutil
@@ -66,15 +66,15 @@ def _patch_nampre(fort4_path):
         content = f.read()
     patched = content.replace("&NAMPRE\n/\n", new_block, 1)
     if patched == content:
-        logger.warning("Canari: NAMPRE group not found in fort.4 — predictors not injected")
+        logger.warning(
+            "Canari: NAMPRE group not found in fort.4 — predictors not injected"
+        )
     with open(fort4_path, "w") as f:
         f.write(patched)
 
 
-
 class Canari(Task):
-    """Run CANARI surface analysis (OI, MASTERODB conf 701).
-    """
+    """Run CANARI surface analysis (OI, MASTERODB conf 701)."""
 
     def __init__(self, config):
         """Construct Canari task.
@@ -162,7 +162,13 @@ class Canari(Task):
         # Delegate to the same logic used by Initialization/FirstGuess so
         # that cold-start, restart, and cycling modes are all handled correctly.
         fg_atm, fg_sfx, _ = InitialConditions(self.config).find_initial_files("Canari")
-        for link in ["ICMSHCYCLINIT", "ICMGGCYCLINIT", "ELSCFCYCLALBC000", "ELSCFANALALBC000", "ICMSHANALINIT"]:
+        for link in [
+            "ICMSHCYCLINIT",
+            "ICMGGCYCLINIT",
+            "ELSCFCYCLALBC000",
+            "ELSCFANALALBC000",
+            "ICMSHANALINIT",
+        ]:
             if not os.path.lexists(link):
                 os.symlink(fg_atm, link)
         logger.info("Canari: atmospheric first guess {}", fg_atm)
@@ -198,42 +204,38 @@ class Canari(Task):
 
         # --- ODB environment ---
         rte = dict(os.environ)
-        rte.update(
-            {
-                "TO_ODB_ECMWF": "0",
-                "TO_ODB_SWAPOUT": "0",
-                "ODB_DEBUG": "0",
-                "ODB_CTX_DEBUG": "0",
-                "ODB_REPRODUCIBLE_SEQNO": "4",
-                "ODB_STATIC_LINKING": "1",
-                "ODB_IO_METHOD": "1",
-                "ODB_IO_FILESIZE": "128",
-                "ODB_IO_GRPSIZE": str(self.nbpool),
-                "EC_PROFILE_HEAP": "0",
-                "TRACEBK": "0",
-                "ODB_ANALYSIS_DATE": f"{yyyy}{mm}{dd}",
-                "ODB_ANALYSIS_TIME": f"{rr}0000",
-                "TIME_INIT_YYYYMMDD": f"{yyyy}{mm}{dd}",
-                "TIME_INIT_HHMMSS": f"{rr}0000",
-                "ODB_FEBINPATH": os.path.dirname(masterodb_bin),
-                "ODB_CMA": "ECMA",
-                "ODB_SRCPATH_ECMA": os.path.join(self.wdir, "ECMA"),
-                "ODB_DATAPATH_ECMA": os.path.join(self.wdir, "ECMA"),
-                "ODB_MERGEODB_DIRECT": "0",
-                "BASETIME": ymdrr,
-                "CNMEXPB": "CYCL",
-                "F_RECLUNIT": "BYTE",
-                "F_UFMTENDIAN": "big:10,33,50,54,81",
-                # Poolmask creation via gather4poolmask_counts crashes (SIGSEGV) when
-                # cmake ODB BATOR produces ghost pools with index.body.len=NMDI;
-                # CANARI analysis does not require a poolmask to function.
-                "ODB_ECMA_CREATE_POOLMASK": "0",
-                "ODB_ECMA_POOLMASK_FILE": os.path.join(
-                    self.wdir, "ECMA", "ECMA.poolmask"
-                ),
-                "IOASSIGN": "IOASSIGN",
-            }
-        )
+        rte.update({
+            "TO_ODB_ECMWF": "0",
+            "TO_ODB_SWAPOUT": "0",
+            "ODB_DEBUG": "0",
+            "ODB_CTX_DEBUG": "0",
+            "ODB_REPRODUCIBLE_SEQNO": "4",
+            "ODB_STATIC_LINKING": "1",
+            "ODB_IO_METHOD": "1",
+            "ODB_IO_FILESIZE": "128",
+            "ODB_IO_GRPSIZE": str(self.nbpool),
+            "EC_PROFILE_HEAP": "0",
+            "TRACEBK": "0",
+            "ODB_ANALYSIS_DATE": f"{yyyy}{mm}{dd}",
+            "ODB_ANALYSIS_TIME": f"{rr}0000",
+            "TIME_INIT_YYYYMMDD": f"{yyyy}{mm}{dd}",
+            "TIME_INIT_HHMMSS": f"{rr}0000",
+            "ODB_FEBINPATH": os.path.dirname(masterodb_bin),
+            "ODB_CMA": "ECMA",
+            "ODB_SRCPATH_ECMA": os.path.join(self.wdir, "ECMA"),
+            "ODB_DATAPATH_ECMA": os.path.join(self.wdir, "ECMA"),
+            "ODB_MERGEODB_DIRECT": "0",
+            "BASETIME": ymdrr,
+            "CNMEXPB": "CYCL",
+            "F_RECLUNIT": "BYTE",
+            "F_UFMTENDIAN": "big:10,33,50,54,81",
+            # Poolmask creation via gather4poolmask_counts crashes (SIGSEGV) when
+            # cmake ODB BATOR produces ghost pools with index.body.len=NMDI;
+            # CANARI analysis does not require a poolmask to function.
+            "ODB_ECMA_CREATE_POOLMASK": "0",
+            "ODB_ECMA_POOLMASK_FILE": os.path.join(self.wdir, "ECMA", "ECMA.poolmask"),
+            "IOASSIGN": "IOASSIGN",
+        })
 
         # fort.61 is read by oi_cavegi.F90 (unit 61) for vegetation polynomial coefficients.
         # POLYNOMES_ISBA from the Harmonie-IAL const area provides the standard coefficients.
@@ -278,7 +280,9 @@ class Canari(Task):
 
         # Kept from that investigation as cheap, still-useful safety nets:
         rte["OMP_NUM_THREADS"] = "1"  # harmless; not itself the fix
-        rte["UCX_HANDLE_ERRORS"] = "bt"  # gets a backtrace out of UCX's signal handler, if it ever fires again
+        rte["UCX_HANDLE_ERRORS"] = (
+            "bt"  # gets a backtrace out of UCX's signal handler, if it ever fires again
+        )
 
         # Diagnostic only (10-50x slowdown from Valgrind's instrumentation);
         # leave VALGRIND_CANARI unset for normal runs.

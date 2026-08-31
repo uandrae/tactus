@@ -5,11 +5,10 @@ CANARI (surface OI) + 3D-Var upper-air DA cycle.
 
 """
 
-from typing import List, Optional
+from typing import List
 
 from ..submission import TaskSettings
 from .base import EcflowSuiteFamily, EcflowSuiteTask
-
 
 # ---------------------------------------------------------------------------
 # Default obs-type lists
@@ -34,6 +33,7 @@ _DEFAULT_OBS_3DVAR: List[str] = [
 # ---------------------------------------------------------------------------
 # OdbFamily — parallel BATOR tasks + OdbMerge
 # ---------------------------------------------------------------------------
+
 
 class OdbFamily(EcflowSuiteFamily):
     """ecFlow family that runs BATOR per obs type.
@@ -293,8 +293,7 @@ class VariationalFamily(EcflowSuiteFamily):
 
 
 class AssimilationFamily(EcflowSuiteFamily):
-    """Top-level DA family containing the surface OI and optionally 3D-Var.
-    """
+    """Top-level DA family containing the surface OI and optionally 3D-Var."""
 
     def __init__(
         self,
@@ -339,8 +338,7 @@ class AssimilationFamily(EcflowSuiteFamily):
         bgcycle = config.get("da.bgcycle", "")
         if bgcycle and len(bgcycle) == 10:
             bgcycle_iso = (
-                f"{bgcycle[:4]}-{bgcycle[4:6]}-{bgcycle[6:8]}"
-                f"T{bgcycle[8:10]}:00:00Z"
+                f"{bgcycle[:4]}-{bgcycle[4:6]}-{bgcycle[6:8]}T{bgcycle[8:10]}:00:00Z"
             )
             is_bgcycle = 1 if cycle_basetime == bgcycle_iso else 0
             self.ecf_node.add_variable("IS_BGCYCLE", is_bgcycle)
