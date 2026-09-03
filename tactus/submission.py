@@ -394,7 +394,15 @@ class TaskSettings(object):
                 file_handler.write(f'export {key}="{val}"\n')
 
             if scheduler is None:
-                file_handler.write(f'export STAND_ALONE_TASK_NAME="{task}"\n')
+                dastream = config.get("da.dastream", "") 
+                if dastream:
+                    file_handler.write(f'export DASTREAM="{dastream}"\n')
+                obstype = config.get("da.obstype", "") 
+                if obstype:
+                    file_handler.write(f'export OBSTYPE="{obstype}"\n')
+
+                tactus_task = config.get("general.tactus_task", task) 
+                file_handler.write(f'export STAND_ALONE_TASK_NAME="{tactus_task}"\n')
 
                 tactus_home = self.platform.get_platform_value("TACTUS_HOME")
 
@@ -431,6 +439,7 @@ class NoSchedulerSubmission:
         member: Optional[int] = None,
         troika: Optional[str] = "troika",
         create_only: Optional[bool] = False,
+        tactus_task: Optional[str] = None,
     ):
         """Submit task.
 
@@ -448,7 +457,7 @@ class NoSchedulerSubmission:
         Raises:
             RuntimeError: Submission failure.
         """
-        name = task.lower()
+        name = tactus_task.lower() if tactus_task is not None else task.lower()
         if name not in load_task_index(config):
             raise NotImplementedError(f"Task {name} not implemented")
 

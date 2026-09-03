@@ -128,6 +128,17 @@ def default_main(kwargs: dict):
         # Update config based on member
         config = get_member_config(config, member=member)
 
+        # Handle generic tasks and various environment variable control
+        tactus_task = os.environ.get("TACTUS_TASK", task.ecf_task)
+        obstype = os.environ.get("OBSTYPE", "")
+        dastream = os.environ.get("DASTREAM", "")
+        config = config.copy(
+            update={
+                "general": {"tactus_task": tactus_task},
+                "da": {"obstype": obstype, "dastream": dastream},
+            }
+        )
+
     # TODO Add wrapper
     server = EcflowServer(config)
     # This will also handle call to sys.exit(), i.e. Client.__exit__ will still be called.
