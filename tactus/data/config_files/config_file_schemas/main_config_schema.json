@@ -696,15 +696,20 @@
           "description": "Git token for IAL source access",
           "default": ""
         },
-        "ial_git_branch": {
+        "ial_git_version": {
           "type": "string",
           "description": "Branch/tag",
           "default": "develop"
         },
+        "arch_dir": {
+          "type": "string",
+          "description": "Directory where arch files can be foud",
+          "default": "arch"
+        },
         "arch": {
           "type": "string",
           "description": "Compiler configuration",
-          "default": "source/ial-source/bundle/arch/ecmwf/hpc2020"
+          "default": "ecmwf/hpc2020/@COMPILER@"
         },
         "dir": {
           "type": "string",
@@ -741,15 +746,10 @@
           "description": "whether to clean build folder before compilation",
           "default": false
         },
-        "cache": {
+        "install": {
           "type": "boolean",
-          "description": "whether to use chache build/install folders",
+          "description": "whether to install in @INSTALL_DIR@",
           "default": false
-        },
-        "cache_dir": {
-          "type": "string",
-          "description": "whether to use chache build/install folders",
-          "default": "@REFERENCE_DATA@/bundle_cache"
         }
       }
     },
