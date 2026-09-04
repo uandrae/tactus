@@ -53,6 +53,7 @@ class OdbFamily(EcflowSuiteFamily):
         obs_types: List[str],
         task_class: str = "Bator",
         family_name: str = "Odb",
+        da_stream: str = "3dvar",
         trigger=None,
         ecf_files_remotely=None,
     ):
@@ -89,7 +90,11 @@ class OdbFamily(EcflowSuiteFamily):
                 task_settings,
                 ecf_files,
                 input_template=input_template,
-                variables={"OBSTYPE": obstype, "TACTUS_TASK": task_class},
+                variables={
+                    "OBSTYPE": obstype,
+                    "TACTUS_TASK": task_class,
+                    "ARGS": f"obstype={obstype};da_stream={da_stream}",
+                },
                 ecf_files_remotely=ecf_files_remotely,
             )
             bator_tasks.append(task)
@@ -102,6 +107,7 @@ class OdbFamily(EcflowSuiteFamily):
             ecf_files,
             input_template=input_template,
             trigger=bator_tasks,
+            variables={ "ARGS": f"da_stream={da_stream}" },
             ecf_files_remotely=ecf_files_remotely,
         )
 
@@ -147,7 +153,7 @@ class SurfaceAnalysisFamily(EcflowSuiteFamily):
             parent,
             ecf_files,
             trigger=trigger,
-            variables={"DA_STREAM": "surface"},
+            variables={"DA_STREAM": "surface", "ARGS": "da_stream='surface'"},
             ecf_files_remotely=ecf_files_remotely,
         )
 
@@ -173,6 +179,7 @@ class SurfaceAnalysisFamily(EcflowSuiteFamily):
             obs_types=obs_types_surface,
             task_class=odb_task_surface,
             family_name="Odb",
+            da_stream="surface",
             trigger=obsprep,
             ecf_files_remotely=ecf_files_remotely,
         )
@@ -244,7 +251,7 @@ class VariationalFamily(EcflowSuiteFamily):
             parent,
             ecf_files,
             trigger=trigger,
-            variables={"DA_STREAM": "3dvar"},
+            variables={"DA_STREAM": "3dvar", "ARGS": "da_stream='3dvar'"},
             ecf_files_remotely=ecf_files_remotely,
         )
 
@@ -270,6 +277,7 @@ class VariationalFamily(EcflowSuiteFamily):
             obs_types=obs_types_3dvar,
             task_class=odb_task_3dvar,
             family_name="Odb",
+            da_stream="3dvar",
             trigger=obsprep,
             ecf_files_remotely=ecf_files_remotely,
         )

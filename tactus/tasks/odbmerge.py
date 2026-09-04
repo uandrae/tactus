@@ -32,16 +32,20 @@ class OdbMerge(Task):
         self.basetime = as_datetime(config["general.times.basetime"])
         self.da_scratch = self.platform.substitute(config["da.scratch"])
         # family1 determines output archive subdirectory name
-        self.family1 = os.environ.get("DA_STREAM", "3dvar")
-        if self.family1 == "surface":
-            self.nbpool = config.get("da.nbpool", 16)
-        else:
-            self.nbpool = config.get("da.oops.nbpool", 128)
+        self.family1 = config.get("task.args.da_stream", "3dvar")
+        logger.info("DA_STREAM:{}", self.family1)
+        self.nbpool = (
+            config.get("da.nbpool", 16)
+            if self.family1 == "surface"
+            else config.get("da.oops.nbpool", 128)
+        )
         self.bator_window_len = config.get("da.bator_window_len", 180)
         self.bator_window_shift = config.get("da.bator_window_shift", -90)
         # Only merge subbases that belong to this stream's obs type list.
         if self.family1 == "surface":
-            self.obs_types = set(config.get("da.obs_types_surface", ["synop", "synop_1"]))
+            self.obs_types = set(
+                config.get("da.obs_types_surface", ["synop", "synop_1"])
+            )
         else:
             self.obs_types = set(
                 config.get(
@@ -122,37 +126,41 @@ class OdbMerge(Task):
         # --- ODB environment ---
         odb_reprod_seqno = "2"
         rte = dict(os.environ)
-        rte.update({
-            "TO_ODB_ECMWF": "0",
-            "TO_ODB_SWAPOUT": "0",
-            "ODB_DEBUG": "0",
-            "ODB_CTX_DEBUG": "0",
-            "ODB_REPRODUCIBLE_SEQNO": odb_reprod_seqno,
-            "ODB_STATIC_LINKING": "1",
-            "ODB_IO_METHOD": "1",
-            "ODB_IO_FILESIZE": "128",
-            "ODB_IO_GRPSIZE": str(self.nbpool),
-            "EC_PROFILE_HEAP": "0",
-            "F_RECLUNIT": "BYTE",
-            "F_UFMTENDIAN": "big",
-            "ODB_ANALYSIS_DATE": f"{yyyy}{mm}{dd}",
-            "ODB_ANALYSIS_TIME": f"{rr}0000",
-            "TIME_INIT_YYYYMMDD": f"{yyyy}{mm}{dd}",
-            "TIME_INIT_HHMMSS": f"{rr}0000",
-            "ODB_FEBINPATH": bin_dir,
-            "ODB_CMA": "ECMA",
-            "BATOR_NBSLOT": "1",
-            # merge_ioassign writes the merged IOASSIGN into wdir/ECMA/,
-            # so ODB_SRCPATH_ECMA must point there (not to wdir).
-            "SWAPP_ODB_IOASSIGN": os.path.join(self.wdir, "ECMA", "IOASSIGN"),
-            "ODB_SRCPATH_ECMA": os.path.join(self.wdir, "ECMA"),
-            "ODB_DATAPATH_ECMA": os.path.join(self.wdir, "ECMA"),
-            "ODB_SRCPATH_RSTBIAS": os.path.join(self.wdir, "ECMA"),
-            "ODB_ECMA_CREATE_POOLMASK": "1",
-            "ODB_ECMA_POOLMASK_FILE": os.path.join(self.wdir, "ECMA", "ECMA.poolmask"),
-            "IOASSIGN": os.path.join(self.wdir, "ECMA", "IOASSIGN"),
-            "DR_HOOK_ASSERT_MPI_INITIALIZED": "0",
-        })
+        rte.update(
+            {
+                "TO_ODB_ECMWF": "0",
+                "TO_ODB_SWAPOUT": "0",
+                "ODB_DEBUG": "0",
+                "ODB_CTX_DEBUG": "0",
+                "ODB_REPRODUCIBLE_SEQNO": odb_reprod_seqno,
+                "ODB_STATIC_LINKING": "1",
+                "ODB_IO_METHOD": "1",
+                "ODB_IO_FILESIZE": "128",
+                "ODB_IO_GRPSIZE": str(self.nbpool),
+                "EC_PROFILE_HEAP": "0",
+                "F_RECLUNIT": "BYTE",
+                "F_UFMTENDIAN": "big",
+                "ODB_ANALYSIS_DATE": f"{yyyy}{mm}{dd}",
+                "ODB_ANALYSIS_TIME": f"{rr}0000",
+                "TIME_INIT_YYYYMMDD": f"{yyyy}{mm}{dd}",
+                "TIME_INIT_HHMMSS": f"{rr}0000",
+                "ODB_FEBINPATH": bin_dir,
+                "ODB_CMA": "ECMA",
+                "BATOR_NBSLOT": "1",
+                # merge_ioassign writes the merged IOASSIGN into wdir/ECMA/,
+                # so ODB_SRCPATH_ECMA must point there (not to wdir).
+                "SWAPP_ODB_IOASSIGN": os.path.join(self.wdir, "ECMA", "IOASSIGN"),
+                "ODB_SRCPATH_ECMA": os.path.join(self.wdir, "ECMA"),
+                "ODB_DATAPATH_ECMA": os.path.join(self.wdir, "ECMA"),
+                "ODB_SRCPATH_RSTBIAS": os.path.join(self.wdir, "ECMA"),
+                "ODB_ECMA_CREATE_POOLMASK": "1",
+                "ODB_ECMA_POOLMASK_FILE": os.path.join(
+                    self.wdir, "ECMA", "ECMA.poolmask"
+                ),
+                "IOASSIGN": os.path.join(self.wdir, "ECMA", "IOASSIGN"),
+                "DR_HOOK_ASSERT_MPI_INITIALIZED": "0",
+            }
+        )
 
         # --- run merge_ioassign then shuffle ---
         # merge_ioassign: combines IOASSIGN files from all subbases
@@ -168,7 +176,9 @@ class OdbMerge(Task):
         ) + "00"
         datemax = (
             bt
-            + datetime.timedelta(minutes=self.bator_window_shift + self.bator_window_len)
+            + datetime.timedelta(
+                minutes=self.bator_window_shift + self.bator_window_len
+            )
         ).strftime("%Y%m%d%H%M") + "00"
         with open("ficdate", "w") as fh:
             fh.write(f"{datemin}\n{datemax}\n")
@@ -180,7 +190,9 @@ class OdbMerge(Task):
         with open("env_dump.sh", "w") as fh:
             for key, value in rte.items():
                 fh.write(f"export {key}={shlex.quote(value)}\n")
-        BatchJob(rte, wrapper=self.platform.substitute(self.wrapper)).run(shuffle_bin_cmd)
+        BatchJob(rte, wrapper=self.platform.substitute(self.wrapper)).run(
+            shuffle_bin_cmd
+        )
 
         if not os.path.isdir("ECMA"):
             raise RuntimeError("OdbMerge: shuffle did not produce an ECMA database.")
