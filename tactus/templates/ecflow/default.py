@@ -130,12 +130,9 @@ def default_main(kwargs: dict):
 
         # Handle generic tasks and various environment variable control
         tactus_task = os.environ.get("TACTUS_TASK", task.ecf_task)
-        obstype = os.environ.get("OBSTYPE", "")
-        dastream = os.environ.get("DASTREAM", "")
         config = config.copy(
             update={
                 "general": {"tactus_task": tactus_task},
-                "da": {"obstype": obstype, "dastream": dastream},
             }
         )
 
@@ -154,7 +151,9 @@ def default_main(kwargs: dict):
 
 
 if __name__ == "__main__":
-    logger.info("Running {} v{}", GeneralConstants.PACKAGE_NAME, GeneralConstants.VERSION)
+    logger.info(
+        "Running {} v{}", GeneralConstants.PACKAGE_NAME, GeneralConstants.VERSION
+    )
     # Get ecflow variables
     kwargs_main = parse_ecflow_vars()
     default_main(kwargs_main)

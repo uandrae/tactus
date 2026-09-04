@@ -91,7 +91,6 @@ class OdbFamily(EcflowSuiteFamily):
                 ecf_files,
                 input_template=input_template,
                 variables={
-                    "OBSTYPE": obstype,
                     "TACTUS_TASK": task_class,
                     "ARGS": f"obstype={obstype};da_stream={da_stream}",
                 },
@@ -153,7 +152,7 @@ class SurfaceAnalysisFamily(EcflowSuiteFamily):
             parent,
             ecf_files,
             trigger=trigger,
-            variables={"DA_STREAM": "surface", "ARGS": "da_stream='surface'"},
+            variables={"ARGS": "da_stream='surface'"},
             ecf_files_remotely=ecf_files_remotely,
         )
 
@@ -251,7 +250,7 @@ class VariationalFamily(EcflowSuiteFamily):
             parent,
             ecf_files,
             trigger=trigger,
-            variables={"DA_STREAM": "3dvar", "ARGS": "da_stream='3dvar'"},
+            variables={"ARGS": "da_stream='3dvar'"},
             ecf_files_remotely=ecf_files_remotely,
         )
 

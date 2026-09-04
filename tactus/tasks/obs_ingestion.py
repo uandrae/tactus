@@ -33,13 +33,11 @@ class OdbIngestionTask(Task):
         self.da_const_dir = self.platform.substitute(config["da.const_dir"])
         self.domain = config["domain.name"]
         self.obstype = config.get("task.args.obstype", "")
-        logger.info("OBSTYPE:{}", self.obstype)
         if not self.obstype:
             raise RuntimeError(
                 f"{self._LOG_TAG}: task.args.obstype variable is not set. "
             )
         self.family1 = config.get("task.args.da_stream", "3dvar")
-        logger.info("DA_STREAM:{}", self.family1)
         self.nbpool = (
             config.get("da.nbpool", 16)
             if self.family1 == "surface"

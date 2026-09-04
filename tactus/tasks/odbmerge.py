@@ -33,7 +33,6 @@ class OdbMerge(Task):
         self.da_scratch = self.platform.substitute(config["da.scratch"])
         # family1 determines output archive subdirectory name
         self.family1 = config.get("task.args.da_stream", "3dvar")
-        logger.info("DA_STREAM:{}", self.family1)
         self.nbpool = (
             config.get("da.nbpool", 16)
             if self.family1 == "surface"
