@@ -21,11 +21,13 @@ class BatchJob(object):
         self.wrapper = wrapper
         logger.debug("Constructed BatchJob")
 
-    def run(self, cmd):
+    def run(self, cmd, logfile=None):
         """Run command.
 
         Args:
             cmd (str): Command to run.
+            logfile: Optional file-like object to tee stdout into in addition
+                to sys.stdout (e.g. open("oops.log", "a")).
 
         Raises:
             TypeError: If the provided command is not a string
@@ -56,6 +58,9 @@ class BatchJob(object):
                 break
             sys.stdout.write(nextline)
             sys.stdout.flush()
+            if logfile is not None:
+                logfile.write(nextline)
+                logfile.flush()
 
         return_code = process.wait()
         if return_code != 0:

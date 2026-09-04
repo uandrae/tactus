@@ -1,0 +1,115 @@
+expver: "OOPS"
+resolution:
+  namelist: "naml_standard_geometry"
+  orogfile: "ICMSHOOPSINIT"
+model:
+  namelist: "naml_nonlinear_model"
+  tstep: "PT45S"
+cost_function:
+  window_length: "PT0H"
+  window_begin: "{analysis_time}"
+  variables: ["u", "v", "t", "q", "sp"]
+  cost_type: "3D-Var"
+  Jb:
+    variables: ["u", "v", "t", "q", "sp"]
+    Background:
+      state:
+        - date: "{analysis_time}"
+          term: "PT0H"
+          ifile: "0"
+          filename: "ICMSHOOPSINIT"
+          variables: []
+          expver: "OOPS"
+      stateObsAux:
+        - type: "VARBC"
+          filename: "VARBC.cycle"
+          namelist: "fort.4"
+        - type: "TOVSCV"
+    Covariance:
+      covariance: "static"
+      date: "{analysis_time}"
+      namelist: "naml_bmatrix"
+    ObsAuxCovariances:
+      - type: "VARBC"
+        filename: "VARBC.screening"
+        namelist: "fort.4"
+      - type: "TOVSCV"
+  Jo:
+    screening: "true"
+    timeslot: "PT1H"
+    ObsTypes:
+      - naml_obs_setup: "naml_observations"
+        local_geom_obs_space:
+          namelist: "naml_standard_geometry"
+          orogfile: "ICMSHOOPSINIT"
+        odb_name: "ECMA"
+        ObsType: "ALLOBS"
+        ObsData:
+          obsvalue: "obsvalue"
+        Covariance:
+          ObsErrorCovariance:
+            obserror: "obserror"
+            covariance: "AllObsError"
+variational:
+  iteration:
+    - iteration: "0"
+      variables: ["u", "v", "t", "q", "sp"]
+      screening:
+        active: "true"
+        departures:
+          obsvalue: "fg_depar@body"
+          biasvalue: "biascorr@body"
+      resolution:
+        namelist: "naml_standard_geometry"
+        orogfile: "ICMSHOOPSINIT"
+      linearmodel:
+        version: "IfsTLM"
+        namelist: "naml_linear_model"
+        tstep: "PT45S"
+        trajectory:
+          namelist: "naml_traj_model"
+          tstep: "PT45S"
+          forcing:
+            variables: ["u", "v", "t", "q", "sp"]
+      ninner: "50"
+      gradient_norm_reduction: "1e-05"
+      diagnostics:
+        variables: ["u", "v", "t", "q", "sp"]
+        jo_table_id: "999"
+        departures:
+          obsvalue: "fg_depar@body"
+        residue:
+          obsvalue: "an_depar@body"
+        stateObsAux:
+          - type: "VARBC"
+            filename: "VARBC.cycle.new"
+            namelist: "fort.4"
+      restart_radar: "true"
+      stateObsAux:
+        - type: "VARBC"
+          filename: "VARBC.screening"
+          namelist: "fort.4"
+      stateObsAuxReset:
+        - type: "TOVSCV"
+      ObsAuxCovariances:
+        - type: "VARBC"
+          filename: "VARBC.screening"
+          namelist: "fort.4"
+          update: "true"
+        - type: "TOVSCV"
+          update: "false"
+minimizer:
+  algorithm: "SQRTPLanczos"
+output:
+  namelist: "naml_write_analysis"
+  steps: "PT0S"
+  window_length: "PT0H"
+  filename: "ICMSHOOPS+0000"
+final:
+  diagnostics:
+    variables: ["u", "v", "t", "q", "sp"]
+    departures:
+      obsvalue: "hires@update_1"
+  state:
+    - namelist: "naml_write_analysis"
+      variables: ["u", "v", "t", "q", "sp"]

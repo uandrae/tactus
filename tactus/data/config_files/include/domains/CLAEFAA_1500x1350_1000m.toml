@@ -1,0 +1,12 @@
+[domain]
+  gridtype = "quadratic"
+  name = "CLAEFAA_1500x1350_1000m"
+  nimax = 1489
+  njmax = 1339
+  tstep = 45
+  xdx = 1000
+  xdy = 1000
+  xlatcen = 46.2
+  xloncen = 13.8
+  nbzong = 20
+  nbzonl = 20

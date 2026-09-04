@@ -60,6 +60,7 @@ def parse_ecflow_vars():
         "TACTUS_HOME": os.environ["TACTUS_HOME"],
         "KEEP_WORKDIRS": os.environ["KEEP_WORKDIRS"],
         "MEMBER": os.environ["MEMBER"],
+        "TACTUS_TASK": os.environ.get("TACTUS_TASK", ""),
     }
 
 
@@ -127,6 +128,14 @@ def default_main(kwargs: dict):
         # Update config based on member
         config = get_member_config(config, member=member)
 
+        # Handle generic tasks and various environment variable control
+        tactus_task = os.environ.get("TACTUS_TASK", task.ecf_task)
+        config = config.copy(
+            update={
+                "general": {"tactus_task": tactus_task},
+            }
+        )
+
     # TODO Add wrapper
     server = EcflowServer(config)
     # This will also handle call to sys.exit(), i.e. Client.__exit__ will still be called.
@@ -142,7 +151,9 @@ def default_main(kwargs: dict):
 
 
 if __name__ == "__main__":
-    logger.info("Running {} v{}", GeneralConstants.PACKAGE_NAME, GeneralConstants.VERSION)
+    logger.info(
+        "Running {} v{}", GeneralConstants.PACKAGE_NAME, GeneralConstants.VERSION
+    )
     # Get ecflow variables
     kwargs_main = parse_ecflow_vars()
     default_main(kwargs_main)

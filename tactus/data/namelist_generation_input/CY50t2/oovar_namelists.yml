@@ -1,0 +1,961 @@
+oovar_fort4_base:
+  NAETLDIAG: {}
+  NAMACV: {}
+  NAMARG:
+    LELAM: true
+    NCONF: 131
+    LECMWF: false
+    CNMEXP: 'OOPS'
+    NSUPERSEDE: 1
+  NAMCFU: {}
+  NAMCLRADLID: {}
+  NAMCOSJO: {}
+  NAMCT0:
+    LFDBOP: false
+    LOBS: true
+    LSIMOB: false
+    NFPOS: 0
+    NSPPR: 1
+    NCNTVAR: 2
+    NHISTS: [1, 1]
+    NFRHIS: 10000
+    NPOSTS: [1, 0]
+    NFRPOS: 10000
+    NGDITS: [1, 1]
+    NFRGDI: 10000
+    NSDITS: [0, 0]
+    NFRSDI: 10000
+    LSCREEN_OPENMP: false
+    L_OOPS: true
+    LSUSPECA_GP: false
+    LSUSPECA_GP_UV: false
+  NAMCT1:
+    LRFILAF: false
+  NAMCVER: {}
+  NAMDYN:
+    SITR: 270.
+    SIPR: 100000.
+  NAMDYNA:
+    LSLAG: true
+    LSPRT: false
+  NAMDYNA_STATIC: {}
+  NAMDYNCORE: {}
+  NAMECV: {}
+  NAMECVDESC: {}
+  NAMECVGRB: {}
+  NAMEMIS_CONF: {}
+  NAMENKF: {}
+  NAMFPC: {}
+  NAMINI: {}
+  NAMJBALPHACV: {}
+  NAMJBECPHYSECV: {}
+  NAMJBSKTECV: {}
+  NAMMCUF: {}
+  NAMMODERRCONF: {}
+  NAMMODERRCOV: {}
+  NAMMODERRINCRCONF: {}
+  NAMMODERRMOD: {}
+  NAMNPROF: {}
+  NAMOPH: {}
+  NAMPAR0:
+    NPROC: ${cfg:submission.task_exceptions.OopsVar.NPROC,128}
+    NOUTPUT: 1
+    NPRGPNS: ${cfg:submission.task_exceptions.OopsVar.NPROC,128}
+    NPRGPEW: 1
+    NPRTRW: ${cfg:submission.task_exceptions.OopsVar.NPROC,128}
+    NPRTRV: 1
+    LMPOFF: false
+    MP_TYPE: 2
+    MBX_SIZE: 2048000000
+  NAMPAR1:
+    LSPLIT: false
+    NSTRIN: ${cfg:submission.task_exceptions.OopsVar.NPROC,128}
+    NSTROUT: 8
+    NCOMBFLEN: 1800000
+  NAMPARECV: {}
+  NAMPERTPAR: {}
+  NAMPHMSE: {}
+  NAMPHYDS: {}
+  NAMPPC: {}
+  NAMPPVI: {}
+  NAMRINC: {}
+  NAMRSTRHBIAS: {}
+  NAMSCEN: {}
+  NAMSENS: {}
+  NAMTHLIM: {}
+  NAMTRAJ:
+    LTRAJGP: true
+    LREADGPTRAJ: true
+  NAMTRANS0: {}
+  NAMVAR:
+    LBGOBS: false
+    LTEST: false
+    NITER: 50
+    NSIMU: 60
+    NGRATS: [1, 1]
+    NFRANA: 10000
+    LJC: false
+    NUPTRA: 0
+    RCVGE: 0.001
+    L_CHECK_CONVERGENCE: false
+    LTOVSCV: false
+    LANOBS: false
+    LINITCV: true
+    LSTATMERR: false
+    LVARBC: false
+    LCONGRAD: true
+    LCLDSINK: false
+  NAMVARBC: {}
+  NAMVARBC_AIREP:
+    LBC_ACARS: false
+    LBC_AIRCT: false
+    LBC_AIREP: false
+    LBC_AMDAR: false
+    LBC_CODAR: false
+    LBC_COLBA: false
+  NAMVARBC_ALLSKY: {}
+  NAMVARBC_GBRAD: {}
+  NAMVARBC_MODES: {}
+  NAMVARBC_RAD:
+    YCONFIG(3,3)%NCSTART: 0
+    LCLD_AIRS: true
+  NAMVARBC_RSONDE:
+    LBC_RSONDE: false
+  NAMVARBC_SFCOBS:
+    LBC_SFCOBS_APD: true
+  NAMVARBC_TCWV: {}
+  NAMVARBC_TO3: {}
+  NAMVRTL:
+    L131TL: true
+    LOBSTL: true
+  NAMVWRK: {}
+  NAMXFU: {}
+  NAM_DISTRIBUTED_VECTORS: {}
+  NEMCT0: {}
+  NEMELBC0A:
+    NBICOP: 2
+    NBICOT: 2
+    NBICOU: 2
+
+oovar_obs_base:
+  NACIETEO: {}
+  NACOBS: {}
+  NACTAN: {}
+  NACTEX: {}
+  NACVEG: {}
+  NADOCK: {}
+  NAEAEM7: {}
+  NAEAER: {}
+  NAECOAPHY: {}
+  NAEPHLI: {}
+  NAEPHY: {}
+  NAERAD: {}
+  NAERCLI: {}
+  NAETLDIAG: {}
+  NAEVOL: {}
+  NAIMPO: {}
+  NALORI: {}
+  NAMACV: {}
+  NAMAERDET: {}
+  NAMAERO: {}
+  NAMARPHY: {}
+  NAMCA: {}
+  NAMCAPE: {}
+  NAMCFU: {}
+  NAMCHEM: {}
+  NAMCHET: {}
+  NAMCHK: {}
+  NAMCLA: {}
+  NAMCLDP: {}
+  NAMCLI: {}
+  NAMCLOP15: {}
+  NAMCLRADLID: {}
+  NAMCLTC: {}
+  NAMCMEM_MW: {}
+  NAMCOK: {}
+  NAMCOM: {}
+  NAMCOMPO: {}
+  NAMCOSJO: {}
+  NAMCOUPLO4: {}
+  NAMCT1: {}
+  NAMCUMF: {}
+  NAMCUMFS: {}
+  NAMCVER: {}
+  NAMCVMNH: {}
+  NAMDDH: {}
+  NAMDFI: {}
+  NAMDIM_TRAJ: {}
+  NAMDPHY: {}
+  NAMDVISI: {}
+  NAMDWET: {}
+  NAMDYNA_STATIC: {}
+  NAMDYNCORE: {}
+  NAMECV: {}
+  NAMECVDESC: {}
+  NAMECVGRB: {}
+  NAMENKF: {}
+  NAMENSCOV: {}
+  NAMFPC: {}
+  NAMFPD: {}
+  NAMFPDY2: {}
+  NAMFPDYF: {}
+  NAMFPDYH: {}
+  NAMFPDYI: {}
+  NAMFPDYP: {}
+  NAMFPDYS: {}
+  NAMFPDYT: {}
+  NAMFPDYV: {}
+  NAMFPF: {}
+  NAMFPG: {}
+  NAMFPIOS: {}
+  NAMFPMOVE: {}
+  NAMFPOBJ: {}
+  NAMFPPHY: {}
+  NAMFPSC2: {}
+  NAMFPSC2_DEP: {}
+  NAMGEM: {}
+  NAMGWD: {}
+  NAMGWDIAG: {}
+  NAMGWWMS: {}
+  NAMIAU: {}
+  NAMICE: {}
+  NAMINI: {}
+  NAMINTFLEX: {}
+  NAMIOS: {}
+  NAMIO_SERV: {}
+  NAMJBALPHACV: {}
+  NAMJBCODES: {}
+  NAMJBECPHYSECV: {}
+  NAMJBSKTECV: {}
+  NAMLCZ: {}
+  NAMLIMA: {}
+  NAMLSFORC: {}
+  NAMMARS: {}
+  NAMMCC: {}
+  NAMMCUF: {}
+  NAMMETHOX: {}
+  NAMMODERR: {}
+  NAMMODERRCONF: {}
+  NAMMODERRCOV: {}
+  NAMMODERRINCRCONF: {}
+  NAMMODERRMOD: {}
+  NAMMTS: {}
+  NAMMWAVE: {}
+  NAMNORGWD: {}
+  NAMNPROF: {}
+  NAMNRTAER: {}
+  NAMNUD: {}
+  NAMNUDGLH: {}
+  NAMOOPS: {}
+  NAMOPH: {}
+  NAMOPTCMEM: {}
+  NAMPARAR: {}
+  NAMPARECV: {}
+  NAMPERTOBS: {}
+  NAMPERTPAR: {}
+  NAMPHMSE: {}
+  NAMPHY1: {}
+  NAMPHY2: {}
+  NAMPHY3: {}
+  NAMPHYDS: {}
+  NAMPPC: {}
+  NAMPPVI: {}
+  NAMPRE: {}
+  NAMRAD15: {}
+  NAMRADCMEM: {}
+  NAMRCF: {}
+  NAMRCOEF: {}
+  NAMRES: {}
+  NAMRGRI: {}
+  NAMRINC: {}
+  NAMRIP0: {}
+  NAMRLX: {}
+  NAMRPP: {}
+  NAMRSTRHBIAS: {}
+  NAMSATSIM: {}
+  NAMSCC: {}
+  NAMSCEN: {}
+  NAMSCM: {}
+  NAMSEKF: {}
+  NAMSENS: {}
+  NAMSIMPHL: {}
+  NAMSPNG: {}
+  NAMSPP: {}
+  NAMSPSDT: {}
+  NAMSTA: {}
+  NAMSTOPH: {}
+  NAMSWE: {}
+  NAMTESTVAR: {}
+  NAMTHLIM: {}
+  NAMTOPH: {}
+  NAMTRAJP: {}
+  NAMTRANS: {}
+  NAMTRANS0: {}
+  NAMVAREPS: {}
+  NAMVDF: {}
+  NAMVDOZ: {}
+  NAMVOLCANO: {}
+  NAMVV0: {}
+  NAMVV1: {}
+  NAMVWRK: {}
+  NAMWAVELETJB: {}
+  NAMXFU: {}
+  NAM_CANAPE: {}
+  NAM_DISTRIBUTED_VECTORS: {}
+  NAM_NEBN: {}
+  NAM_PARAM_ICEN: {}
+  NAM_PARAM_MFSHALLN: {}
+  NAM_TURBN: {}
+  NAPHLC: {}
+  NEMCT0: {}
+  NEMDIM: {}
+  NEMDYN: {}
+  NEMELBC0B: {}
+  NEMFPEZO: {}
+  NEMGEO: {}
+  NEMJK: {}
+  NEMWAVELET: {}
+  NAMAFN:
+    TFP_I%LLGP: true
+    TFP_L%LLGP: true
+  NAMARG:
+    LELAM: true
+    NCONF: 131
+    LECMWF: false
+    CNMEXP: 'CEXP'
+    NSUPERSEDE: 1
+  NAMCT0:
+    LFDBOP: false
+    LOBS: true
+    LSIMOB: false
+    NFPOS: 0
+    NSPPR: 1
+    NCNTVAR: 2
+    NHISTS: [1, 1]
+    NFRHIS: 10000
+    NPOSTS: [1, 0]
+    NFRPOS: 10000
+    NGDITS: [1, 1]
+    NFRGDI: 10000
+    NSDITS: [0, 0]
+    NFRSDI: 10000
+    LSCREEN_OPENMP: false
+  NAMDIM:
+    NPROMA: ${cfg:da.oops.nproma,-50}
+  NAMDYN:
+    SITR: 270.
+    SIPR: 100000.
+  NAMDYNA:
+    LSLAG: true
+    LSPRT: false
+  NAMEMIS_CONF:
+    LUSE_TELSEM: false
+  NAMFA:
+    NBITCS: -1
+    NSTRON: -1
+    NBITPG: -1
+    YFAL%NBITS: 12
+    YFAI%NBITS: 12
+    YFAR%NBITS: 12
+    YFAS%NBITS: 12
+    YFAL: 'CLOUD_WATER'
+    YFAI: 'ICE_CRYSTAL'
+    YFAS: 'SNOW'
+    YFAR: 'RAIN'
+    YFAG: 'GRAUPEL'
+  NAMFAINIT:
+    JPXTRO: 2000
+  NAMGFL:
+    YQ_NL%CNAME: 'HUMI.SPECIFI'
+    YQ_NL%LGP: true
+    YQ_NL%LSP: false
+    YQ_NL%NREQIN: 1
+    YL_NL%LGP: false
+    YL_NL%LSP: false
+    YL_NL%NREQIN: 0
+    YL_NL%CNAME: 'CLOUD_WATER'
+    YI_NL%LGP: false
+    YI_NL%LSP: false
+    YI_NL%NREQIN: 0
+    YI_NL%CNAME: 'ICE_CRYSTAL'
+    YS_NL%LGP: false
+    YS_NL%LSP: false
+    YS_NL%NREQIN: 0
+    YS_NL%CNAME: 'SNOW'
+    YR_NL%LGP: false
+    YR_NL%LSP: false
+    YR_NL%NREQIN: 0
+    YR_NL%CNAME: 'RAIN'
+    YG_NL%LGP: false
+    YG_NL%LSP: false
+    YG_NL%NREQIN: 0
+    YG_NL%CNAME: 'GRAUPEL'
+    YCPF_NL%LGP: false
+  NAMGRIB:
+    NCYCLE: 47
+  NAMIOMI:
+    NMUPD: 5
+    CFVATRA: 'VATRH'
+  NAMJG:
+    CONFIG%L3DBGERR: true
+    CONFIG%LCLMSFCE: true
+    CONFIG%LCORCOSU: false
+    CONFIG%LJB_NONLINEAR_BALANCE: false
+    CONFIG%LJB_NONLINEAR_CVHUM: false
+    CONFIG%LJB_NONLINEAR_BALANCE_RELAX: true
+    CONFIG%LJB_OMEGA_BALANCE_RELAX: true
+    CONFIG%ELC: 300000.
+    CONFIG%LJBBALBETA: false
+    CONFIG%LSPFCE: true
+    CONFIG%LSBQ_STRATOLOW: true
+    CONFIG%LJB_OMEGA_BALANCE: false
+    CONFIG%LRDQERR: false
+    CONFIG%LREDNMCQ: false
+    CONFIG%LSBLATLONG: false
+    CONFIG%REDNMC: 0.5
+  NAMDIMO: {}
+  NAMMKODB:
+    LSCATINT: false
+    L_SCAT_BIASSIG: false
+    NBIASCOR: 0
+    LTBIASC: false
+  NAMOBS:
+    LCAPACH: false
+    LCACHMT: true
+    LMKCMARPL: false
+    L_F_SCR_WORK_TS: false
+    LSAATOPZTD: true
+    LRSTBIAS_ODB: false
+  NAMPAR0:
+    NPROC: ${cfg:submission.task_exceptions.OopsVar.NPROC,128}
+    NOUTPUT: 1
+    NPRGPNS: ${cfg:submission.task_exceptions.OopsVar.NPROC,128}
+    NPRGPEW: 1
+    NPRTRW: ${cfg:submission.task_exceptions.OopsVar.NPROC,128}
+    NPRTRV: 1
+    LMPOFF: false
+    MP_TYPE: 2
+    MBX_SIZE: 2048000000
+  NAMPAR1:
+    LSPLIT: false
+    NSTRIN: ${cfg:submission.task_exceptions.OopsVar.NPROC,128}
+    NSTROUT: 8
+    NCOMBFLEN: 1800000
+  NAMPHY:
+    LVGSN: true
+    LO3ABC: true
+    LAEROSEA: true
+    LAEROLAN: true
+    LAEROSOO: true
+    LAERODES: true
+    LBLVAR: true
+    LNEBN: false
+    LRAY: false
+  NAMPHY0:
+    USURIC: 0.175
+    USURICE: 0.5
+    USURICL: 1.
+    USURID: 0.1
+    EDK: 5.
+  NAMRIP:
+    CSTOP: 'FCSTOP'
+    TSTEP: 'TIMESTEP'
+  NAMSATS:
+    MEMIS_SW: 1
+    LCO2_DIAG_AIRS: false
+    LCO2_DIAG_IASI: false
+    LPARTIAL_COEF_FILES: true
+  NAMTRAJ:
+    LTRAJGP: true
+    LREADGPTRAJ: true
+  NAMVAR:
+    LBGOBS: false
+    LTEST: false
+    NITER: 50
+    NSIMU: 60
+    NGRATS: [1, 1]
+    NFRANA: 10000
+    LJC: false
+    NUPTRA: 0
+    RCVGE: 0.001
+    L_CHECK_CONVERGENCE: false
+    LTOVSCV: true
+    LANOBS: false
+    LINITCV: true
+    LSTATMERR: false
+    LVARBC: true
+    LCONGRAD: true
+    LCLDSINK: false
+  NAMVARBC: {}
+  NAMVARBC_AIREP:
+    LBC_ACARS: false
+    LBC_AIRCT: false
+    LBC_AIREP: false
+    LBC_AMDAR: false
+    LBC_CODAR: false
+    LBC_COLBA: false
+  NAMVARBC_ALLSKY: {}
+  NAMVARBC_GBRAD: {}
+  NAMVARBC_MODES: {}
+  NAMVARBC_RAD:
+    YCONFIG(3,3)%NCSTART: 0
+    LCLD_AIRS: true
+  NAMVARBC_RSONDE:
+    LBC_RSONDE: false
+  NAMVARBC_SFCOBS:
+    LBC_SFCOBS_APD: true
+  NAMVARBC_TCWV: {}
+  NAMVARBC_TO3: {}
+  NAMVRTL:
+    L131TL: true
+    LOBSTL: true
+  NEMVAR:
+    NBZONVAR_EW: 20
+    EXPVAR: 1.
+    EVAREPSILON: 0.01
+    LEVARGP: false
+    ENIL1: 300000.
+    ENIL2: 500000.
+    ENILHBAL1: 600000.
+    ENILHBAL2: 1000000.
+    LCORCOSU_AUTO: false
+    LCORCOSU_STAT: false
+    LCORCOSU_HBAL: false
+  NEMELBC0A:
+    NBICOP: 2
+    NBICOT: 2
+    NBICOU: 2
+
+oovar_obs_tlad_base:
+  NAMCLRADLID: {}
+  NAMCMEM_MW: {}
+  NAMCOSJO:
+    LTC: false
+  NAMDIMO: {}
+  NAMMKODB: {}
+  NAMMWAVE: {}
+  NAMNPROF: {}
+  NAMOBS:
+    LCAPACH: false
+    LCACHMT: true
+    LMKCMARPL: false
+    L_F_SCR_WORK_TS: false
+    LSAATOPZTD: true
+  NAMPERTOBS: {}
+  NAMSATS:
+    MEMIS_SW: 1
+    LCO2_DIAG_AIRS: false
+    LCO2_DIAG_IASI: false
+    LPARTIAL_COEF_FILES: true
+  NAMSCC: {}
+
+oovar_bmatrix_base:
+  NAMCFU: {}
+  NAMFPC: {}
+  NAMJBCODES: {}
+  NAMJG:
+    CONFIG%L3DBGERR: true
+    CONFIG%LCLMSFCE: true
+    CONFIG%LCORCOSU: false
+    CONFIG%LJB_NONLINEAR_BALANCE: false
+    CONFIG%LJB_NONLINEAR_CVHUM: false
+    CONFIG%LJB_NONLINEAR_BALANCE_RELAX: true
+    CONFIG%LJB_OMEGA_BALANCE_RELAX: true
+    CONFIG%ELC: 300000.
+    CONFIG%LJBBALBETA: false
+    CONFIG%LSPFCE: true
+    CONFIG%LSBQ_STRATOLOW: true
+    CONFIG%LJB_OMEGA_BALANCE: false
+    CONFIG%LRDQERR: false
+    CONFIG%LREDNMCQ: false
+    CONFIG%LSBLATLONG: false
+    CONFIG%REDNMC: 0.5
+  NAMMCUF: {}
+  NAMPHYDS: {}
+  NAMWAVELETJB: {}
+  NAMXFU: {}
+
+oovar_geometry_base:
+  NAMRGRI: {}
+  NAMDIM:
+    NPROMA: ${cfg:da.oops.nproma,-50}
+  NAMCVER: {}
+  NAMGEM: {}
+  NAMVV0: {}
+  NAMVV1: {}
+  NAMTRANS: {}
+  NAMTRANS0: {}
+  NAMSTA: {}
+  NEMDIM: {}
+  NEMGEO: {}
+  NEMDYN: {}
+
+oovar_traj_base:
+  NAEPHLI: {}
+  NAEPHY: {}
+  NAERAD: {}
+  NAMARPHY: {}
+  NAMCA: {}
+  NAMCAPE: {}
+  NAMCLDP: {}
+  NAMCOM: {}
+  NAMCUMF: {}
+  NAMCUMFS: {}
+  NAMCVMNH: {}
+  NAMDDH: {}
+  NAMDIM: {}
+  NAMDPHY:
+    NCSNEC: 1
+  NAMDVISI: {}
+  NAMDYN:
+    SIPR: 100000.
+    SITR: 270.
+    VMAX2: 10.
+  NAMDYNA: {}
+  NAMDWET: {}
+  NAMFA:
+    NBITCS: -1
+    NBITPG: -1
+    NSTRON: -1
+    YFAG: 'GRAUPEL'
+    YFAI: 'ICE_CRYSTAL'
+    YFAI%NBITS: 12
+    YFAL: 'CLOUD_WATER'
+    YFAL%NBITS: 12
+    YFAR: 'RAIN'
+    YFAR%NBITS: 12
+    YFAS: 'SNOW'
+    YFAS%NBITS: 12
+  NAMFPC: {}
+  NAMGFL:
+    YA_NL%LGP: false
+    YA_NL%NREQIN: 0
+    YCPF_NL%LGP: false
+    YG_NL%CNAME: 'GRAUPEL'
+    YG_NL%LGP: false
+    YG_NL%LSP: false
+    YG_NL%NREQIN: 0
+    YI_NL%CNAME: 'ICE_CRYSTAL'
+    YI_NL%LGP: false
+    YI_NL%LSP: false
+    YI_NL%NREQIN: 0
+    YL_NL%CNAME: 'CLOUD_WATER'
+    YL_NL%LGP: false
+    YL_NL%LSP: false
+    YL_NL%NREQIN: 0
+    YQ_NL%CNAME: 'HUMI.SPECIFI'
+    YQ_NL%LGP: true
+    YQ_NL%LSP: false
+    YQ_NL%NREQIN: 1
+    YR_NL%CNAME: 'RAIN'
+    YR_NL%LGP: false
+    YR_NL%LSP: false
+    YR_NL%NREQIN: 0
+    YS_NL%CNAME: 'SNOW'
+    YS_NL%LGP: false
+    YS_NL%LSP: false
+    YS_NL%NREQIN: 0
+  NAMGRIB:
+    NCYCLE: 48
+  NAMGWD: {}
+  NAMGWWMS: {}
+  NAMMCC: {}
+  NAMMETHOX: {}
+  NAMMTS: {}
+  NAMNORGWD: {}
+  NAMNRTAER: {}
+  NAMPARAR: {}
+  NAMPERTPAR: {}
+  NAMPHY:
+    LAERODES: true
+    LAEROLAN: true
+    LAEROSEA: true
+    LAEROSOO: true
+    LBLVAR: true
+    LNEBN: false
+    LO3ABC: true
+    LRAY: false
+    LVGSN: true
+  NAMPHY0:
+    EDK: 5.
+    USURIC: 0.175
+    USURICE: 0.5
+    USURICL: 1.
+    USURID: 0.1
+  NAMPHY1: {}
+  NAMPHY2: {}
+  NAMPHY3: {}
+  NAMPHYDS: {}
+  NAMRCOEF: {}
+  NAMRIP:
+    CSTOP: 'h0'
+    TSTEP: 45
+  NAMSCM: {}
+  NAMSIMPHL: {}
+  NAMSPNG: {}
+  NAMSPP: {}
+  NAMSPSDT: {}
+  NAMSTOPH: {}
+  NAMTOPH: {}
+  NAMTRAJP: {}
+  NAMVAREPS: {}
+  NAMVDF: {}
+  NAMVDOZ: {}
+  NAPHLC: {}
+  NEMDYN: {}
+  NEMELBC0A: {}
+
+oovar_linmod_base:
+  NAEPHLI: {}
+  NAEPHY: {}
+  NAERAD: {}
+  NAMARPHY: {}
+  NAMCA: {}
+  NAMCAPE: {}
+  NAMCLRADLID: {}
+  NAMCLDP: {}
+  NAMCOM: {}
+  NAMCUMF: {}
+  NAMCUMFS: {}
+  NAMCVMNH: {}
+  NAMDDH: {}
+  NAMDPHY:
+    NCSNEC: 1
+  NAMDVISI: {}
+  NAMDYN:
+    SIPR: 100000.
+    SITR: 270.
+    VMAX2: 10.
+  NAMDYNA: {}
+  NAMDWET: {}
+  NAMFA:
+    NBITCS: -1
+    NBITPG: -1
+    NSTRON: -1
+    YFAG: 'GRAUPEL'
+    YFAI: 'ICE_CRYSTAL'
+    YFAI%NBITS: 12
+    YFAL: 'CLOUD_WATER'
+    YFAL%NBITS: 12
+    YFAR: 'RAIN'
+    YFAR%NBITS: 12
+    YFAS: 'SNOW'
+    YFAS%NBITS: 12
+  NAMFPC: {}
+  NAMGFL:
+    YA_NL%LGP: false
+    YA_NL%NREQIN: 0
+    YCPF_NL%LGP: false
+    YG_NL%CNAME: 'GRAUPEL'
+    YG_NL%LGP: false
+    YG_NL%LSP: false
+    YG_NL%NREQIN: 0
+    YI_NL%CNAME: 'ICE_CRYSTAL'
+    YI_NL%LGP: false
+    YI_NL%LSP: false
+    YI_NL%NREQIN: 0
+    YL_NL%CNAME: 'CLOUD_WATER'
+    YL_NL%LGP: false
+    YL_NL%LSP: false
+    YL_NL%NREQIN: 0
+    YQ_NL%CNAME: 'HUMI.SPECIFI'
+    YQ_NL%LGP: true
+    YQ_NL%LSP: false
+    YQ_NL%NREQIN: 1
+    YR_NL%CNAME: 'RAIN'
+    YR_NL%LGP: false
+    YR_NL%LSP: false
+    YR_NL%NREQIN: 0
+    YS_NL%CNAME: 'SNOW'
+    YS_NL%LGP: false
+    YS_NL%LSP: false
+    YS_NL%NREQIN: 0
+  NAMGRIB:
+    NCYCLE: 48
+  NAMGWD: {}
+  NAMGWWMS: {}
+  NAMMCC: {}
+  NAMMETHOX: {}
+  NAMMTS: {}
+  NAMNORGWD: {}
+  NAMNRTAER: {}
+  NAMPARAR: {}
+  NAMPERTPAR: {}
+  NAMPHY:
+    LAERODES: true
+    LAEROLAN: true
+    LAEROSEA: true
+    LAEROSOO: true
+    LBLVAR: true
+    LNEBN: false
+    LNEIGE: false
+    LO3ABC: true
+    LRAY: false
+    LVGSN: true
+  NAMPHY0:
+    EDK: 5.
+    USURIC: 0.175
+    USURICE: 0.5
+    USURICL: 1.
+    USURID: 0.1
+  NAMPHY1: {}
+  NAMPHY2: {}
+  NAMPHY3: {}
+  NAMPHYDS: {}
+  NAMRCOEF: {}
+  NAMRIP:
+    CSTOP: 'h0'
+    TSTEP: 45.
+  NAMSCM: {}
+  NAMSIMPHL: {}
+  NAMSPNG: {}
+  NAMSPP: {}
+  NAMSPSDT: {}
+  NAMSTOPH: {}
+  NAMTOPH: {}
+  NAMTRAJP: {}
+  NAMVAREPS: {}
+  NAMVDF: {}
+  NAMVDOZ: {}
+  NAPHLC: {}
+  NEMELBC0A: {}
+  NEMDYN: {}
+
+oovar_nonlinmod_base:
+  NAEPHLI: {}
+  NAEPHY: {}
+  NAERAD: {}
+  NAMARPHY: {}
+  NAMCA: {}
+  NAMCAPE: {}
+  NAMCLDP: {}
+  NAMCLRADLID: {}
+  NAMCOM: {}
+  NAMCUMF: {}
+  NAMCUMFS: {}
+  NAMCVMNH: {}
+  NAMDDH: {}
+  NAMDWET: {}
+  NAMDPHY:
+    NCSNEC: 1
+  NAMDVISI: {}
+  NAMDYN:
+    SITR: 270.
+    SIPR: 100000.
+  NAMDYNA: {}
+  NAMFA:
+    NBITCS: -1
+    NSTRON: -1
+    NBITPG: -1
+    YFAL%NBITS: 12
+    YFAI%NBITS: 12
+    YFAR%NBITS: 12
+    YFAS%NBITS: 12
+    YFAL: 'CLOUD_WATER'
+    YFAI: 'ICE_CRYSTAL'
+    YFAS: 'SNOW'
+    YFAR: 'RAIN'
+    YFAG: 'GRAUPEL'
+  NAMFPC: {}
+  NAMGFL:
+    YCPF_NL%LGP: false
+    YG_NL%CNAME: 'GRAUPEL'
+    YG_NL%LGP: false
+    YG_NL%LSP: false
+    YG_NL%NREQIN: 0
+    YI_NL%CNAME: 'ICE_CRYSTAL'
+    YI_NL%LGP: false
+    YI_NL%LSP: false
+    YI_NL%NREQIN: 0
+    YL_NL%CNAME: 'CLOUD_WATER'
+    YL_NL%LGP: false
+    YL_NL%LSP: false
+    YL_NL%NREQIN: 0
+    YQ_NL%CNAME: 'HUMI.SPECIFI'
+    YQ_NL%LGP: true
+    YQ_NL%LSP: false
+    YQ_NL%NREQIN: 1
+    YR_NL%CNAME: 'RAIN'
+    YR_NL%LGP: false
+    YR_NL%LSP: false
+    YR_NL%NREQIN: 0
+    YS_NL%CNAME: 'SNOW'
+    YS_NL%LGP: false
+    YS_NL%LSP: false
+    YS_NL%NREQIN: 0
+  NAMGRIB:
+    NCYCLE: 47
+  NAMGWD: {}
+  NAMGWWMS: {}
+  NAMMCC: {}
+  NAMMETHOX: {}
+  NAMNORGWD: {}
+  NAMNRTAER: {}
+  NAMPARAR:
+    CMICRO: 'NONE'
+  NAMPERTPAR: {}
+  NAMPHY:
+    LVGSN: true
+    LO3ABC: true
+    LAEROSEA: true
+    LAEROLAN: true
+    LAEROSOO: true
+    LAERODES: true
+    LBLVAR: true
+    LNEBN: false
+    LRAY: false
+  NAMPHY0:
+    USURIC: 0.175
+    USURICE: 0.5
+    USURICL: 1.
+    USURID: 0.1
+    EDK: 5.
+  NAMPHY1: {}
+  NAMPHY2: {}
+  NAMPHY3: {}
+  NAMPHYDS: {}
+  NAMRCOEF: {}
+  NAMRIP:
+    CSTOP: 'h0'
+    TSTEP: 45.
+  NAMSCM: {}
+  NAMSIMPHL: {}
+  NAMSPNG: {}
+  NAMSPP: {}
+  NAMSPSDT: {}
+  NAMSTOPH: {}
+  NAMTOPH: {}
+  NAMTRAJP: {}
+  NAMVAREPS: {}
+  NAMVDF: {}
+  NAMVDOZ: {}
+  NAM_NEBN: {}
+  NAM_PARAM_ICEN: {}
+  NAM_PARAM_MFSHALLN: {}
+  NAM_TURBN: {}
+  NAPHLC: {}
+  NEMDYN: {}
+  NEMELBC0A: {}
+
+oovar_write_spec_base:
+  NAMOOPSWRITE:
+    LWRSPEC: true
+    LWRSPECA_GP: false
+    LWRSPECA_GP_UV: false
+    LINC: true
+    CDMEXP: 'BG__'
+
+oovar_write_analysis_base:
+  NAMOOPSWRITE:
+    CDMEXP: 'OOPS'
+    LINC: false
+    LWRSPEC: true
+    LWRSPECA_GP: false
+    LWRSPECA_GP_UV: false
+
+oovar_gom_setup_base:
+  NAMNPROF: {}
+
+oovar_gom_setup_hres_base:
+  NAMNPROF:
+    NOBSPROFS(13): 225
