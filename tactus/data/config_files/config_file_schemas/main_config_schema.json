@@ -46,6 +46,9 @@
     },
     "gribmodify": {
       "$ref": "#/definitions/gribmodify"
+    },
+    "genesis": {
+      "$ref": "#/definitions/genesis"
     }
   },
   "required": [
@@ -333,13 +336,25 @@
       "properties": {
         "pertana": {
           "title": "Perturbation of initial atmospheric conditions with boundary data.",
-          "type": "boolean",
-          "default": false
+          "type": "object",
+          "properties": {
+            "active": {
+              "title": "Activate pertana perturbations",
+              "type": "boolean",
+              "default": false
+            }
+          }
         },
         "pertsurf": {
           "title": "Perturbation of initial surfex conditions",
-          "type": "boolean",
-          "default": false
+          "type": "object",
+          "properties": {
+            "active": {
+              "title": "Activate pertsurf perturbations",
+              "type": "boolean",
+              "default": false
+            }
+          }
         }
       }
     },
@@ -731,6 +746,11 @@
           "description": "Git token for IAL source access",
           "default": ""
         },
+        "ial_git_tag_case": {
+          "type": "string",
+          "description": "Placeholder for parsed branch name",
+          "default": ""
+        },
         "ial_git_branch": {
           "type": "string",
           "description": "Branch/tag",
@@ -785,6 +805,38 @@
           "type": "string",
           "description": "whether to use chache build/install folders",
           "default": "@REFERENCE_DATA@/bundle_cache"
+        },
+        "forecast_only": {
+          "type": "boolean",
+          "description": "Do not compile assimilation related binaries",
+          "default": false
+        }
+      }
+    },
+    "genesis": {
+      "title": "Genesis information",
+      "description": "Genesis information of the configuration file",
+      "type": "object",
+      "properties": {
+        "command": {
+          "description": "The command used to generate the configuration file",
+          "type": "string"
+        },
+        "package": {
+          "description": "The package used to generate the configuration file",
+          "type": "string"
+        },
+        "version": {
+          "description": "The version of the package used to generate the configuration file",
+          "type": "string"
+        },
+        "user": {
+          "description": "The user who generated the configuration file",
+          "type": "string"
+        },
+        "time": {
+          "description": "The time when the configuration file was generated",
+          "type": "string"
         }
       }
     },
@@ -1056,7 +1108,7 @@
           "description": "Experiment name",
           "default": "tactus_case",
           "type": "string",
-          "pattern": "^[^0-9][^.]*$"
+          "pattern": "^([a-zA-Z0-9_@][a-zA-Z0-9_@.]*)?$"
         },
         "member_str": {
           "description": "String identifier of a member in the ensemble",
