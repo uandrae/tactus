@@ -87,8 +87,12 @@ class E923(Task):
         self.link_data_files(label="rrtm")
 
         # PGD input
-        self.fmanager.input(f"{self.climdir}/{self.pgd_prel}", "Neworog")
-        self.fmanager.input(f"{self.climdir}/{self.pgd_prel}", "Newsuborog")
+        self.fmanager.input(
+            f"{self.climdir}/{self.pgd_prel}", "Neworog", register="system.climdir"
+        )
+        self.fmanager.input(
+            f"{self.climdir}/{self.pgd_prel}", "Newsuborog", register="system.climdir"
+        )
 
         for part_nr in [0, 1, 2]:
             if part_nr != 1:
@@ -189,6 +193,7 @@ class E923(Task):
             label = f"part{label}"
 
         data = self.input_data.get(label)
+        register = data.get("register", None)
 
         logger.info("*** {}: {}", label, data)
 
@@ -218,7 +223,10 @@ class E923(Task):
                     src_local = src_local.replace("@MM@", month)
 
                 self.fmanager.input(
-                    f"{path}{sep}{src_local}", dst_local, provider_id=provider_id
+                    f"{path}{sep}{src_local}",
+                    dst_local,
+                    provider_id=provider_id,
+                    register=register,
                 )
 
                 # Decompress compressed files

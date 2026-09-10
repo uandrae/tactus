@@ -188,7 +188,6 @@ class TestCases:
             cases = self.selection
 
         logger.info("Create config files in {}", self.test_dir)
-        tdp = self.modifs["system"]["test_data_path"]
 
         for case, item in self.cases.items():
             if case not in self.assigned:
@@ -262,8 +261,7 @@ class TestCases:
             level = [
                 case
                 for case in remaining
-                if "host" not in self.cases[case]
-                or self.cases[case]["host"] in resolved
+                if "host" not in self.cases[case] or self.cases[case]["host"] in resolved
             ]
             if not level:
                 message = f"Circular dependency detected in host cases: {remaining}"
@@ -307,9 +305,7 @@ class TestCases:
         from .__main__ import main as tactus_main
 
         try:
-            with open(
-                f"{self.test_dir}/{self.config_name}_config_names.toml", "rb"
-            ) as f:
+            with open(f"{self.test_dir}/{self.config_name}_config_names.toml", "rb") as f:
                 config_names = tomli.load(f)
         except FileNotFoundError as err:
             msg = "No case mapping available. Run again with '-m'"
@@ -385,7 +381,8 @@ class TestCases:
                 compiler = "gnu"
             cptag = ff.replace(ial_hash, "").replace("ial", "")
             bindir = (
-                _bindir.replace("@CPTAG@", cptag)
+                _bindir
+                .replace("@CPTAG@", cptag)
                 .replace("@IAL_HASH@", ial_hash)
                 .replace("@COMPILER@", compiler)
                 .replace("@PRECISION@", precision)
@@ -416,7 +413,8 @@ class TestCases:
                     compiler = "gnu"
                 cptag = ff.replace(gl_hash, "").replace("gl", "")
                 bindir = (
-                    _bindir.replace("@CPTAG@", cptag)
+                    _bindir
+                    .replace("@CPTAG@", cptag)
                     .replace("@IAL_HASH@", gl_hash)
                     .replace("@COMPILER@", compiler)
                     .replace("/bin", "")
@@ -452,9 +450,9 @@ class TestCases:
             }
         }
         if self.gl.get("active", False):
-            bin_modifs["submission"][
-                "bindir_gl"
-            ] = f"{self.gl['user_binary_path']}/{gl_hash}/@COMPILER@/bin"
+            bin_modifs["submission"]["bindir_gl"] = (
+                f"{self.gl['user_binary_path']}/{gl_hash}/@COMPILER@/bin"
+            )
         self.modifs = merge_dicts(bin_modifs, self.modifs, True)
 
     def update_hostnames(self, hostnames):
@@ -509,9 +507,7 @@ class TestCases:
     def collect_summaries(self):
         """Collect summaries from the runs."""
         try:
-            with open(
-                f"{self.test_dir}/{self.config_name}_config_names.toml", "rb"
-            ) as f:
+            with open(f"{self.test_dir}/{self.config_name}_config_names.toml", "rb") as f:
                 config_names = tomli.load(f)
         except FileNotFoundError as err:
             msg = "No case mapping available. Run again with '-m'"
@@ -603,15 +599,13 @@ class TestCases:
                         self.cases[case]["config_name"] = config_name
                         self.cases[case]["domain_name"] = domain_name
                 self.update_hostnames({case: self.cases[case] for case in level})
-                BasicConfig(
-                    {
-                        "config_names": {
-                            c: item["config_name"]
-                            for c, item in self.cases.items()
-                            if "config_name" in item
-                        }
+                BasicConfig({
+                    "config_names": {
+                        c: item["config_name"]
+                        for c, item in self.cases.items()
+                        if "config_name" in item
                     }
-                ).save_as(f"{directory}/{self.config_name}_config_names.toml")
+                }).save_as(f"{directory}/{self.config_name}_config_names.toml")
 
             if not args.run:
                 logger.info("\n\nRerun with '-r' to start the suites\n\n")

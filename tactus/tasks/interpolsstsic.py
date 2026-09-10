@@ -78,7 +78,7 @@ class InterpolSstSic(Task):
                         infile,
                         basetime=self.boundary.bd_basetime,
                         validtime=as_datetime(bd_time),
-                        register = "system.bddir_sst",
+                        register="system.bddir_sst",
                     )
                 else:
                     raise NotImplementedError(f"SST model '{sstmodel}' not implemented")
@@ -125,9 +125,8 @@ class InterpolSstSic(Task):
             # Run gl
             outfile = self.platform.substitute(self.outfile, bd_index=bd_index)
             target = self.platform.substitute(self.target, bd_index=bd_index)
-            #batch.run(f"{self.gl} -sst3 -n namgl -o {outfile}")
+            batch.run(f"{self.gl} -sst3 -n namgl -o {outfile}")
 
             logger.debug("WRKDIR: {}", self.wrk)
             logger.debug("OUTPUT {}", outfile)
-            #self.fmanager.output(outfile, target)
-            self.fmanager.output(infile, target)
+            self.fmanager.output(outfile, target)

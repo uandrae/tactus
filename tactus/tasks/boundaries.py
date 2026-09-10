@@ -49,9 +49,7 @@ class InterpolateBoundaries(Task):
 
         self.input_definition = f"{self.boundary.method}_input_definition"
         self.nlgen = NamelistGenerator(self.config, "master")
-        self.master = self.get_binary(
-            "MASTERODB", task_name=self.boundary.method.upper()
-        )
+        self.master = self.get_binary("MASTERODB", task_name=self.boundary.method.upper())
 
     def execute(self):
         """Run task.
@@ -77,11 +75,7 @@ class InterpolateBoundaries(Task):
                 "host_model_static_files"
             )
             path_static = host_model_static_files["path"]
-            register = (
-                host_model_static_files["register"]
-                if "register" in host_model_static_files
-                else None
-            )
+            register = host_model_static_files.get("register")
             logger.info("*** host_model_static_files: {}", host_model_static_files)
 
             for dst, src in host_model_static_files["files"].items():
@@ -101,13 +95,11 @@ class InterpolateBoundaries(Task):
                     register=register,
                 )
         # Link the static data
-        self.fmanager.input_data_iterator(
-            input_data, basetime=self.boundary.bd_basetime
-        )
+        self.fmanager.input_data_iterator(input_data, basetime=self.boundary.bd_basetime)
 
         # Host model input files
         path = host_model_files["path"]
-        register = host_model_files["register"] if "register" in host_model_files else None
+        register = host_model_files.get("register")
         logger.info("*** host_model_files: {}", host_model_files)
         for dst, src in host_model_files["files"].items():
             # Default to 0 for bdmember if no bdmember specified. This is to
@@ -153,9 +145,7 @@ class InterpolateBoundaries(Task):
                 self.target += self.config["task.args.target_suffix"]
 
             self.fmanager.output(
-                self.outfile.replace(
-                    "@NNN@", f"{bd_index - self.boundary.min_index:04}"
-                ),
+                self.outfile.replace("@NNN@", f"{bd_index - self.boundary.min_index:04}"),
                 self.target,
             )
 

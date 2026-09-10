@@ -284,8 +284,12 @@ class Task(object):
 
         # Clean workdir
         if self.config["general.keep_workdirs"]:
-            finished_wdir = self.rename_wdir(prefix="Finished_task_", source=source, target=target)
-            self.fmanager.dump_storage(Path(self.wrk), self.name, config_dir=finished_wdir)
+            finished_wdir = self.rename_wdir(
+                prefix="Finished_task_", source=source, target=target
+            )
+            self.fmanager.dump_storage(
+                Path(self.wrk), self.name, config_dir=finished_wdir
+            )
         else:
             self.remove_wdir(wdir=source)
 

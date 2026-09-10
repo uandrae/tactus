@@ -59,9 +59,9 @@
 
 [modifs.system]
   # Picks up the case name and domain from the host run
-  #case_suffix = ""
+  # case_suffix = ""
   host_case = "@HOST_CASE@"
   host_domain = "@HOST_DOMAIN@"
   host_suite = "@HOST_CASE@"
-  #test_data_path = "@SCRATCH@/tactus_input_data/@TAG@_@SUBTAG@"
+  # test_data_path = "@SCRATCH@/tactus_input_data/@TAG@_@SUBTAG@"
   test_data_path = "/scratch/snh/tactus_io_track/task_data/io_tracker_AROME_20260720T00/"

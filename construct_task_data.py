@@ -1,18 +1,21 @@
-import os
-import sys
-from pathlib import Path
+"""Collects task data and configs."""
+
+import contextlib
 import json
+import os
+import shutil
+from pathlib import Path
+
 from tactus.config_parser import ParsedConfig
 from tactus.host_actions import set_tactus_home
 from tactus.os_utils import Search
-import shutil
 
-TARGET_DIR = Path("/scratch/snh//tactus_io_track/task_data")
+TARGET_DIR = Path(f"/scratch/{os.environ['USER']}/tactus_io_track/task_data")
 
 NON_COPY_CONFIG = ["platform"]
 
 
-test_tasks = ["Forecast", "C903", "InterpolSstSic"]
+test_tasks = ["E923Constant", "Forecast", "C903", "InterpolSstSicPgdUpdate"]
 
 
 search_path = "/scratch/snh/tactus/io_tracker_AROME_20260720T00/20260720_0000"
@@ -24,11 +27,11 @@ input_files = Search.find_files(
     search_path, pattern=f"({'|'.join(test_tasks)})(.*)_storage.json", recursive=True
 )
 
-print(input_files)
+print(input_files, flush=True)
 
 for input_file in input_files:
     with open(input_file, "r", encoding="utf-8") as f:
-        print("\nRead", input_file)
+        print("\nRead", input_file, flush=True)
         input_data = json.load(f)
 
     taskname = os.path.basename(input_file).replace("_storage.json", "")
@@ -44,8 +47,7 @@ for input_file in input_files:
     target_config_dir = f"@REFERENCES_FOLDER@/{config['general.case']}/{taskname}"
     os.makedirs(target_dir, exist_ok=True)
 
-    cd = {"general": {"task": taskname},
-          "system": {"case_suffix": f"_{taskname}"}}
+    cd = {"general": {"task": taskname}, "system": {"case_suffix": f"_{taskname}"}}
 
     for source, val in input_data["input"].items():
         splits = source.split(".")
@@ -55,20 +57,21 @@ for input_file in input_files:
             value = config_unresolved[source]
             for files in val.values():
                 for f in files:
-                    source, _ = f.popitem()
-                    print(" use", source)
+                    _source, _ = f.popitem()
+                    print(" use", _source, flush=True)
         else:
             value = target_config_dir
 
-            for files in val.values():
-                for f in files:
-                    source, target = f.popitem()
-                    target = str(target_dir / os.path.basename(source))
-                    if not os.path.isfile(target):
-                        print("  cp", source, target)
-                        shutil.copy(source, target_dir / target)
-                    else:
-                        print(" exists", target)
+            with contextlib.suppress(AttributeError):
+                for files in val.values():
+                    for f in files:
+                        _source, target = f.popitem()
+                        target = str(target_dir / os.path.basename(_source))
+                        if not os.path.isfile(target):
+                            print("  cp", _source, target, flush=True)
+                            shutil.copy(_source, target_dir / target)
+                        else:
+                            print(" exists", target, flush=True)
         if header not in cd:
             cd[header] = {key: value}
         else:
