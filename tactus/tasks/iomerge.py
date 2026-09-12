@@ -151,6 +151,7 @@ class IOmerge(Task):
                     files_found,
                     ntries,
                 )
+                logger.error("The following files were found: {}", file_list)
                 raise RuntimeError(f"Expected {files_expected} files found {files_found}")
 
         return file_list

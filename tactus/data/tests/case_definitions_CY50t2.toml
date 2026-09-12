@@ -307,7 +307,6 @@
 
 [cases.cy50t2_harmonie_arome_climate_files]
   base = "cy50t2_harmonie_arome"
-  host = "cy50t2_compile"
 
 [cases.cy50t2_harmonie_arome_climate_files.modifs.system]
   case_suffix = "_climate_files"
@@ -396,6 +395,63 @@
 [cases.cy50t2_harmonie_arome_eps.modifs.reference_checker]
   check = false
   generate = false
+
+[cases.cy50t2_harmonie_arome_spp]
+  base = "cy50t2_harmonie_arome"
+  extra = [
+    "tactus/data/config_files/include/eps/CY50t2/harmonie_arome.toml",
+  ]
+  host = "cy50t2_harmonie_arome"
+
+[cases.cy50t2_harmonie_arome_spp.modifs.eps.general]
+  members = "1:18"
+
+[cases.cy50t2_harmonie_arome_spp.modifs.eps.member_settings.boundaries.ifs]
+  bdmember = []
+
+[cases.cy50t2_harmonie_arome_spp.modifs.system]
+  case_suffix = "_spp"
+  climdir = "@REFERENCE_DATA@/@CASE_PREFIX@/cy50t2_harmonie_arome/climate/@DOMAIN@"
+  intp_bddir = "@REFERENCE_DATA@/@CASE_PREFIX@/cy50t2_harmonie_arome/intp_bddir/@YYYY@/@MM@/@DD@/@HH@/mbr000"
+  intp_bddir_sfx = "@REFERENCE_DATA@/@CASE_PREFIX@/cy50t2_harmonie_arome/intp_bddir/@YYYY@/@MM@/@DD@/@HH@/mbr000"
+
+[cases.cy50t2_harmonie_arome_spp.modifs.suite_control]
+  create_static_data = false
+  do_addcalculatedfields = false
+  do_extractsqlite = false
+  do_mergesqlite = false
+  do_marsprep = false
+  interpolate_boundaries = false
+  mirror_suite = true
+
+[cases.cy50t2_harmonie_arome_spp.modifs.reference_checker]
+  check = false
+  generate = false
+
+[cases.cy50t2_harmonie_arome_spp.modifs.eps.member_settings.namelist_update.master.forecast.nam_spp_active]
+  requested_perts = {
+    "1" = ["PSIGQSAT"],
+    "2" = ["CLDDPTHDP"],
+    "3" = ["ICE_CLD_WGT"],
+    "4" = ["ICENU"],
+    "5" = ["KGN_ACON"],
+    "6" = ["KGN_SBGR"],
+    "7" = ["RADGR"],
+    "8" = ["RADSN"],
+    "9" = ["RFAC_TWOC"],
+    "10" = ["RZC_H"],
+    "11" = ["RZL_INF"],
+    "12" = ["ALPHAC2"],
+    "13" = ["RZNUC"],
+    "14" = ["RZMFDRY"],
+    "15" = ["RZMBCLOSURE"],
+    "16" = ["SLWIND"],
+    "17" = ["VTERM"],
+  }
+
+
+#############
+#############
 
 [cases.cy50t2_harmonie_arome_mode_start]
   base = "cy50t2_harmonie_arome"
