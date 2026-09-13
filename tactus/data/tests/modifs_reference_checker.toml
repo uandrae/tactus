@@ -125,6 +125,13 @@
   generate_folder = "@REFERENCES_GENERATION_FOLDER@/@REF_CASE@/@ARCHIVE_TIMESTAMP@/@MEMBER_STR@"
   reference_folder = "@REFERENCES_FOLDER@/@REF_CASE@/@ARCHIVE_TIMESTAMP@/@MEMBER_STR@"
 
+[refchecks.reference_checker.task.Forecast.spp]
+  inpath = "@WRK@/logs/Forecast"
+  pattern = "NODE.001_01"
+  method = "ForecastNormsInverse"
+  reference_folder = "@CASEDIR@/../@SCHEDULER.MIRROR_SUITE.MIRROR_NAME@/@YYYY@@MM@@DD@_@HH@@mm@/mbr000/logs/Forecast"
+  result_folder = "@WRK@/checks/Forecast"
+
 [refchecks.reference_checker.task.Forecast.namelist]
   inpath = "@WRK@/logs/Forecast"
   pattern = "(fort\\.4|EXSEG1\\.nam)"

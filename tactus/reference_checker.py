@@ -67,6 +67,11 @@ class ReferenceChecker:
             mode = config["methods"][method]["mode"]
             tolerance = int(config["methods"][method]["tolerance"])
             return NormsChecker(which, tolerance, mode)
+        if tool == "norms_checker_inverse":
+            which = config["methods"][method]["which"]
+            mode = config["methods"][method]["mode"]
+            tolerance = int(config["methods"][method]["tolerance"])
+            return NormsCheckerInverse(which, tolerance, mode)
         if tool == "xtool":
             binary_pattern = config["methods"][method]["binary"]
             file_format = config["methods"][method]["file_format"]
@@ -255,6 +260,86 @@ class NormsChecker(ReferenceChecker):
                 else:
                     results.append(
                         f"FAILURE - Worst digit is {worstdigit} > tol = {self.tolerance}"
+                    )
+
+            result = "\n".join(results)
+            out.write(result)
+
+        logger.info(f"NormsChecker result: {result}")
+        return result
+
+
+class NormsCheckerInverse(ReferenceChecker):
+    """Compare the norms in Node files against a reference."""
+
+    def __init__(self, which, tolerance, mode):
+        """Construct NormsCheckerInverse object.
+
+        Args:
+           which: first_and_last_spectral or all (from arpifs_listing)
+           tolerance: integer giving the worstdigit
+           mode: get_worst or get_worst_by_step (from arpifs_listings)
+        """
+        ReferenceChecker.__init__(self, tool="norms_checker")
+        self.which = which
+        self.tolerance = tolerance
+        self.mode = mode
+
+    def compare(self, test_log, reference_log, out_file) -> str:
+        """Compare the norms against a reference.
+
+        Args:
+              test_log: name of the lof to compare
+              reference_log: name of the reference log file
+              out_file: name of the file produced by the comparion
+        Returns:
+              str giving the result of the comparison
+        """
+        results = []
+
+        if not os.path.exists(test_log):
+            results.append(f"ERROR - Test log {test_log} not found")
+        if not os.path.exists(reference_log):
+            results.append(f"ERROR - Reference log {reference_log} not found")
+
+        if len(results) == 0:
+            try:
+                l1_n = norms.NormsSet(test_log)
+                l2_n = norms.NormsSet(reference_log)
+            except UnicodeDecodeError:
+                with (
+                    open(test_log, "r", errors="replace") as test,
+                    open(reference_log, "r", errors="replace") as reference,
+                ):
+                    test_log_content = test.readlines()
+                    reference_log_content = reference.readlines()
+                    l1_n = norms.NormsSet(test_log_content)
+                    l2_n = norms.NormsSet(reference_log_content)
+
+            if len(l1_n.norms_at_each_step) == 0:
+                results.append(f"ERROR - No norms found in {test_log}")
+            if len(l2_n.norms_at_each_step) == 0:
+                results.append(f"ERROR - No norms found in {reference_log}")
+
+        with open(out_file, "w") as out:
+            if len(results) == 0:
+                onlymaxdiff = self.mode == "get_worst"
+                worstdigit = norms.compare_normsets(
+                    l1_n,
+                    l2_n,
+                    mode=self.mode,
+                    which=self.which,
+                    onlymaxdiff=onlymaxdiff,
+                    out=out,
+                )
+                if worstdigit > self.tolerance:
+                    results.append(
+                        f"SUCCESS - Worst digit is {worstdigit} > tol = "
+                        + f"{self.tolerance} (mode={self.mode}, which={self.which})"
+                    )
+                else:
+                    results.append(
+                        f"FAILURE - Worst digit is {worstdigit} <= tol = {self.tolerance}"
                     )
 
             result = "\n".join(results)

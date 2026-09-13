@@ -1,6 +1,9 @@
 [general]
   reference_date = "2026-06-18T00:00:00Z"
   selection = [
+    "cy50t2_arome_climate_files",
+    "cy50t2_arome",
+    "cy50t2_arome_spp",
     "cy50t2_harmonie_arome_climate_files",
     "cy50t2_harmonie_arome",
     "cy50t2_harmonie_arome_spp",
