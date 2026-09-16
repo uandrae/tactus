@@ -55,7 +55,7 @@
 
 [compile]
   ial_git_repo = "git@github.com:uandrae/IAL"
-  ial_git_branch = "dev-CY50T2_spp"
+  ial_git_branch = "surfex_SPP_wastl_upd"
 
 [fullpos]
   config_path = "@CYCLE@/fullpos"
