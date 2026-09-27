@@ -633,6 +633,7 @@ class MarsprepFamily(EcflowSuiteFamily):
             ecf_files,
             ecf_files_remotely=ecf_files_remotely,
             trigger=marsprep_trigger_nodes,
+            add_var_trigger=add_var_trigger,
             remote_path=remote_path,
         )
         latlon_deps = ["GG", "SH"]
@@ -873,16 +874,16 @@ class LBCSubFamilyGenerator(EcflowSuiteFamily):
             interpolation_task_name = "E927"
         for bd_index_time_dict in self.lbc_time_generator:
             bd_index_time_dict_sst = bd_index_time_dict.copy()
+
+            mode = self.config["suite_control.mode"]
+            has_bd_index_zero = 0 in bd_index_time_dict
+            is_restart_with_bd_zero = mode == "restart" and has_bd_index_zero
+            is_start_with_bd_zero = (
+                mode == "start" and has_bd_index_zero and not self.is_first_cycle
+            )
+
             if not self.config["suite_control.do_assimilation"] and (
-                (
-                    self.config["suite_control.mode"] == "restart"
-                    and 0 in bd_index_time_dict
-                )
-                or (
-                    self.config["suite_control.mode"] == "start"
-                    and 0 in bd_index_time_dict
-                    and not self.is_first_cycle
-                )
+                is_restart_with_bd_zero or is_start_with_bd_zero
             ):
                 del bd_index_time_dict[0]
 
@@ -1241,7 +1242,8 @@ class InterpolationFamily(EcflowSuiteFamily):
         if config["suite_control.split_mars_by_step"] and prep_fam is not None:
             lbc_mars_fam = lbc_fam.split_mars_by_step_fam
             lbc_mars_fam_path = prep_fam.make_relative(lbc_mars_fam.path)
-            prep_fam.ecf_node.add_trigger(f"{lbc_mars_fam_path}==complete")
+            if prep_fam.ecf_node is not None:
+                prep_fam.ecf_node.add_trigger(f"{lbc_mars_fam_path}==complete")
 
 
 class InitializationFamily(EcflowSuiteFamily):
@@ -1457,7 +1459,6 @@ class CycleFamily(EcflowSuiteFamily):
         trigger=None,
         ecf_files_remotely=None,
         cycle_basetime=None,
-        member=None,
     ):
         """Class initialization."""
         super().__init__(
@@ -1504,7 +1505,7 @@ class CycleFamily(EcflowSuiteFamily):
             task_settings,
             input_template,
             ecf_files,
-            trigger=perturbation_family,
+            trigger=forecast_trigger,
             ecf_files_remotely=ecf_files_remotely,
         )
 
@@ -1561,6 +1562,10 @@ class PostCycleFamily(EcflowSuiteFamily):
                 ecf_files,
                 input_template=input_template,
                 trigger=cleaning_triggers,
+                variables={
+                    "TACTUS_TASK": "Cleaning",
+                    "ARGS": "cleaning_type=CycleCleaning",
+                },
                 ecf_files_remotely=ecf_files_remotely,
             )
             cleaning_triggers.append(cleaning_task)
@@ -1847,7 +1852,6 @@ class TimeDependentFamily(EcflowSuiteFamily):
                     trigger=ready_for_cycle,
                     ecf_files_remotely=ecf_files_remotely,
                     cycle_basetime=cycle.basetime,
-                    member=member,
                 )
                 member_cycle_families.append(cycle_family)
                 prev_cycle_triggers[member] = [cycle_family]

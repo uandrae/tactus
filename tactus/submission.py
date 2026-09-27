@@ -166,19 +166,10 @@ class TaskSettings(object):
                 )
                 break
 
-        task_exc_key = None
-        if "task_exceptions" in all_defs:
-            if task in all_defs["task_exceptions"]:
-                task_exc_key = task
-            else:
-                for exc_key in all_defs["task_exceptions"]:
-                    if task.startswith(exc_key + "_"):
-                        task_exc_key = exc_key
-                        break
-        if task_exc_key is not None:
-            logger.debug("Task task_exceptions for task {} (key={})", task, task_exc_key)
+        if "task_exceptions" in all_defs and task in all_defs["task_exceptions"]:
+            logger.debug("Task task_exceptions for task {}", task)
             task_settings = self.update_task_setting(
-                task_settings, all_defs["task_exceptions"][task_exc_key]
+                task_settings, all_defs["task_exceptions"][task]
             )
 
         if "SCHOST" in task_settings:
@@ -354,6 +345,17 @@ class TaskSettings(object):
                 for ecf_var in ecf_vars:
                     file_handler.write(f'export {ecf_var}="%{ecf_var}%"\n')
 
+            # Environment settings from a file
+            env_file_settings = self.get_task_settings(
+                task, "ENV_FILE", variables=variables, ecf_micro=ecf_micro
+            )
+            logger.debug("environment file settings {}", env_file_settings)
+            if env_file_settings is not None and len(env_file_settings) > 0:
+                env_file_path = env_file_settings.get("env_file_path")
+                if env_file_path:
+                    cmd = "source " + env_file_path
+                    file_handler.write(f"{cmd}\n")
+
             # Module settings
             module_settings = self.get_task_settings(
                 task, "MODULES", variables=variables, ecf_micro=ecf_micro
@@ -392,7 +394,7 @@ class TaskSettings(object):
                 file_handler.write(f'export {key}="{val}"\n')
 
             if scheduler is None:
-                tactus_task = config.get("general.tactus_task", task) 
+                tactus_task = config.get("task.args.tactus_task", task)
                 file_handler.write(f'export STAND_ALONE_TASK_NAME="{tactus_task}"\n')
 
                 tactus_home = self.platform.get_platform_value("TACTUS_HOME")
@@ -448,7 +450,7 @@ class NoSchedulerSubmission:
         Raises:
             RuntimeError: Submission failure.
         """
-        name = tactus_task.lower() if tactus_task is not None else task.lower()
+        name = config.get("task.args.tactus_task", task).lower()
         if name not in load_task_index(config):
             raise NotImplementedError(f"Task {name} not implemented")
 

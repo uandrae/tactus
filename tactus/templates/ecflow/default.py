@@ -60,7 +60,7 @@ def parse_ecflow_vars():
         "TACTUS_HOME": os.environ["TACTUS_HOME"],
         "KEEP_WORKDIRS": os.environ["KEEP_WORKDIRS"],
         "MEMBER": os.environ["MEMBER"],
-        "TACTUS_TASK": os.environ.get("TACTUS_TASK", ""),
+        "TACTUS_TASK": os.environ.get("TACTUS_TASK", None),
     }
 
 
@@ -114,7 +114,15 @@ def default_main(kwargs: dict):
     ecf_tryno = kwargs.get("ECF_TRYNO")
     ecf_rid = kwargs.get("ECF_RID")
     ecf_timeout = kwargs.get("ECF_TIMEOUT")
-    task = EcflowTask(ecf_name, ecf_tryno, ecf_pass, ecf_rid, ecf_timeout=ecf_timeout)
+    ecf_task = kwargs.get("TACTUS_TASK")
+    task = EcflowTask(
+        ecf_name,
+        ecf_tryno,
+        ecf_pass,
+        ecf_rid,
+        ecf_timeout=ecf_timeout,
+        ecf_task=ecf_task,
+    )
 
     # Get member number
     member = kwargs.get("MEMBER")
@@ -123,16 +131,18 @@ def default_main(kwargs: dict):
         member = int(member)
     except (TypeError, ValueError):
         logger.debug("MEMBER is not an integer, skipping eps setup for task {}", task)
-        config = config.copy(update={"general": {"use_member_stand_alone": False}})
+        config = config.copy(update={"task": {"args": {"use_member_stand_alone": False}}})
     else:
         # Update config based on member
         config = get_member_config(config, member=member)
 
-        # Handle generic tasks and various environment variable control
-        tactus_task = os.environ.get("TACTUS_TASK", task.ecf_task)
+    # Handle possible generic tasks
+    if ecf_name != task.ecf_task:
         config = config.copy(
             update={
-                "general": {"tactus_task": tactus_task},
+                "task": {
+                    "args": {"tactus_task": task.ecf_task},
+                }
             }
         )
 
@@ -151,9 +161,7 @@ def default_main(kwargs: dict):
 
 
 if __name__ == "__main__":
-    logger.info(
-        "Running {} v{}", GeneralConstants.PACKAGE_NAME, GeneralConstants.VERSION
-    )
+    logger.info("Running {} v{}", GeneralConstants.PACKAGE_NAME, GeneralConstants.VERSION)
     # Get ecflow variables
     kwargs_main = parse_ecflow_vars()
     default_main(kwargs_main)

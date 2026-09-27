@@ -9,6 +9,7 @@ from typing import List
 
 from ..submission import TaskSettings
 from .base import EcflowSuiteFamily, EcflowSuiteTask
+from .suite_utils import combine_triggers
 
 # ---------------------------------------------------------------------------
 # Default obs-type lists
@@ -36,7 +37,7 @@ _DEFAULT_OBS_3DVAR: List[str] = [
 
 
 class OdbFamily(EcflowSuiteFamily):
-    """ecFlow family that runs BATOR per obs type.
+    """ecFlow family that runs Obsconvert or BATOR per obs type.
 
     Each obs type gets its own sub-family (``Bator_<obstype>``) containing a
     single ``Bator`` task.  The ``OdbMerge`` task triggers when all Bator
@@ -51,9 +52,9 @@ class OdbFamily(EcflowSuiteFamily):
         input_template,
         ecf_files,
         obs_types: List[str],
-        task_class: str = "Bator",
+        task_class: str = "Obsconvert",
+        da_stream: str = "surface",
         family_name: str = "Odb",
-        da_stream: str = "3dvar",
         trigger=None,
         ecf_files_remotely=None,
     ):
@@ -69,6 +70,7 @@ class OdbFamily(EcflowSuiteFamily):
             task_class: Task class to use for each obs type (``"Bator"`` or
                 ``"Obsconvert"``).  Both archive their output to the same
                 ``odb/`` directory so OdbMerge works with either.
+            da_stream (str) : Assimilation part identifier.
             family_name: Name of this family node (default ``Odb``).
             trigger: Optional trigger for the whole family.
             ecf_files_remotely: Remote path prefix for ecf scripts.
@@ -106,7 +108,7 @@ class OdbFamily(EcflowSuiteFamily):
             ecf_files,
             input_template=input_template,
             trigger=bator_tasks,
-            variables={ "ARGS": f"da_stream={da_stream}" },
+            variables={"ARGS": f"da_stream={da_stream}"},
             ecf_files_remotely=ecf_files_remotely,
         )
 
@@ -120,10 +122,10 @@ class SurfaceAnalysisFamily(EcflowSuiteFamily):
     """ecFlow family for the CANARI surface OI assimilation chain.
 
     Tasks within this family (in dependency order):
-    1. ``ObsPrep``  – stage surface observations (synop).
-    2. ``Odb``      – build surface ODB (Bator + OdbMerge).
-    3. ``Canari``   – run CANARI surface analysis (MASTERODB conf 701).
-    4. ``BlendSur`` – blend CANARI with LBC SST (BLENDSUR executable).
+    1. ``ObsPrep``  : stage surface observations (synop).
+    2. ``Odb``      : build surface ODB (Bator + OdbMerge).
+    3. ``Canari``   : run CANARI surface analysis (MASTERODB conf 701).
+    4. ``BlendSur`` : blend CANARI with LBC SST (BLENDSUR executable).
     """
 
     def __init__(
@@ -152,7 +154,6 @@ class SurfaceAnalysisFamily(EcflowSuiteFamily):
             parent,
             ecf_files,
             trigger=trigger,
-            variables={"ARGS": "da_stream='surface'"},
             ecf_files_remotely=ecf_files_remotely,
         )
 
@@ -166,6 +167,7 @@ class SurfaceAnalysisFamily(EcflowSuiteFamily):
             task_settings,
             ecf_files,
             input_template=input_template,
+            variables={"ARGS": "da_stream=surface"},
             ecf_files_remotely=ecf_files_remotely,
         )
 
@@ -177,8 +179,8 @@ class SurfaceAnalysisFamily(EcflowSuiteFamily):
             ecf_files,
             obs_types=obs_types_surface,
             task_class=odb_task_surface,
-            family_name="Odb",
             da_stream="surface",
+            family_name="Odb",
             trigger=obsprep,
             ecf_files_remotely=ecf_files_remotely,
         )
@@ -215,9 +217,9 @@ class VariationalFamily(EcflowSuiteFamily):
     """ecFlow family for the 3D-Var upper-air assimilation chain.
 
     Tasks within this family (in dependency order):
-    1. ``ObsPrep`` – stage all upper-air observation types.
-    2. ``Odb``     – build 3D-Var ODB (Bator or Obsconvert + OdbMerge).
-    3. ``OopsVar`` – OOPS-based screening + minimisation; triggered by both
+    1. ``ObsPrep`` : stage all upper-air observation types.
+    2. ``Odb``     : build 3D-Var ODB (Bator or Obsconvert + OdbMerge).
+    3. ``OopsVar`` : OOPS-based screening + minimisation; triggered by both
                      ``Odb`` and ``Surface/BlendSur`` (blended first guess).
     """
 
@@ -250,12 +252,11 @@ class VariationalFamily(EcflowSuiteFamily):
             parent,
             ecf_files,
             trigger=trigger,
-            variables={"ARGS": "da_stream='3dvar'"},
             ecf_files_remotely=ecf_files_remotely,
         )
 
         obs_types_3dvar = config.get("da.obs_types_3dvar", _DEFAULT_OBS_3DVAR)
-        odb_task_3dvar = config.get("da.odb_task_3dvar", "Bator")
+        odb_task_3dvar = config.get("da.odb_task_3dvar", "Obsconvert")
 
         obsprep = EcflowSuiteTask(
             "ObsPrep",
@@ -264,6 +265,7 @@ class VariationalFamily(EcflowSuiteFamily):
             task_settings,
             ecf_files,
             input_template=input_template,
+            variables={"ARGS": "da_stream=3dvar"},
             ecf_files_remotely=ecf_files_remotely,
         )
 
@@ -275,11 +277,12 @@ class VariationalFamily(EcflowSuiteFamily):
             ecf_files,
             obs_types=obs_types_3dvar,
             task_class=odb_task_3dvar,
-            family_name="Odb",
             da_stream="3dvar",
+            family_name="Odb",
             trigger=obsprep,
             ecf_files_remotely=ecf_files_remotely,
         )
+        oopsvar_trigger = combine_triggers([odb_family, blendsur_node, trigger])
 
         # OOPS Var: a single OOVAR call handles screening + minimization.
         EcflowSuiteTask(
@@ -289,7 +292,7 @@ class VariationalFamily(EcflowSuiteFamily):
             task_settings,
             ecf_files,
             input_template=input_template,
-            trigger=[odb_family, blendsur_node],
+            trigger=oopsvar_trigger,
             ecf_files_remotely=ecf_files_remotely,
         )
 
@@ -351,24 +354,29 @@ class AssimilationFamily(EcflowSuiteFamily):
             self.ecf_node.add_variable("IS_BGCYCLE", is_bgcycle)
             self.ecf_node.add_complete("Assimilation:IS_BGCYCLE == 1")
 
-        # Surface OI chain — always present
-        surface_family = SurfaceAnalysisFamily(
-            self,
-            config,
-            task_settings,
-            input_template,
-            ecf_files,
-            ecf_files_remotely=ecf_files_remotely,
-        )
+        # Surface OI chain
+        surface_family = None
+        variational_trigger = None
+        if config.get("da.surface", True):
+            surface_family = SurfaceAnalysisFamily(
+                self,
+                config,
+                task_settings,
+                input_template,
+                ecf_files,
+                ecf_files_remotely=ecf_files_remotely,
+            )
+            variational_trigger = surface_family.blendsur
 
-        # Upper-air 3D-Var chain — optional (da.do_upper_air, default true)
-        if config.get("da.do_upper_air", True):
+        # Upper-air 3D-Var chain — optional (da.upper_air, default false)
+        if config.get("da.upper_air", False):
             VariationalFamily(
                 self,
                 config,
                 task_settings,
                 input_template,
                 ecf_files,
-                blendsur_node=surface_family.blendsur,
+                blendsur_node=variational_trigger,
+                trigger=trigger,
                 ecf_files_remotely=ecf_files_remotely,
             )
