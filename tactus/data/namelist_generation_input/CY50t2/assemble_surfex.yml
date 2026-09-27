@@ -76,3 +76,9 @@ forecast_AROME:
 forecast_HARMONIE_AROME:
   - sfx_@CSC@
   - sfx_treedrag
+
+# CANARI surface OI reuses forecast's full SURFEX scheme configuration (same domain,
+# same PGD/PREP files) plus the OI-specific NAM_NACVEG/NAM_ASSIM settings.
+canari:
+  - ${forecast}
+  - sfx_canari_oi

@@ -35,6 +35,7 @@ class InitialConditions(object):
         self.source_sfx = ""
 
         self.function_map = {
+            "Canari": self.canari,
             "Forecast": self.forecast,
             "Pertana": self.pertana,
             "Pertsurf": self.pertsurf,
@@ -127,6 +128,10 @@ class InitialConditions(object):
             self.source_sfx = self.platform.substitute(
                 f"@ARCHIVE@/{self.config['file_templates.pertsurf.archive']}"
             )
+        return self.source, self.source_sfx
+
+    def canari(self):
+        """Find initial files for the Canari task."""
         return self.source, self.source_sfx
 
     def pertana(self):

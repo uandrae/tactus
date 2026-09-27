@@ -1,0 +1,19 @@
+[domain]
+  gridtype = "linear"
+  name = "DKCOEXP"
+  nimax = 637
+  njmax = 637
+  tstep = 75
+  xdx = 2500
+  xdy = 2500
+  xlatcen = 56.3
+  xloncen = 9.9
+  xlat0 = 56.3
+  xlon0 = 0.0
+
+[general.times]
+  start = "2025-02-09T00:00:00Z"
+  end = "2025-02-09T03:00:00Z"
+
+[da]
+  bgcycle = "2025020900"
