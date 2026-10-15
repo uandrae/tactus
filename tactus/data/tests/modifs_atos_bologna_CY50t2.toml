@@ -49,8 +49,8 @@
   remote_path = "/@HOST_CASE@/PostMortem"
 
 [modifs.submission]
-  bindir = "/scratch/snh/install/intel/bin"
-  bindir_gl = "/scratch/snh/tactus/feature_accordify_config_intelCY50t2_compile/install/R64/bin"
+  bindir = "@SCRATCH@/@SYS_NAME@/@CASE_PREFIX@_@CYCLE@_compile/install/R64/bin"
+  bindir_gl = "@SUBMISSION.BINDIR@"
   max_ecf_tasks = 5
 
 [modifs.submission.task_exceptions.Forecast.binaries.MASTERODB]
@@ -73,9 +73,3 @@
   host_domain = "@HOST_DOMAIN@"
   host_suite = "@HOST_CASE@"
   test_data_path = "/perm/snh/ttr/data"
-
-[modifs.submission.task_exceptions.PgdUpdate]
-  bindir = "@BINDIR_GL@"
-
-[modifs.submission.task_exceptions.InterpolSstSic]
-  bindir = "@BINDIR_GL@"
