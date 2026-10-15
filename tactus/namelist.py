@@ -18,7 +18,6 @@ from .config_parser import ConfigPaths
 from .csc_actions import SelectTstep
 from .datetime_utils import as_timedelta, oi2dt_list
 from .logs import logger
-from .os_utils import resolve_path_relative_to_package
 from .toolbox import Platform
 
 
@@ -120,13 +119,36 @@ def write_namelist(nml, output_file):
     logger.debug("Wrote: {}", output_file)
 
 
+def get_namelist_type_options():
+    """Find available namelist type options.
+
+    Returns:
+        tuple[list[str], Path | None]: Sorted list of available namelist
+            type names, and the directory they were found in (None if no
+            directory was found).
+
+    """
+    master_file = ConfigPaths.path_from_subpath("assemble_master.yml", last=True)
+    if not master_file:
+        return [], None
+    search_dir = master_file.parent
+    options = sorted(
+        p.name.replace("assemble_", "").replace(".yml", "")
+        for p in search_dir.glob("assemble_*.yml")
+    )
+    return options, search_dir
+
+
 def _resolve_namelist_path(subpath) -> Path:
     """Resolve a config path, falling back to package-relative lookup."""
     path = Path(subpath)
     try:
         return ConfigPaths.path_from_subpath(path)
     except RuntimeError:
-        return resolve_path_relative_to_package(path)
+        logger.error("File not found: {}", path.name)
+        options, search_path = get_namelist_type_options()
+        logger.error("Available assemble files in {}: {}", search_path, options)
+        raise FileNotFoundError from None
 
 
 class InvalidNamelistKindError(ValueError):
@@ -489,16 +511,16 @@ class NamelistGenerator:
         self.target = target
         # define OmegaConf resolvers
         OmegaConf.clear_resolvers()
-        OmegaConf.register_new_resolver(
+        OmegaConf.register_resolver(
             "vsigqsat_by_gridsize",
             lambda arg1, arg2: self.fn_vsigqsat_by_gridsize(arg1, arg2),
         )
-        OmegaConf.register_new_resolver("stepfreq", lambda arg: self.fn_stepfreq(arg))
-        OmegaConf.register_new_resolver("steplist", lambda arg: self.fn_steplist(arg))
-        OmegaConf.register_new_resolver(
+        OmegaConf.register_resolver("stepfreq", lambda arg: self.fn_stepfreq(arg))
+        OmegaConf.register_resolver("steplist", lambda arg: self.fn_steplist(arg))
+        OmegaConf.register_resolver(
             "cfg", lambda arg, default=None: self.fn_config(arg, default)
         )
-        OmegaConf.register_new_resolver("timestep", lambda arg: self.fn_tstep(arg))
+        OmegaConf.register_resolver("timestep", lambda arg: self.fn_tstep(arg))
 
         # Use static namelist if given
         use_yaml = True
