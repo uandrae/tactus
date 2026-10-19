@@ -36,14 +36,22 @@
   model = "ICMSH@CNMEXP@+@DURATION_MODEL@"
 
 [file_templates.initfile]
-  archive = "@SCRATCH@/tactus/@PREV_CASE@/archive/@YYYY@/@MM@/@DD@/@HH@/@MEMBER_STR@/@HISTORY_TEMPLATE@"
+  archive = "@SCRATCH@/@SYS_NAME@/@PREV_CASE@/archive/@YYYY@/@MM@/@DD@/@HH@/@MEMBER_STR@/@HISTORY_TEMPLATE@"
 
 [file_templates.initfile_sfx]
-  archive = "@SCRATCH@/tactus/@PREV_CASE@/archive/@YYYY@/@MM@/@DD@/@HH@/@MEMBER_STR@/@SURFEX_TEMPLATE@"
+  archive = "@SCRATCH@/@SYS_NAME@/@PREV_CASE@/archive/@YYYY@/@MM@/@DD@/@HH@/@MEMBER_STR@/@SURFEX_TEMPLATE@"
 
 [file_templates.interpolated_boundaries]
   archive = "ELSCF@CNMEXP@ALBC@NNN@"
   model = "ELSCF@CNMEXP@ALBC@NNN@"
+
+[file_templates.pertsurf]
+  archive = "PERTSURF@CNMEXP@"
+  model = "PERTSURF@CNMEXP@"
+
+[file_templates.pertana]
+  archive = "PERTANA@CNMEXP@"
+  model = "PERTANA@CNMEXP@"
 
 [file_templates.pgd]
   archive = "Const.Clim@ONE_DECADE@.sfx"

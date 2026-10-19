@@ -1,5 +1,5 @@
 # Development guidelines
-Describes best practices and guidelines for development in the Deode-Workflow repository.
+Describes best practices and guidelines for development in the tactus repository.
 
 ## Best practices
 - Assignee should not merge before the PR has been reviewed and approved (see below on how to request reviewer(s)).
@@ -19,7 +19,7 @@ Describes best practices and guidelines for development in the Deode-Workflow re
 
 
 ### Checklist for assignee
-- ✔️ Make sure your local environment is correctly initialised as described in the [README](https://github.com/destination-earth-digital-twins/Deode-Workflow/blob/develop/README.md) file.
+- ✔️ Make sure your local environment is correctly initialised as described in the [README](https://github.com/ACCORD-NWP/tactus/blob/develop/README.md) file.
 - ✔️ Use forks for your changes
 - ✔️ If not up-to-date, update your fork with the changes from the target branch (use `pull` with `--rebase` option if possible).
 - ✔️ Describe what the PR contains.
@@ -69,7 +69,7 @@ make pre-push-checks
 ```
 
 ### Run tests
-Tests will run as if they were on current platform, if recognized. If the platform is not recognized a bogus plaform `pytest` is used as defined under `tests/include`. To force the tests to run as on the `pytest` platform export `DEODE_HOST=pytest` before running pytest. Run the tests with
+Tests will run as if they were on current platform, if recognized. If the platform is not recognized a bogus plaform `pytest` is used as defined under `tests/include`. To force the tests to run as on the `pytest` platform export `TACTUS_HOST=pytest` before running pytest. Run the tests with
 ```shell
 pytest
 ```
@@ -78,7 +78,7 @@ or
 make test
 ```
 
-### Generate and view the documentation to be published to our [docpages](https://destination-earth-digital-twins.github.io/deode-workflow-docs/)
+### Generate and view the documentation to be published to our [docpages](https://ACCORD-NWP.github.io/tactus/)
 
 ```shell
 make doc-clean
@@ -90,24 +90,16 @@ or, combining them all:
 make doc
 ```
 
-# Testing on Atos and LUMI
-For testing of a number of configurations we use https://github.com/destination-earth-digital-twins/Tactus-test-runner which launches a number of ecflow suites. Install the package and make yourself familiar with the environment. For individual PR testing the minimum should be:
+## Testing on Atos
+For testing of a number of configurations we use `tactus test` which launches a number of ecflow suites. The required testing for a PR is the following
 ```
- selection = [
-    "cy49t2_alaro",
-    "cy49t2_alaro_target",
-    "cy49t2_arome_R64",
-    "cy49t2_arome_target",
-    "cy49t2_harmonie_arome_R64",
-    "alaro",
-    "arome",
-    "harmonie_arome",
-  ]
+tactus test tactus/data/tests/atos_bologna_CY49t2.toml -m -r
+tactus test tactus/data/tests/atos_bologna_CY50t2.toml -m -r
 ```
-I.e. run the standard toy domain with target coupling including the full sized domains. Add additional configurations as you find suitable.
+The tests includes a check against a reference based on the latest tag and the outcome shall be reported with the label `bit-reproducible` or `non-bit-reproducible` in the PR.
 
 ## Testing before tagging
-For testing prior to tagging all the testing should be performed as defined by `atos_bologna.toml` and `lumi.toml` respectively. In addition operational like tests should be done from the development users (snh02, lrb_465000527_efdev) on atos and lumi using atos_bologna_operational.toml and lumi_operational.toml.
+For testing prior to tagging a test for all CSCs with the full sized domain, DKCOEXP, for a recent date shall be executed.
 
 ## Git Branching Structure and Workflow
 
@@ -155,7 +147,7 @@ These branches are created and reside in developers' personal forks of the upstr
    - Merged back into the upstream's `master` and `develop` branch upon completion.
 
 **`binary-update/vX.Y.Z` branches**:
-   - Created to update the binary versions used by the specific version (`vX.Y.Z`) of Deode-Workflow .
+   - Created to update the binary versions used by the specific version (`vX.Y.Z`) of tactus .
    - Based on the `master` branch.
    - Merged back into `master` in the upstream repository.
 
@@ -166,6 +158,7 @@ These branches are created and reside in developers' personal forks of the upstr
 ![git_branch_structure](/figs/git_branch_structure.svg)
 
 *Git branching structure with hotfix to an older release:*
+
 ![git_branch_structure](/figs/git_branch_structure_legacy_support.svg)
 
 ### Workflow
