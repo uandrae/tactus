@@ -19,4 +19,4 @@
   case = "test_ecflow"
 
 [suite_control]
-  suite_definition = "TestSuiteDefinition"
+  suite_definition = "ExampleSuiteDefinition"

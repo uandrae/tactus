@@ -6,7 +6,7 @@ from tactus.os_utils import tactusmakedirs
 from tactus.suites.base import EcflowSuiteTask, SuiteDefinition
 
 
-class TestSuiteDefinition(SuiteDefinition):
+class ExampleSuiteDefinition(SuiteDefinition):
     """Definition of suite for tactus."""
 
     def __init__(
@@ -79,4 +79,5 @@ class TestSuiteDefinition(SuiteDefinition):
             input_template=input_template,
             trigger=archiving,
             ecf_files_remotely=self.ecf_files_remotely,
+            variables={"TACTUS_TASK": "Cleaning", "ARGS": "cleaning_type=PostMortem"},
         )

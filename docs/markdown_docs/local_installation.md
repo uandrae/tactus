@@ -36,9 +36,9 @@ The ecflow server setup is defined in `tactus/data/config_files/include/schedule
 
 Note there are two functions available for the detection of `ecf_port` and `ecf_host` that might help to detect correct values for these two variables. `_set_port_from_user()` sets a user-id related ecf_port while `_select_host_from_list()` finds the active ecf_host from a list of possible hostnames (used in `ecflow_atos_bologna.toml`). Both functions are defined in `tactus/scheduler.py`
 
-## linda
+## linda, a laptop example
 
-Linda is the SMHI RedHat linux environment. In the following it's described how to install tactus to run the simple test suite with ecflow.
+Linda is the SMHI RedHat linux environment. In the following it's described how to install tactus to run the simple test suite with ecflow. Here we describe how to setup the environment using a simple EcFlow example available via https://github.com/uandrae/tactus/tree/feature/simple_laptop_example.
 
 ### Fetch and install the micromamba environment, and tactus
 
@@ -63,20 +63,20 @@ We also have to make sure the host is recognized by adding a rule in `tactus/con
 
 ### Hack ecflow_start.sh
 
-Here we want to resolve hostname to localhost and to force ecflow to use this we change the ecflow server start script, located by `which ecflow_start.sh` so that
+Here we want to resolve hostname to `localhost` and to force ecflow to use this we change the ecflow server start script, located by `which ecflow_start.sh` so that
 ```
 hostname="localhost"
 ```
 
 ### Explaining the config
 
-For this example we use a simple config file `tactus/data/config_files/modifications/test_ecflow.toml`. First we select a simplfied ecflow suite definition and call it `test_ecflow`
+For this example we use a simple config file `tactus/data/config_files/modifications/example_ecflow.toml`. First we select a simplified ecflow suite definition and call it `test_ecflow`
 
 ```
 [general]
   case = "test_ecflow"
 [suite_control]
-  suite_definition = "TestSuiteDefinition"
+  suite_definition = "ExampleSuiteDefinition"
 ```
 
 This suite has four tasks
@@ -116,7 +116,7 @@ This suite has four tasks
 Now we're ready to launch the run
 
 ```
-tactus case tactus/data/config_files/modifications/test_ecflow.toml --start-suite
+tactus case -c tactus/data/config_files/config.toml tactus/data/config_files/modifications/example_ecflow.toml --start-suite
 ```
 This creates a new config file `test_ecflow.toml` which is used to launch the suite
 
@@ -144,11 +144,12 @@ bash ./ArchiveStatic.job
 
 ### Remove all results
 
-All traces of the run can be removed by
+All traces of the execution of the example can be removed by
 
 ```
-tactus remove test_ecflow.toml --execute-removal
+tactus remove test_ecflow.toml [--execute-removal]
 ```
+Excluding the `--execute-removal` argument will print what would have been removed.
 
 ## freja
 
