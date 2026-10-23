@@ -39,7 +39,7 @@
   remote_path = "/@HOST_CASE@/PostMortem"
 
 [modifs.submission]
-  bindir = "/scratch/snh/install/intel/bin"
+  bindir = "/scratch/snh/install/IAL_SPP_SURFEX/intel/bin"
   bindir_gl = "/scratch/snh/tactus/feature_accordify_config_intelCY50t2_compile/install/R64/bin"
   max_ecf_tasks = 5
 
