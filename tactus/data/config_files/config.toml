@@ -88,6 +88,7 @@
 
 [compile]
   ial_git_repo = "git@github.com:ACCORD-NWP/IAL"
+  single_task = true
 
 [include]
   archiving = "include/archiving/@HOST@.toml"

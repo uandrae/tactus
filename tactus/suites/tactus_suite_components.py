@@ -2066,7 +2066,20 @@ class CompilationFamily(EcflowSuiteFamily):
             ecf_files_remotely=ecf_files_remotely,
         )
 
-        clone_ial = EcflowSuiteTask(
+        if config["compile.single_task"]:
+         EcflowSuiteTask(
+            "TactusCompile",
+            self,
+            config,
+            task_settings,
+            ecf_files,
+            input_template=input_template,
+            ecf_files_remotely=ecf_files_remotely,
+         )
+
+        else:
+
+         clone_ial = EcflowSuiteTask(
             "IALClone",
             self,
             config,
@@ -2074,9 +2087,9 @@ class CompilationFamily(EcflowSuiteFamily):
             ecf_files,
             input_template=input_template,
             ecf_files_remotely=ecf_files_remotely,
-        )
+         )
 
-        create_bundle = EcflowSuiteTask(
+         create_bundle = EcflowSuiteTask(
             "TactusBundleCreate",
             self,
             config,
@@ -2085,19 +2098,19 @@ class CompilationFamily(EcflowSuiteFamily):
             input_template=input_template,
             ecf_files_remotely=ecf_files_remotely,
             trigger=EcflowSuiteTriggers(EcflowSuiteTrigger(clone_ial)),
-        )
+         )
 
-        build_familiy = EcflowSuiteFamily(
+         build_familiy = EcflowSuiteFamily(
             "TactusBundleBuild",
             self,
             ecf_files,
             ecf_files_remotely=ecf_files_remotely,
-        )
-        precision_dict = {"R64": "double"}
-        if config["submission"]["precision"] == "R32":
+         )
+         precision_dict = {"R64": "double"}
+         if config["submission"]["precision"] == "R32":
             precision_dict["R32"] = "single"
 
-        for precision in precision_dict:
+         for precision in precision_dict:
             prec_familiy = EcflowSuiteFamily(
                 precision,
                 build_familiy,
