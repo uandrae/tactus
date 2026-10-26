@@ -29,9 +29,8 @@ The ecflow server setup is defined in `tactus/data/config_files/include/schedule
   ecf_host = "le1"
   ecf_jobout = "/nobackup/smhid20/users/@USER@/tactus_ecflow/jobout"
   ecf_out = "/nobackup/smhid20/users/@USER@/tactus_ecflow/jobout"
-  ecf_port = "_set_port_from_user(10000)"
+  ecf_port = "_set_port_from_user('10000',)"
   ecf_ssl = "0"
-  hpc = "freja"
 ```
 
 Note there are two functions available for the detection of `ecf_port` and `ecf_host` that might help to detect correct values for these two variables. `_set_port_from_user()` sets a user-id related ecf_port while `_select_host_from_list()` finds the active ecf_host from a list of possible hostnames (used in `ecflow_atos_bologna.toml`). Both functions are defined in `tactus/scheduler.py`
@@ -75,33 +74,32 @@ cd tactus
 
 Create a conda environment and install ecflow, gdal and poetry.
 ```
-$ module purge
-$ module load Mambaforge/23.3.1-1-hpc1
-$ mamba create -p .conda ecflow gdal=3.5.0 poetry python=3.10.4
-...
-$ mamba activate .conda/
+module purge
+module load Mambaforge/23.3.1-1-hpc1
+mamba create -p .conda ecflow gdal=3.5.0 poetry python=3.10.4
+mamba activate .conda/
 ```
 
 Install tactus and all it's dependencies
 
 ```
-(tactus-py3.10) $ poetry install
+poetry install
 ```
 
 Now we're ready to go!
 
 ```
 tactus-py3.10) $ tactus --version
-2024-05-20 13:00:19 | INFO     | Start tactus v0.5.0 --> "tactus --version"
+2024-05-20 13:00:19 | INFO     | Start tactus v	1.4.0 --> "tactus --version"
 tactus v1.4.0
-mamba deactivate
 ```
 
-To load your new environment do
+To load your new environment next time do
 
 ```
-$ cd tactus
-$ mamba activate .conda/
+cd tactus
+module load Mambaforge/23.3.1-1-hpc1
+mamba activate .conda/
 ```
 
 Note that for the time being ( until the mamba/poetry usage is better understood ) it's recommended to make this procedure, with a new mamba name, for each new tactus clone.

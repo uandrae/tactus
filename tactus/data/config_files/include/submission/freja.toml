@@ -1,5 +1,6 @@
 [submission]
   account = "#SBATCH -A accord"
+  arch = "nsc/freja/intel/2023a"
   bindir = "/nobackup/smhid19/proj/accord/sm_uandr/hm_home/dev_CY46h1_deode/bin/R64"
   default_submit_type = "serial"
   lfftw = true

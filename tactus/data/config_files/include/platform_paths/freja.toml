@@ -9,6 +9,7 @@
   ecoclim_data_path = "@CLIMDATA@/ecoclimap"
   ecoclimap_bin_dir = "@ecoclim_data_path@"
   ecosg_data_path = "@CLIMDATA@/ECOCLIMAP_SG"
+  ecf_base = "/nobackup/smhid20/users/@USER@/@SYS_NAME@_ecflow"
   flake_dir = "@STATIC_DATA@/climate/PGD"
   global_sfcdir = "@STATIC_DATA@/climate_fields_mir/climate.v020_MIR_orog/"
   lai_dir = "@CLIMDATA@/ECOCLIMAP_SG/LAI_SAT"
