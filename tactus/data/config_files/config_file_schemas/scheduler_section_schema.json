@@ -94,6 +94,11 @@
         "ecf_tactus_home": {
           "type": "string",
           "description": "tactus home directory stripped for parts specific to where a node is mounted on a cluster"
+        },
+        "case_prefix": {
+          "type": "string",
+          "description": "Prefix to prepend the case name",
+          "default": ""
         }
       }
     },
