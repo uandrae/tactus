@@ -5,6 +5,6 @@
   ecf_host = "le1"
   ecf_jobout = "/nobackup/smhid20/users/@USER@/@SYS_NAME@_ecflow/jobout"
   ecf_out = "/nobackup/smhid20/users/@USER@/@SYS_NAME@_ecflow/jobout"
-  ecf_port = "_set_port_from_user(10000)"
+  ecf_port = "_set_port_from_user('10000',)"
   ecf_tactus_home = "@TACTUS_HOME@"
   hpc = "freja"

@@ -93,7 +93,7 @@ Now we're ready to go!
 ```
 tactus-py3.10) $ tactus --version
 2024-05-20 13:00:19 | INFO     | Start tactus v0.5.0 --> "tactus --version"
-tactus v0.5.0
+tactus v1.4.0
 mamba deactivate
 ```
 
