@@ -1,6 +1,6 @@
 [submission]
   account = "#SBATCH -A accord"
-  arch = "nsc/freja/intel/2023a"
+  arch = "intel/2023a"
   default_submit_type = "serial"
   lfftw = true
   module_initfile = "/software/sse2/init/nsc_lmod_init.sh"
