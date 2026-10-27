@@ -104,6 +104,17 @@ mamba activate .conda/
 
 Note that for the time being ( until the mamba/poetry usage is better understood ) it's recommended to make this procedure, with a new mamba name, for each new tactus clone.
 
+### Start a compilation
+Now we can start to compile the IAL code by
+```
+tactus compile
+```
+The IAL repository and branch used is defined by
+```
+[compile]
+  ial_git_repo = "git@github.com:uandrae/IAL"
+  ial_git_version = "feature/compile_on_freja"
+```
 
 ## Belenos
 Belenos is the Météo-France computing cluster for research. On this platform, the tactus can be installed using Micromamba.
