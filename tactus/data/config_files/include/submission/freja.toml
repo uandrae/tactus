@@ -73,7 +73,7 @@
 [submission.types.task]
   wrapper = ""
 
-[submission.types.task_exceptions.TactusBundleBuild.BATCH]
+[submission.task_exceptions.TactusBundleBuild.BATCH]
   MEMORY = "#SBATCH --mem=0GB"
   WALLTIME = "#SBATCH --time=03:00:00"
-  CPUSPERTASK = "#SBATCH --cpus-per-task=32"
+  CPUSPERTASK = "#SBATCH --cpus-per-task=64"
