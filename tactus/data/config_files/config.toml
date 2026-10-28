@@ -87,7 +87,7 @@
   output_name = "utci"
 
 [compile]
-  ial_git_repo = "git@github.com:ACCORD-NWP/IAL"
+  ial_git_repo = "git@github.com:uandrae/IAL"
   ial_git_version = "feature/compile_on_freja"
 
 [include]
