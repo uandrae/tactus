@@ -61,13 +61,6 @@ poetry install
 
 We also have to make sure the host is recognized by adding a rule in `tactus/config/known_host.yaml`
 
-### Hack ecflow_start.sh
-
-Here we want to resolve hostname to `localhost` and to force ecflow to use this we change the ecflow server start script, located by `which ecflow_start.sh` so that
-```
-hostname="localhost"
-```
-
 ### Explaining the config
 
 For this example we use a simple config file `tactus/data/config_files/modifications/example_ecflow.toml`. First we select a simplified ecflow suite definition and call it `test_ecflow`
