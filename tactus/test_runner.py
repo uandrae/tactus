@@ -7,6 +7,7 @@ import copy
 import glob
 import json
 import os
+import sys
 import shutil
 import tempfile
 from datetime import datetime
@@ -24,6 +25,8 @@ from .host_actions import TactusHost
 from .logs import logger
 from .reference_checker import CheckSummaryAnalysis
 from .toolbox import Platform
+from .os_utils import resolve_path_relative_to_package
+
 
 
 class TestCases:
@@ -392,20 +395,33 @@ class TestCases:
             prefix_file = f"{self.test_dir}/{config_name}"
             config_file = f"{prefix_file}.toml"
             if self.mode == "task":
-                cmds = [
+                raw_case = case.replace(f"{self.cases[case]['subtag']}_","")
+                # First update the config with task specific settings, then generate the run command
+                task_settings = {task:f"{self.test_dir}/{config_name}_{task}" for task in self.cases[case]["tasks"]}
+                cmds = []
+                for task, task_config_path in task_settings.items():
+                 cmds.extend([
+                    [
+                        "case",
+                        "--config-file",
+                        config_file,
+                        str(resolve_path_relative_to_package( Path(f"tactus/data/tests/include/{raw_case}/{task}.toml"))),
+                        "--output",
+                        f"{task_config_path}.toml",
+                    ],
                     [
                         "run",
                         "--config-file",
-                        config_file,
+                        f"{task_config_path}.toml",
                         "--task",
                         task,
                         "--job",
-                        f"{self.test_dir}/{task}.{config_name}.job",
+                        f"{task_config_path}.job",
                         "--output",
-                        f"{self.test_dir}/{task}.{config_name}.log",
+                        f"{task_config_path}.log",
                     ]
-                    for task in self.cases[case]["tasks"]
-                ]
+                    ]
+                 )
             else:
                 suite_file = f"{prefix_file}.def"
                 cmds = [

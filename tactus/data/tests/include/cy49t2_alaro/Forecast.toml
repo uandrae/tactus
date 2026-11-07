@@ -1,0 +1,2 @@
+[system]
+  archive = "@CASEDIR@/tests/Forecast"

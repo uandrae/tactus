@@ -111,6 +111,7 @@ class Pgd(PySurfexBaseTask):
         self.program = "pgd"
         self.nlgen = NamelistGenerator(self.config, "surfex")
         self.climdir = self.platform.get_system_value("climdir")
+        self.climdir_out = self.platform.get_system_value("climdir_out")
         self.one_decade = self.config["pgd.one_decade"]
         self.basetime = config["task.args.basetime"]
         self.pgd_prel = self.platform.substitute(
@@ -120,7 +121,7 @@ class Pgd(PySurfexBaseTask):
 
     def execute(self):
         """Execute."""
-        output = f"{self.climdir}/{self.pgd_prel}"
+        output = f"{self.climdir_out}/{self.pgd_prel}"
 
         if not os.path.exists(output) or self.force:
             binary = self.get_binary("PGD")
