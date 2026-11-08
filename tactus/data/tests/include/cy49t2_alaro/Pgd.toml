@@ -2,4 +2,5 @@
   basetime = "2026-06-18T00:00:00Z"
 [system]
   climdir_out = "@CASEDIR@/tests/Pgd"
+  logs = "@CASEDIR@/tests/Pgd"
 

@@ -578,6 +578,11 @@
           "type": "string",
           "description": "Location of generated/used climate files (PGD/monthly files)"
         },
+        "climdir_out": {
+          "type": "string",
+          "description": "Location of generated/used climate files (PGD/monthly files)",
+	  "default": "@CLIMDIR@"
+        },
         "bindir": {
           "type": "string",
           "description": "Location of binaries"

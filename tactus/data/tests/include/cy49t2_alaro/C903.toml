@@ -4,4 +4,5 @@
   tactus_task = "C903"
 [system]
   intp_bddir = "@CASE_DATA@/tests/C903"
+  logs = "@CASE_DATA@/tests/C903"
 
