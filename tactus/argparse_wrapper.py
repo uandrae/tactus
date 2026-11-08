@@ -617,6 +617,16 @@ def get_args_parser(program_name=GeneralConstants.PACKAGE_NAME):
         default=False,
     )
     parser_test.add_argument(
+        "--summaries",
+        "-s",
+        action="store_true",
+        dest="summaries",
+        help="Create the summaries for the configured cases, executing "
+        + "the analyze_summaries() function of the ReferenceChecker.",
+        required=False,
+        default=False,
+    )
+    parser_test.add_argument(
         "--build",
         "-b",
         action="store_true",

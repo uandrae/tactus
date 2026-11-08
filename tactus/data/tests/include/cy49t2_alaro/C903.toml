@@ -3,6 +3,28 @@
   prep_step = "False"
   tactus_task = "C903"
 [system]
-  intp_bddir = "@CASE_DATA@/tests/C903"
-  logs = "@CASE_DATA@/tests/C903"
+  intp_bddir = "@CASEDIR@/tests/C903"
+  logs = "@CASEDIR@/tests/C903"
+
+[reference_checker.task.C903_0-0.fafiles]
+  inpath = "@INTP_BDDIR@"
+  pattern = "ELS(.*)(000|003)(_slaf2)?$"
+  method = "HistoryFields"
+  generate_folder = "@REFERENCES_GENERATION_FOLDER@/@REF_CASE@/@ARCHIVE_TIMESTAMP@/@MEMBER_STR@"
+  reference_folder = "@REFERENCES_FOLDER@/@REF_CASE@/@ARCHIVE_TIMESTAMP@/@MEMBER_STR@"
+  result_folder = "@WRK@/checks/initial_files"
+
+[reference_checker.task.C903_0-0.namelist]
+  inpath = "@WRK@/logs/C903_0-0/"
+  pattern = "fort.4"
+  method = "NamelistDiff"
+  generate_folder = "@REFERENCES_GENERATION_FOLDER@/@REF_CASE@/@ARCHIVE_TIMESTAMP@/@MEMBER_STR@/namelists/C903_0-6"
+  reference_folder = "@REFERENCES_FOLDER@/@REF_CASE@/@ARCHIVE_TIMESTAMP@/@MEMBER_STR@/namelists/C903_0-6"
+  result_folder = "@WRK@/checks/namelists/C903"
+
+[reference_checker]
+  rules_active = [
+    "C903_0-0.fafiles",
+    "C903_0-0.namelist",
+  ]
 

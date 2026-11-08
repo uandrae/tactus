@@ -156,7 +156,7 @@ class Pgd(PySurfexBaseTask):
                 argv += ["--basetime", basetime, "--one-decade"]
 
             pgd(argv=argv)
-            self.archive_logs(["OPTIONS.nam", "LISTING_PGD.txt"], target=self.climdir)
+            self.archive_logs(["OPTIONS.nam", "LISTING_PGD.txt"], target=self.climdir_out)
         else:
             logger.warning("Output already exists: ", output)
 

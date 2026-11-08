@@ -694,6 +694,111 @@ class TestCases:
             if not self.verbose:
                 logger.opt(colors=True).info("<blue>Add '-v' for more info</blue>")
 
+    def analyze_summaries(self):
+        """Create the summaries for the configured cases.
+
+        For every configuration listed in the
+        {config_name}_config_names.toml file of the test directory, the
+        reference checks of each task are executed on the retained case
+        outputs and the results are appended to the summary files. The
+        analyze_summaries() function of the ReferenceCheckManager is then
+        executed, which appends the summary analysis to the summaries.
+        """
+        from .config_parser import ConfigParserDefaults
+        from .derived_variables import derived_variables, set_times
+        from .eps.eps_setup import get_member_config
+        from .host_actions import set_tactus_home
+        from .reference_checker import ReferenceCheckManager
+        from .submission import ProcessorLayout, TaskSettings
+        from .toolbox import FileManager
+
+        try:
+            with open(f"{self.test_dir}/{self.config_name}_config_names.toml", "rb") as f:
+                config_names = tomli.load(f)
+        except FileNotFoundError as err:
+            msg = "No case mapping available. Run again with '-m'"
+            logger.error(msg)
+            raise FileNotFoundError(msg) from err
+
+        for case, config_name in config_names["config_names"].items():
+            tasks = self.cases.get(case, {}).get("tasks", [])
+            if not tasks:
+                logger.warning("No tasks defined for case {}, skipping", case)
+                continue
+
+            managers = []
+            fmanager = None
+            last_config = None
+            for task in tasks:
+                task_config = f"{self.test_dir}/{config_name}_{task}.toml"
+                if not os.path.exists(task_config):
+                    logger.warning(
+                        "No task config {} available. Run again with '-m'", task_config
+                    )
+                    continue
+
+                config = ParsedConfig.from_file(
+                    task_config,
+                    json_schema=ConfigParserDefaults.MAIN_CONFIG_JSON_SCHEMA,
+                    host=self.tactus_host,
+                )
+                config = config.copy(
+                    update={"platform": {"tactus_home": set_tactus_home(config, None)}}
+                )
+                config = config.copy(update=set_times(config))
+                if config.get("task.args.use_member_stand_alone", True):
+                    try:
+                        member = int(config["general.member"])
+                    except (KeyError, TypeError, ValueError):
+                        logger.debug("No member defined for task {}, skipping eps", task)
+                    else:
+                        config = get_member_config(config, member=member)
+                task_settings = TaskSettings(config).get_task_settings(task)
+                config = config.copy(
+                    update=derived_variables(
+                        config, processor_layout=ProcessorLayout(task_settings)
+                    )
+                )
+
+                if fmanager is None:
+                    fmanager = FileManager(config)
+                last_config = config
+
+                rcm = ReferenceCheckManager.create_reference_check_manager(config, task)
+                if rcm is None:
+                    logger.info("No reference checks for task {}", task)
+                    continue
+                managers.append(rcm)
+
+            if fmanager is None:
+                logger.warning("No task configs available for case {}", case)
+                continue
+
+            platform = fmanager.platform
+
+            if managers:
+                first_rcm = managers[0]
+                first_rcm.prepare(platform)
+                for summary in first_rcm.summary_list:
+                    if os.path.exists(summary.fullpath):
+                        logger.info("Removing existing summary {}", summary.fullpath)
+                        os.remove(summary.fullpath)
+                first_rcm.create_summaries_with_header_if_empty()
+
+            for rcm in managers:
+                rcm.prepare(platform)
+                rcm.check_references()
+                rcm.append_results_to_summaries()
+
+            check_rcm = ReferenceCheckManager.create_reference_check_manager(
+                last_config, "ReferenceCheck"
+            )
+            if check_rcm is None:
+                logger.warning("No ReferenceCheck manager for case {}", case)
+                continue
+            check_rcm.prepare(platform)
+            check_rcm.analyze_summaries()
+
     def execute(self, args):
         """Execute test cases.
 
@@ -742,7 +847,12 @@ def run_test(args, config=None):
     """
     t = TestCases(args=args)
 
-    if not args.config_file and not args.prepare_binaries and not args.list:
+    if (
+        not args.config_file
+        and not args.prepare_binaries
+        and not args.list
+        and not args.summaries
+    ):
         logger.warning("Nothing to do. Use `tactus test -h` for help.")
         return False
     if args.prepare_binaries:
@@ -754,6 +864,12 @@ def run_test(args, config=None):
     elif args.config_file is not None:
         if args.configure or args.run:
             t.execute(args)
+        elif args.summaries:
+            try:
+                t.analyze_summaries()
+            except RuntimeError as err:
+                logger.error("Reference check failed:\n{}", err)
+                return False
         else:
             t.collect_summaries(args.inspect)
 

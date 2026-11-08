@@ -6,3 +6,8 @@
   climdir = "@CASE_DATA@/climate/@DOMAIN@"
   intp_bddir = "@CASE_DATA@/intp_bddir/@YYYY@/@MM@/@DD@/@HH@/@MEMBER_STR@"
   intp_bddir_sfx = "@INTP_BDDIR@"
+
+#[cases.cy49t2_alaro.task.Forecast.system]
+  #archive = "@CASEDIR@/tests/Forecast"
+  #logs = "@CASEDIR@/tests/Forecast"
+

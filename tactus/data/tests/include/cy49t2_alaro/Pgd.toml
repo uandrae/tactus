@@ -4,3 +4,18 @@
   climdir_out = "@CASEDIR@/tests/Pgd"
   logs = "@CASEDIR@/tests/Pgd"
 
+[reference_checker.task.Pgd.fafiles]
+  inpath = "@CLIMDIR_OUT@"
+  method = "HistoryFields"
+  pattern = "PGD_prel.*.fa"
+  generate_folder = "@REFERENCES_GENERATION_FOLDER@/@REF_CASE@/climate/@DOMAIN@"
+  reference_folder = "@REFERENCES_FOLDER@/@REF_CASE@_climate_files/climate/@DOMAIN@"
+  result_folder = "@WRK@/checks/static_data"
+
+[reference_checker.task.Pgd.namelist]
+  inpath = "@LOGS@"
+  pattern = "OPTIONS.nam"
+  method = "NamelistDiff"
+  generate_folder = "@REFERENCES_GENERATION_FOLDER@/@REF_CASE@/climate/@DOMAIN@/namelists/Pgd"
+  reference_folder = "@REFERENCES_FOLDER@/@REF_CASE@_climate_files/climate/@DOMAIN@/namelists/Pgd"
+  result_folder = "@WRK@/checks/namelists/Pgd"
