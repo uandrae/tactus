@@ -15,7 +15,12 @@ from pathlib import Path
 import tomli
 
 from . import GeneralConstants
-from .config_parser import BasicConfig, ConfigPaths, ParsedConfig
+from .config_parser import (
+    BasicConfig,
+    ConfigFileCache,
+    ConfigPaths,
+    ParsedConfig,
+)
 from .datetime_utils import evaluate_date
 from .experiment import get_git_info
 from .fullpos import flatten_list
@@ -24,6 +29,13 @@ from .host_actions import TactusHost
 from .logs import logger
 from .reference_checker import CheckSummaryAnalysis
 from .toolbox import Platform
+
+# Every case of a test reads the same config files (its `include` files, the cycle
+# and host modifications, ...). They are therefore cached, see
+# `config_parser.ConfigFileCache`, so that a config file with a given name is only
+# read once. Set this to False to read every config file from disk again, e.g. when
+# config files are edited while the tests are running.
+CACHE_CONFIG_FILES = True
 
 
 class TestCases:
@@ -36,6 +48,12 @@ class TestCases:
             args: Command line arguments
 
         """
+        self.set_config_cache(
+            CACHE_CONFIG_FILES
+            if getattr(args, "cache_config_files", None) is None
+            else args.cache_config_files
+        )
+
         self.tactus_host = TactusHost().detect_tactus_host()
 
         definitions = {"general": {}, "modifs": {}}
@@ -92,6 +110,23 @@ class TestCases:
                     self.update_binary_paths()
         logger.info(" tag: {}", self.tag)
         logger.info(" test_dir: {}", self.test_dir)
+
+    def set_config_cache(self, enabled):
+        """Turn the caching of config files on/off for the rest of this run.
+
+        Config files that have been read are cached by
+        `config_parser.ConfigFileCache` so that a file with a given name is only
+        read once. Disabling the cache empties it as well, so that everything is
+        read from disk again.
+
+        Arguments:
+            enabled (bool): Whether config files may be read from the cache
+
+        """
+        self.cache_config_files = bool(enabled)
+        ConfigFileCache.set_enabled(self.cache_config_files)
+        if not self.cache_config_files:
+            logger.info("Caching of config files is disabled")
 
     def get_tag(self, definitions):
         """Get and validate tag.
@@ -695,6 +730,8 @@ class TestCases:
 
             if not args.run:
                 logger.info("\n\nRerun with '-r' to start the suites\n\n")
+
+            logger.info("Config file cache: {}", ConfigFileCache.stats())
 
         if args.run:
             self.start()

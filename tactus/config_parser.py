@@ -7,9 +7,10 @@ import glob
 import json
 import os
 import tempfile
+import threading
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import List, Optional, Tuple
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 import fastjsonschema
 import frozendict
@@ -54,6 +55,215 @@ class ConfigParserDefaults(QuasiConstant):
     SCHEMAS_DIRECTORY = CONFIG_DIRECTORY / "config_file_schemas"
     MAIN_CONFIG_JSON_SCHEMA_PATH = SCHEMAS_DIRECTORY / "main_config_schema.json"
     MAIN_CONFIG_JSON_SCHEMA = json.loads(MAIN_CONFIG_JSON_SCHEMA_PATH.read_text())
+
+
+class ConfigFileCache:
+    """Cache of config files, so that a file with a given name is only read once.
+
+    The two expensive steps of reading a config file are cached:
+
+    * the search through `ConfigPaths.CONFIG_DATA_SEARCHPATHS` that turns a (usually
+      relative) config file name into a full path, see `ConfigPaths.path_from_subpath`
+      and `ConfigFileCache.path_key`, and
+    * the raw contents of the file, see `_read_raw_config_file` and
+      `ConfigFileCache.contents_key`. The key holds the modification time and the size
+      of the file, so that a file that changed since it was cached is read again.
+
+    All cases of a test read the same `include` files, and `tactus test -m` configures
+    them all in a single process, hence both the searches and the reads of a given
+    config file would otherwise be repeated once per case.
+
+    Cached contents are deep copied, so that callers can neither modify what is
+    cached nor share a dictionary with whoever reads the same file next.
+
+    Caching is enabled by default and can be turned off with
+    `ConfigFileCache.set_enabled(False)`, see the `CACHE_CONFIG_FILES` switch in
+    `tactus/test_runner.py`. Entries are also dropped whenever a config file is saved,
+    see `BasicConfig.save_dictionary_as`.
+    """
+
+    _no_entry = object()
+    _lock = threading.Lock()
+    _entries: Dict[Tuple, Any] = {}
+    _loading: Dict[Tuple, threading.Event] = {}
+    _enabled = True
+    _hits = 0
+    _misses = 0
+
+    @classmethod
+    def set_enabled(cls, enabled: bool):
+        """Switch the caching of config files on/off, dropping anything cached.
+
+        Args:
+            enabled (bool): Whether config files may be cached
+
+        """
+        with cls._lock:
+            if cls._enabled != bool(enabled) or not enabled:
+                cls._entries.clear()
+                cls._hits = 0
+                cls._misses = 0
+            cls._enabled = bool(enabled)
+
+    @classmethod
+    def is_enabled(cls) -> bool:
+        """Return whether config files are cached."""
+        return cls._enabled
+
+    @classmethod
+    def path_key(cls, subpath, last=False) -> Tuple:
+        """Return the cache key of the search for `subpath`.
+
+        The searchpaths are part of the key since they determine which match is
+        found, e.g. `ConfigPaths.print` and the unit tests search in more than one
+        set of directories.
+
+        Args:
+            subpath (Path | str): Name (or subpath) of the file to locate
+            last (bool): Whether the last rather than the first match is used
+
+        Returns:
+            tuple: The cache key
+
+        """
+        searchpaths = tuple(str(p) for p in ConfigPaths.CONFIG_DATA_SEARCHPATHS)
+        return ("path", searchpaths, bool(last), str(subpath))
+
+    @classmethod
+    def contents_key(cls, config_path: Path) -> Tuple:
+        """Return the cache key of the contents of `config_path`.
+
+        Args:
+            config_path (Path): Full path to the config file
+
+        Returns:
+            tuple: The cache key, holding the file timestamp when it could be
+                retrieved and the file size
+
+        """
+        with contextlib.suppress(OSError):
+            stat = os.stat(config_path)
+            return ("contents", str(config_path), stat.st_mtime_ns, stat.st_size)
+        return ("contents", str(config_path), None, None)
+
+    @classmethod
+    def get(cls, key: Tuple, loader: Callable, *args, deepcopy_value=False, **kwargs):
+        """Return the value of `key`, calling `loader` only when it is not cached.
+
+        Threads asking for a value that another thread is loading wait for it, so
+        that a config file is read (and searched for) once even when several cases
+        are configured in parallel.
+
+        Args:
+            key (tuple): Cache key, see `path_key` and `contents_key`
+            loader (Callable): Computes the value, called with `*args, **kwargs`
+            *args: Arguments passed on to `loader`
+            deepcopy_value (bool): Whether the value is copied in and out of the
+                cache, for values that callers are allowed to modify
+            **kwargs: Keyword arguments passed on to `loader`
+
+        Returns:
+            Any: The cached, or freshly loaded, value
+
+        """
+        while True:
+            # The lock is not held while loading or copying, so that parallel
+            # reads of different config files are not serialised
+            if not cls._enabled:
+                return loader(*args, **kwargs)
+            with cls._lock:
+                entry = cls._entries.get(key, cls._no_entry)
+                if entry is not cls._no_entry:
+                    cls._hits += 1
+                    waiter = is_loader = None
+                else:
+                    waiter = cls._loading.get(key)
+                    is_loader = waiter is None
+                    if is_loader:
+                        cls._misses += 1
+                        waiter = cls._loading[key] = threading.Event()
+            if entry is not cls._no_entry:
+                return copy.deepcopy(entry) if deepcopy_value else entry
+            if is_loader:
+                return cls._load(key, waiter, loader, args, kwargs, deepcopy_value)
+            waiter.wait()
+
+    @classmethod
+    def _load(cls, key, waiter, loader, args, kwargs, deepcopy_value):
+        """Cache the value of `key` that `loader` reads, and wake up the waiters.
+
+        Args:
+            key (tuple): Cache key
+            waiter (threading.Event): Signals the threads waiting for `key`
+            loader (Callable): Computes the value, called with `args, kwargs`
+            args: Positional arguments passed on to `loader`
+            kwargs: Keyword arguments passed on to `loader`
+            deepcopy_value (bool): Whether the value is copied into the cache
+
+        Returns:
+            Any: The loaded value
+
+        """
+        try:
+            value = loader(*args, **kwargs)
+        finally:
+            with cls._lock:
+                del cls._loading[key]
+                waiter.set()
+        with cls._lock:
+            if cls._enabled:
+                # Another thread may have cached an equivalent value in the meantime
+                cls._entries.setdefault(
+                    key, copy.deepcopy(value) if deepcopy_value else value
+                )
+        return value
+
+    @classmethod
+    def discard_file(cls, config_file: Union[Path, str]):
+        """Drop everything cached about `config_file`, e.g. because it is written.
+
+        Args:
+            config_file (Path | str): Path to the config file, as used by the caller
+
+        """
+        path = Path(config_file).expanduser()
+        with contextlib.suppress(OSError, ValueError):
+            path = resolve_path_relative_to_package(path, ignore_errors=True)
+        written = str(path.resolve())
+        with cls._lock:
+            stale = [
+                key
+                for key in cls._entries
+                # Contents are keyed by full path, paths by the requested name
+                if (key[0] == "contents" and key[1] == written)
+                or (key[0] == "path" and written.endswith(key[3].lstrip("/")))
+            ]
+            for key in stale:
+                del cls._entries[key]
+
+    @classmethod
+    def clear(cls):
+        """Drop everything cached."""
+        with cls._lock:
+            cls._entries.clear()
+            cls._hits = 0
+            cls._misses = 0
+
+    @classmethod
+    def stats(cls) -> dict:
+        """Return a summary of the cache contents and its hit rate.
+
+        Returns:
+            dict: enabled flag, number of cached entries and the hit/miss counts
+
+        """
+        with cls._lock:
+            return {
+                "enabled": cls._enabled,
+                "entries": len(cls._entries),
+                "hits": cls._hits,
+                "misses": cls._misses,
+            }
 
 
 class ConfigPaths:
@@ -160,6 +370,9 @@ class ConfigPaths:
     def path_from_subpath(subpath, last=False) -> Path:
         """Interface to find full path given any subpath, by searching 'searchpaths'.
 
+        The subpaths are cached (see `ConfigFileCache`) so that the data directories
+        are searched only once per subpath.
+
         Arguments:
             subpath (str): Subpath to search for
             last(boolan): Return last match
@@ -169,6 +382,27 @@ class ConfigPaths:
 
         Raises:
             RuntimeRerror: Various errors
+        """
+        return ConfigFileCache.get(
+            ConfigFileCache.path_key(subpath, last),
+            ConfigPaths._search_path_from_subpath,
+            subpath,
+            last=last,
+        )
+
+    @staticmethod
+    def _search_path_from_subpath(subpath, last=False) -> Path:
+        """Search the config data paths for the first/last match of `subpath`.
+
+        Arguments:
+            subpath (str): Subpath to search for
+            last (boolean): Return last match
+
+        Returns:
+            (Path): Full path to target
+
+        Raises:
+            RuntimeError: If `subpath` could not be found
         """
         return_index = -1 if last else 0
         pattern = f"**/{subpath}"
@@ -241,6 +475,9 @@ class BasicConfig(BaseMapping):
         Raises:
             TypeError: when unknown filetype as config_file is given.
         """
+        # Make sure the new contents are not served from a stale cache
+        ConfigFileCache.discard_file(config_file)
+
         suffix = Path(config_file).suffix
 
         if suffix == ".toml":
@@ -535,6 +772,9 @@ class ParsedConfig(BasicConfig):
 def _read_raw_config_file(config_path: Path):
     """Read raw configs from files in miscellaneous formats.
 
+    Files are cached (see `ConfigFileCache`) so that a config file with a given
+    name is only read once, unless it has changed since it was read.
+
     Args:
         config_path (Path): Path to the config file.
 
@@ -545,7 +785,27 @@ def _read_raw_config_file(config_path: Path):
         NotImplementedError: If the config file format is not supported.
     """
     config_path = resolve_path_relative_to_package(config_path)
+    print(config_path)
+    return ConfigFileCache.get(
+        ConfigFileCache.contents_key(config_path),
+        _read_raw_config_file_from_disk,
+        config_path,
+        deepcopy_value=True,
+    )
 
+
+def _read_raw_config_file_from_disk(config_path: Path):
+    """Read raw configs from files in miscellaneous formats.
+
+    Args:
+        config_path (Path): Path to the config file.
+
+    Returns:
+        dict: Configs read from the specified path.
+
+    Raises:
+        NotImplementedError: If the config file format is not supported.
+    """
     logger.debug("Reading configs from file <{}>", config_path)
 
     with open(config_path, "rb") as config_file:
