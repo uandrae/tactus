@@ -3,6 +3,7 @@
 
 import contextlib
 import copy
+import errno
 import glob
 import json
 import os
@@ -35,6 +36,30 @@ from .general_utils import recursive_unfreeze
 from .logs import logger
 from .os_utils import resolve_path_relative_to_package
 from .toolbox import Platform
+
+_ignored_scandir_errnos = (errno.ENOENT, errno.ENOTDIR, errno.EBADF, errno.ELOOP)
+
+
+def _entry_is_searchable_dir(entry: os.DirEntry) -> bool:
+    """Return whether a `**`-style descent should enter `entry`.
+
+    Mirrors `pathlib`'s recursive glob selector: it enters real directories
+    (symlinks are resolved when checking, but never descended through) and
+    treats the errnos that `pathlib` ignores as "not a directory".
+
+    Arguments:
+        entry (os.DirEntry): Entry returned by `os.scandir`
+
+    Returns:
+        bool: Whether the tree search should recurse into `entry`
+
+    """
+    try:
+        return entry.is_dir() and not entry.is_symlink()
+    except OSError as err:
+        if err.errno in _ignored_scandir_errnos:
+            return False
+        raise
 
 
 class ConfigParserDefaults(QuasiConstant):
@@ -391,6 +416,52 @@ class ConfigPaths:
         )
 
     @staticmethod
+    def _iter_subpath_matches(searchpath, subpath: str):
+        """Yield matches of a plain `subpath` under `searchpath`, like rglob.
+
+        Equivalent to `Path(searchpath).rglob(f"**/{subpath}")` for a `subpath`
+        without glob magic, but walks the tree with a single `scandir` per
+        directory and tests each candidate with a single `os.stat`. This avoids
+        the repeated scans, selector chains and `Path` allocations of pathlib's
+        recursive glob, which costs several `scandir` system calls per directory
+        and per pattern component. Matches are yielded lazily, in the same
+        depth-first order as `Path.rglob`, so a caller looking for the first
+        match can stop after the second one.
+
+        Arguments:
+            searchpath (Path | str): Root directory to search
+            subpath (str): Relative path to search for, without glob magic
+
+        Yields:
+            (Path): Full paths matching `subpath` at any depth under `searchpath`
+
+        """
+        if not os.path.isdir(searchpath):
+            return
+
+        def descend(directory):
+            candidate = os.path.join(directory, subpath)
+            try:
+                os.stat(candidate)
+            except OSError:
+                pass
+            else:
+                yield Path(candidate)
+            try:
+                with os.scandir(directory) as scan:
+                    entries = list(scan)
+            except PermissionError:
+                return
+            try:
+                for entry in entries:
+                    if _entry_is_searchable_dir(entry):
+                        yield from descend(entry.path)
+            except PermissionError:
+                return
+
+        yield from descend(os.fspath(searchpath))
+
+    @staticmethod
     def _search_path_from_subpath(subpath, last=False) -> Path:
         """Search the config data paths for the first/last match of `subpath`.
 
@@ -404,19 +475,25 @@ class ConfigPaths:
         Raises:
             RuntimeError: If `subpath` could not be found
         """
-        return_index = -1 if last else 0
-        pattern = f"**/{subpath}"
+        subpath = str(subpath)
         searchpaths = ConfigPaths.CONFIG_DATA_SEARCHPATHS.copy()
         for searchpath in searchpaths:
-            results = list(Path(searchpath).rglob(pattern))
-            if len(results) > 1 and not last:
-                logger.warning("Multiple matches found for subpath: {}", subpath)
-                logger.warning("Selecting the first result: {}", results[0])
-
-            if len(results) == 0:
+            if glob.has_magic(subpath):
+                matches = Path(searchpath).rglob(f"**/{subpath}")
+            else:
+                matches = ConfigPaths._iter_subpath_matches(searchpath, subpath)
+            if last:
+                results = list(matches)
+                if len(results) == 0:
+                    continue
+                return results[-1]
+            first = next(matches, None)
+            if first is None:
                 continue
-
-            return results[return_index]
+            if next(matches, None) is not None:
+                logger.warning("Multiple matches found for subpath: {}", subpath)
+                logger.warning("Selecting the first result: {}", first)
+            return first
 
         raise RuntimeError(f"Could not find {subpath}")
 
@@ -785,7 +862,6 @@ def _read_raw_config_file(config_path: Path):
         NotImplementedError: If the config file format is not supported.
     """
     config_path = resolve_path_relative_to_package(config_path)
-    print(config_path)
     return ConfigFileCache.get(
         ConfigFileCache.contents_key(config_path),
         _read_raw_config_file_from_disk,
@@ -807,6 +883,7 @@ def _read_raw_config_file_from_disk(config_path: Path):
         NotImplementedError: If the config file format is not supported.
     """
     logger.debug("Reading configs from file <{}>", config_path)
+    print(config_path)
 
     with open(config_path, "rb") as config_file:
         if config_path.suffix == ".toml":
