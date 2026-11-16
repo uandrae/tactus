@@ -883,7 +883,6 @@ def _read_raw_config_file_from_disk(config_path: Path):
         NotImplementedError: If the config file format is not supported.
     """
     logger.debug("Reading configs from file <{}>", config_path)
-    print(config_path)
 
     with open(config_path, "rb") as config_file:
         if config_path.suffix == ".toml":

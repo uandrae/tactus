@@ -396,7 +396,7 @@ def case_setup(
 
     exp.config.save_as(output_file)
 
-    return output_file
+    return output_file, exp.config
 
 
 def get_git_info():

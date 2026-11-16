@@ -84,7 +84,7 @@ def run_command(cmd):
     args = get_args_parser().parse_args(cmd)
 
     cached = LAST_READ_CONFIG
-    if cached is not None and cached[0] == args.config_file:
+    if cached is not None and cached[0] == args.config_file.resolve():
         tactus_host, config = cached[1], cached[2]
     else:
         tactus_host = TactusHost().detect_tactus_host()
@@ -126,7 +126,7 @@ def run_command(cmd):
     if args.command == "case":
         if args.start_suite:
             raise ValueError("run_command cannot start the suite, only create the case")
-        case_setup(
+        outfile, new_config = case_setup(
             config,
             args.output_file,
             args.config_mods or [],
@@ -134,6 +134,7 @@ def run_command(cmd):
             host=tactus_host,
             expand_config=args.expand_config,
         )
+        return outfile, new_config
     elif args.command == "run":
         run_task(args=args, config=config)
     elif args.command == "remove":
@@ -235,6 +236,8 @@ class TestCases:
         if not self.cache_config_files:
             LAST_READ_CONFIG = None
             logger.info("Caching of config files is disabled")
+        else:
+            logger.info("Caching of config files is enabled")
 
     def get_tag(self, definitions):
         """Get and validate tag.
@@ -505,13 +508,11 @@ class TestCases:
             cmd[-1] = tmpdir
             logger.info("Configure case {} with\n", case)
             logger.info("Use cmd:\n\n{}\n\n", " ".join(cmd))
-            run_command(cmd)
-            (config_file,) = Path(tmpdir).glob("*.toml")
-            with open(config_file, "rb") as f:
-                defs = tomli.load(f)
+            config_file, new_config = run_command(cmd)
+            config_file = Path(tmpdir) / config_file
             dest = Path(self.test_dir) / config_file.name
             shutil.move(str(config_file), str(dest))
-        return dest.stem, defs["domain"]["name"]
+        return dest.stem, new_config["domain"]["name"]
 
     def start(self):
         """Start the run."""
@@ -848,7 +849,19 @@ def run_test(args, config=None):
         config: Unused; the test command manages its own config loading
 
     """
+    global LAST_READ_CONFIG
+
     t = TestCases(args=args)
+
+    if ConfigFileCache.is_enabled():
+        logger.info("Read and cache {}", ConfigParserDefaults.PACKAGE_CONFIG_PATH)
+        tactus_host = TactusHost().detect_tactus_host()
+        config = ParsedConfig.from_file(
+            ConfigParserDefaults.PACKAGE_CONFIG_PATH,
+            json_schema=ConfigParserDefaults.MAIN_CONFIG_JSON_SCHEMA,
+            host=tactus_host,
+        )
+        LAST_READ_CONFIG = (ConfigParserDefaults.PACKAGE_CONFIG_PATH, tactus_host, config)
 
     if not args.config_file and not args.prepare_binaries and not args.list:
         logger.warning("Nothing to do. Use `tactus test -h` for help.")
