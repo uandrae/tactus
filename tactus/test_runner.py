@@ -9,24 +9,27 @@ import json
 import os
 import shutil
 import tempfile
+import threading
 from datetime import datetime
 from pathlib import Path
 
 import tomli
 
 from . import GeneralConstants
+from .commands_functions import remove_cases, run_task, start_suite
 from .config_parser import (
     BasicConfig,
     ConfigFileCache,
+    ConfigParserDefaults,
     ConfigPaths,
     ParsedConfig,
 )
 from .datetime_utils import evaluate_date
-from .experiment import get_git_info
+from .experiment import case_setup, get_git_info
 from .fullpos import flatten_list
 from .general_utils import ial_compile_modifs, merge_dicts, sanitize_case_name
 from .host_actions import TactusHost
-from .logs import logger
+from .logs import LoggerHandlers, logger
 from .reference_checker import CheckSummaryAnalysis
 from .toolbox import Platform
 
@@ -36,6 +39,109 @@ from .toolbox import Platform
 # read once. Set this to False to read every config file from disk again, e.g. when
 # config files are edited while the tests are running.
 CACHE_CONFIG_FILES = True
+
+# The config read by run_command, as a (config_file, tactus_host, config) tuple.
+# Commands that are run with the same config file reuse it, see run_command.
+LAST_READ_CONFIG = None
+
+# The cached config can be shared by the threads that concurrently configure the
+# cases of a test. `aux_types.BaseMapping.copy` temporarily clears the data of
+# the object it copies from, so reading from that shared config, and copying it,
+# needs to happen under this lock, see `run_command`.
+LAST_READ_CONFIG_LOCK = threading.Lock()
+
+
+def run_command(cmd):
+    """Execute a tactus command by calling its implementation directly.
+
+    This is what the test runner uses instead of calling the tactus main
+    entry point: the command line arguments are parsed as on the command
+    line, the config is loaded the same way and then the corresponding
+    function is called, `experiment.case_setup` for the "case" command and
+    the function in commands_functions for the others.
+
+    The config that has been read is stored in LAST_READ_CONFIG and only
+    read again when args.config_file has changed (or when caching of
+    config files is disabled, see CACHE_CONFIG_FILES). The stored config
+    is the one read from file, before the genesis update that each command
+    applies to its own copy.
+
+    Arguments:
+        cmd (list): Command line arguments, e.g. ["case", "config.toml"]
+
+    Raises:
+        ValueError: If the command has no implementation here
+
+    """
+    global LAST_READ_CONFIG
+
+    # Local import to avoid circular dependency (argparse_wrapper -> here)
+    from .argparse_wrapper import get_args_parser
+
+    # Importing tactus' main used to do this, keep logging as it was
+    logger.enable(GeneralConstants.PACKAGE_NAME)
+
+    args = get_args_parser().parse_args(cmd)
+
+    cached = LAST_READ_CONFIG
+    if cached is not None and cached[0] == args.config_file:
+        tactus_host, config = cached[1], cached[2]
+    else:
+        tactus_host = TactusHost().detect_tactus_host()
+        with contextlib.suppress(AttributeError):
+            if args.config_data_dir is not None:
+                for config_data_dir in args.config_data_dir[::-1]:
+                    ConfigPaths.CONFIG_DATA_SEARCHPATHS.insert(0, config_data_dir)
+        config = ParsedConfig.from_file(
+            args.config_file,
+            json_schema=ConfigParserDefaults.MAIN_CONFIG_JSON_SCHEMA,
+            host=tactus_host,
+        )
+        if ConfigFileCache.is_enabled():
+            LAST_READ_CONFIG = (args.config_file, tactus_host, config)
+
+    # The config may be the one shared through LAST_READ_CONFIG, and reading
+    # from it or copying it must not overlap with another thread doing the
+    # same, see LAST_READ_CONFIG_LOCK. Everything below works on the fresh
+    # copy and is therefore thread-local again.
+    with LAST_READ_CONFIG_LOCK:
+        with contextlib.suppress(KeyError):
+            # Reset default loglevel if specified in the config
+            logger.configure(
+                handlers=LoggerHandlers(default_level=config["general.loglevel"])
+            )
+
+        config = config.copy(
+            update={
+                "genesis": {
+                    "command": GeneralConstants.PACKAGE_NAME + " " + " ".join(cmd),
+                    "package": GeneralConstants.PACKAGE_NAME,
+                    "version": GeneralConstants.VERSION,
+                    "time": datetime.now().isoformat(timespec="seconds"),
+                    "user": os.environ.get("USER"),
+                }
+            }
+        )
+
+    if args.command == "case":
+        if args.start_suite:
+            raise ValueError("run_command cannot start the suite, only create the case")
+        case_setup(
+            config,
+            args.output_file,
+            args.config_mods or [],
+            case=args.case,
+            host=tactus_host,
+            expand_config=args.expand_config,
+        )
+    elif args.command == "run":
+        run_task(args=args, config=config)
+    elif args.command == "remove":
+        remove_cases(args=args, config=config)
+    elif args.command == "start" and args.start_what == "suite":
+        start_suite(args=args, config=config)
+    else:
+        raise ValueError(f"Unsupported command: {' '.join(cmd)}")
 
 
 class TestCases:
@@ -123,9 +229,11 @@ class TestCases:
             enabled (bool): Whether config files may be read from the cache
 
         """
+        global LAST_READ_CONFIG
         self.cache_config_files = bool(enabled)
         ConfigFileCache.set_enabled(self.cache_config_files)
         if not self.cache_config_files:
+            LAST_READ_CONFIG = None
             logger.info("Caching of config files is disabled")
 
     def get_tag(self, definitions):
@@ -392,14 +500,12 @@ class TestCases:
             (config_name, domain_name): stem of the generated config file and
                                         the domain name read from it.
         """
-        from .__main__ import main as tactus_main
-
         cmd = list(self.cmds[case])
         with tempfile.TemporaryDirectory() as tmpdir:
             cmd[-1] = tmpdir
             logger.info("Configure case {} with\n", case)
             logger.info("Use cmd:\n\n{}\n\n", " ".join(cmd))
-            tactus_main(cmd)
+            run_command(cmd)
             (config_file,) = Path(tmpdir).glob("*.toml")
             with open(config_file, "rb") as f:
                 defs = tomli.load(f)
@@ -409,9 +515,6 @@ class TestCases:
 
     def start(self):
         """Start the run."""
-        # Local import to avoid circular dependency (__main__ -> argparse_wrapper -> here)
-        from .__main__ import main as tactus_main
-
         try:
             with open(f"{self.test_dir}/{self.config_name}_config_names.toml", "rb") as f:
                 config_names = tomli.load(f)
@@ -475,7 +578,7 @@ class TestCases:
                 if not self.dry:
                     if self.mode != "task" and os.path.exists(suite_file):
                         os.remove(suite_file)
-                    tactus_main(cmd)
+                    run_command(cmd)
 
     def get_binaries(self):
         """Get the correct binaries."""
